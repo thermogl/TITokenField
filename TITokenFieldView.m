@@ -175,18 +175,12 @@
 	return YES;
 }
 
-- (void)becomeFirstResponder {
-	
-	if (![tokenField isFirstResponder]){
-		[tokenField becomeFirstResponder];
-	}
+- (BOOL)becomeFirstResponder {
+	return [tokenField becomeFirstResponder];
 }
 
-- (void)resignFirstResponder {
-	
-	if ([tokenField isFirstResponder]){
-		[tokenField resignFirstResponder];
-	}
+- (BOOL)resignFirstResponder {
+	return [tokenField resignFirstResponder];
 }
 
 #pragma mark TableView Methods
