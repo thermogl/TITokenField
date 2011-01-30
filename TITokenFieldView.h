@@ -82,10 +82,7 @@
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
 
-@property (nonatomic, retain) NSArray * sourceArray;
-@property (nonatomic, retain) NSMutableArray * resultsArray;
-@property (nonatomic, retain) NSArray * tokenTitles;
-
+@property (nonatomic, copy) NSArray * sourceArray;
 @property (nonatomic, readonly) TITokenField * tokenField;
 
 - (void)updateContentSize;

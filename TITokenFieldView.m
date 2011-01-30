@@ -12,13 +12,8 @@
 // - Private Additions
 //==========================================================
 
-@interface NSArray (Private)
-- (id)_safeObjectAtIndex:(NSUInteger)index;
-@end
-
-@interface NSMutableArray (Private)
-- (void)_safelyRemoveObjectAtIndex:(NSUInteger)index;
-- (void)_safelyRemoveObject:(id)object;
+@interface TITokenFieldView ()
+@property (nonatomic, retain) NSArray * tokenTitles;
 @end
 
 @interface TITokenFieldView (Private)
@@ -65,7 +60,6 @@
 @synthesize textFieldShadow;
 
 @synthesize sourceArray;
-@synthesize resultsArray;
 @synthesize tokenTitles;
 
 @synthesize tokenField;
@@ -88,9 +82,7 @@
 		[self setScrollEnabled:YES];
 		[self setShowAlreadyTokenized:NO];
 		
-		NSMutableArray * array = [[NSMutableArray alloc] init];
-		[self setResultsArray:array];
-		[array release];
+		resultsArray = [[NSMutableArray alloc] init];
 		
 		// This view (contentView) is created for convenience, because it resizes and moves with the rest of the subviews.
 		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldHeight, self.frame.size.width, self.frame.size.height - tokenFieldHeight)];
@@ -220,7 +212,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
 	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForObject:)]){
-		return [delegate tokenField:tokenField resultsTableView:tableView cellForObject:[resultsArray _safeObjectAtIndex:indexPath.row]];
+		return [delegate tokenField:tokenField resultsTableView:tableView cellForObject:[resultsArray objectAtIndex:indexPath.row]];
 	}
 	
     static NSString *CellIdentifier = @"ResultsCell";
@@ -230,14 +222,14 @@
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
     }
 	
-	[cell.textLabel setText:[resultsArray _safeObjectAtIndex:indexPath.row]];
+	[cell.textLabel setText:[resultsArray objectAtIndex:indexPath.row]];
 
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	[tokenField addToken:[resultsArray _safeObjectAtIndex:indexPath.row]];
+	[tokenField addToken:[resultsArray objectAtIndex:indexPath.row]];
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -566,7 +558,7 @@
 - (void)removeToken:(TIToken *)token {
 	
 	[token removeFromSuperview];
-	[tokensArray _safelyRemoveObject:token];
+	[tokensArray removeObject:token];
 	
 	[self setText:textEmpty];
 	[self updateHeight:NO];
@@ -1024,41 +1016,6 @@
 //==========================================================
 // - Private Additions
 //==========================================================
-
-@implementation NSArray (Private)
-
-- (id)_safeObjectAtIndex:(NSUInteger)index {
-	id object = nil;
-	@try {
-		object = [self objectAtIndex:index];
-	}
-	@catch (NSException * e){
-		// Ignore.
-	}
-	return object;
-}
-
-@end
-
-@implementation NSMutableArray (Private)
-
-- (void)_safelyRemoveObjectAtIndex:(NSUInteger)index {
-	@try {
-		[self removeObjectAtIndex:index];
-	}
-	@catch (NSException * e){
-		// Yup. IGNORE.
-	}
-}
-
-- (void)_safelyRemoveObject:(id)object {
-	
-	if ([self containsObject:object]){
-		[self _safelyRemoveObjectAtIndex:[self indexOfObject:object]];
-	}
-}
-
-@end
 
 @implementation UIView (Private)
 
