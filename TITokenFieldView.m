@@ -608,6 +608,7 @@
 	cursorLocation.y = topMargin - 1;
 		
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokensArray];
+	
 	for (TIToken * token in tokens){
 
 		CGFloat lineWidth = cursorLocation.x + token.frame.size.width + rightMargin;
@@ -647,6 +648,8 @@
 		cursorLocation.x += token.frame.size.width + tokenPadding;
 			
 	}
+	
+	[tokens release];
 		
 	CGFloat leftoverWidth = self.frame.size.width - (cursorLocation.x + rightMarginWithButton);
 	
