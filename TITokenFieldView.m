@@ -97,7 +97,7 @@
 		[tokenField setDelegate:self];
 		[self addSubview:tokenField];
 		[tokenField release];
-	
+		
 		separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldHeight, self.frame.size.width, separatorHeight)];
 		[separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
 		[self addSubview:separator];
@@ -223,7 +223,7 @@
     }
 	
 	[cell.textLabel setText:[resultsArray objectAtIndex:indexPath.row]];
-
+	
     return cell;
 }
 
@@ -508,9 +508,9 @@
 		UIButton * button = [UIButton buttonWithType:UIButtonTypeContactAdd];
 		
 		[button setFrame:CGRectMake(self.frame.size.width - button.frame.size.width - 6,
-									 self.frame.size.height + self.frame.origin.y - button.frame.size.height - 6,
-									 button.frame.size.width,
-									 button.frame.size.height)];
+									self.frame.size.height + self.frame.origin.y - button.frame.size.height - 6,
+									button.frame.size.width,
+									button.frame.size.height)];
 		
 		[button setUserInteractionEnabled:YES];
 		[button setHidden:YES];
@@ -540,15 +540,15 @@
 		
 		TIToken * token = [[TIToken alloc] initWithTitle:title];
 		[token setDelegate:self];
-	
+		
 		[self addSubview:token];
 		[tokensArray addObject:token];
 		[token release];
-	
+		
 		[self updateHeight:NO];
-	
+		
 		[self setText:textEmpty];
-	
+		
 		if (![self isFirstResponder]){
 			[self becomeFirstResponder];
 		}
@@ -594,66 +594,57 @@
 	CGFloat rightMarginWithButton = addButton.hidden ? 8 : 46;
 	CGFloat initialPadding = 8;
 	CGFloat tokenPadding = 4;
-
+	
 	numberOfLines = 1;
 	cursorLocation.x = leftMargin;
 	cursorLocation.y = topMargin - 1;
-		
+	
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokensArray];
 	
 	for (TIToken * token in tokens){
-
+		
 		CGFloat lineWidth = cursorLocation.x + token.frame.size.width + rightMargin;
 		
 		if (lineWidth >= self.frame.size.width){
-				
+			
 			numberOfLines++;
 			cursorLocation.x = leftMargin;
-				
+			
 			if (numberOfLines > 1){
 				cursorLocation.x = initialPadding;
 			}
-
+			
 			cursorLocation.y += lineHeight;
 		}
-			
+		
 		CGRect oldFrame = CGRectMake(token.frame.origin.x, token.frame.origin.y, token.frame.size.width, token.frame.size.height);
 		CGRect newFrame = CGRectMake(cursorLocation.x, cursorLocation.y, token.frame.size.width, token.frame.size.height);
-
+		
 		if (!CGRectEqualToRect(oldFrame, newFrame)){
 			
 			[token setFrame:newFrame];
 			[token setAlpha:0.6];
 			
-			if ([UIView respondsToSelector:@selector(animateWithDuration:animations:)]){
-				[UIView animateWithDuration:0.3 animations:^{[token setAlpha:1];}];
-			}
-			else
-			{
-				[UIView beginAnimations:nil context:NULL];
-				[UIView setAnimationDuration:0.3];
-				[token setAlpha:1];
-				[UIView commitAnimations];
-			}
+			[UIView animateWithDuration:0.3 animations:^{[token setAlpha:1];}];
 		}
-				
+		
 		cursorLocation.x += token.frame.size.width + tokenPadding;
-			
+		
 	}
 	
 	[tokens release];
-		
+	
 	CGFloat leftoverWidth = self.frame.size.width - (cursorLocation.x + rightMarginWithButton);
 	
 	if (leftoverWidth < 50){
-			
+		
 		numberOfLines++;
 		cursorLocation.x = leftMargin;
-			
+		
 		if (numberOfLines > 1){
 			cursorLocation.x = initialPadding;
 		}
-			
+		
 		cursorLocation.y += lineHeight;
 	}
 	
@@ -670,30 +661,13 @@
 	
 	if (previousHeight && previousHeight != newHeight){
 		
-		[self setHeight:newHeight];
-		
-		if ([UIView respondsToSelector:@selector(animateWithDuration:animations:)]){
-			[UIView animateWithDuration:0.3 animations:^{
-				[parentView.separator setOriginY:newHeight];
-				[parentView.textFieldShadow setOriginY:newHeight];
-				[parentView.resultsTable setOriginY:newHeight + 1];
-				[parentView.contentView setOriginY:newHeight];
-				[self setHeight:newHeight];
-			}
-			 ];
-		}
-		else
-		{
-				
-			[UIView beginAnimations:nil context:NULL];
-			[UIView setAnimationDuration:0.3];
+		[UIView animateWithDuration:0.3 animations:^{
 			[parentView.separator setOriginY:newHeight];
 			[parentView.textFieldShadow setOriginY:newHeight];
 			[parentView.resultsTable setOriginY:newHeight + 1];
 			[parentView.contentView setOriginY:newHeight];
 			[self setHeight:newHeight];
-			[UIView commitAnimations];
-		}
+		}];
 		
 		[parentView tokenFieldResized:self];
 	}
@@ -810,7 +784,7 @@
 }
 
 - (CGRect)editingRectForBounds:(CGRect)bounds {
-
+	
 	return [self textRectForBounds:bounds];
 }
 
@@ -852,17 +826,17 @@
 - (id)initWithTitle:(NSString *)aTitle {
 	
 	if ((self = [super init])){
-	
+		
 		[self setTitle:aTitle];
 		[self setCroppedTitle:aTitle];
-	
+		
 		if ([aTitle length] > 24){
 			NSString * shortTitle = [aTitle substringWithRange:NSMakeRange(0, 24)];
 			[self setCroppedTitle:[NSString stringWithFormat:@"%@...", shortTitle]];
 		}
-	
+		
 		CGSize tokenSize = [croppedTitle sizeWithFont:TokenTitleFont];
-	
+		
 		//We lay the tokens out all at once, so it doesn't matter what the X,Y coords are.
 		[self setFrame:CGRectMake(0, 0, tokenSize.width + 17, tokenSize.height + 8)];
 		[self setBackgroundColor:[UIColor clearColor]];
