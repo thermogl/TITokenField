@@ -34,7 +34,7 @@
 // - Delegate Methods
 //==========================================================
 
-@protocol TITokenFieldViewDelegate <NSObject>
+@protocol TITokenFieldViewDelegate <UIScrollViewDelegate>
 @optional
 - (BOOL)tokenFieldShouldReturn:(TITokenField *)tokenField;
 
