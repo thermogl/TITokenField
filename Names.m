@@ -75,11 +75,6 @@
 			@"Chantay Palczynski",
 			@"Denver Perfater",
 			@"Tom Irving",
-			@"Rebecca Grigg",
-			@"Jordan Routledge",
-			@"Jacob Shaw",
-			@"Ben Watkins",
-			@"Kieran Small",
 			nil];
 }
 

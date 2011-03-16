@@ -197,7 +197,7 @@
 		[delegate tokenField:tokenField didFinishSearch:resultsArray];
 	}
 	
-	BOOL hideTable = ([resultsArray count] == 0);
+	BOOL hideTable = !resultsArray.count;
 	[resultsTable setHidden:hideTable];
 	[textFieldShadow setHidden:hideTable];
 	[tokenField scrollForEdit:!hideTable];
@@ -205,7 +205,7 @@
 	UIColor * separatorColor = hideTable ? [UIColor colorWithWhite:0.7 alpha:1] : [UIColor colorWithRed:150/255 green:150/255 blue:150/255 alpha:0.4];
 	[separator setBackgroundColor:separatorColor];
 	
-	return [resultsArray count];
+	return resultsArray.count;
 	
 }
 
@@ -287,7 +287,7 @@
 	[tokenField updateHeight:YES];
 	
 	if (untokSize.width > self.frame.size.width - 120){
-		untokenized = [NSString stringWithFormat:@"%i recipients", [tokenTitles count]];
+		untokenized = [NSString stringWithFormat:@"%i recipients", tokenTitles.count];
 	}
 	
 	[textField setText:untokenized];
@@ -315,7 +315,7 @@
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
 	
-	if ([string isEqualToString:@""] && [textField.text isEqualToString:textEmpty] && [tokenField.tokensArray count]){
+	if ([string isEqualToString:@""] && [textField.text isEqualToString:textEmpty] && tokenField.tokensArray.count){
 		
 		//When the backspace is pressed, we capture it, highlight the last token, and hide the cursor.
 		
@@ -458,7 +458,7 @@
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenFieldView %p 'Token count: %i'>", self, [tokenTitles count]];
+	return [NSString stringWithFormat:@"<TITokenFieldView %p 'Token count: %i'>", self, tokenTitles.count];
 }
 
 - (void)dealloc {
