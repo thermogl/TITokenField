@@ -80,7 +80,8 @@ CGFloat const kSeparatorHeight = 1;
 		[self setDelaysContentTouches:NO];
 		[self setMultipleTouchEnabled:NO];
 		[self setScrollEnabled:YES];
-		[self setShowAlreadyTokenized:NO];
+		
+		showAlreadyTokenized = NO;
 		
 		resultsArray = [[NSMutableArray alloc] init];
 		
@@ -118,7 +119,6 @@ CGFloat const kSeparatorHeight = 1;
 		[textFieldShadow release];
 		
 		[self bringSubviewToFront:separator];
-		
 		[self updateContentSize];
 	}
 	
@@ -333,6 +333,8 @@ CGFloat const kSeparatorHeight = 1;
 	}
 	
 	if ([textField.text	isEqualToString:kTextHidden] && [string isEqualToString:@""]){
+		
+		NSLog(@"%@ - %@", string, NSStringFromRange(range));
 		
 		// When the user presses backspace and the text is hidden,
 		// we find the highlighted token, and remove it.
@@ -549,9 +551,7 @@ CGFloat const kSeparatorHeight = 1;
 		
 		[self setText:kTextEmpty];
 		
-		if (![self isFirstResponder]){
-			[self becomeFirstResponder];
-		}
+		if (![self isFirstResponder]) [self becomeFirstResponder];
 	}
 }
 
@@ -575,9 +575,7 @@ CGFloat const kSeparatorHeight = 1;
 	
 	[tokens release];
 	
-	if (![self isFirstResponder]){
-		[self becomeFirstResponder];
-	}
+	if (![self isFirstResponder]) [self becomeFirstResponder];
 	
 	[self setText:kTextHidden];
 }
@@ -726,9 +724,7 @@ CGFloat const kSeparatorHeight = 1;
 	
 	[tokens release];
 	
-	if ([self.text isEqualToString:kTextHidden]){
-		[self setText:kTextEmpty];
-	}
+	if ([self.text isEqualToString:kTextHidden]) [self setText:kTextEmpty];
 	
 	[super touchesBegan:touches withEvent:event];
 }
@@ -762,18 +758,13 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)performButtonAction {
 	
-	if (!self.editing){
-		[self becomeFirstResponder];
-	}
-	
+	if (!self.editing) [self becomeFirstResponder];	
 	[addButtonTarget performSelector:addButtonSelector];
 }
 
 - (CGRect)textRectForBounds:(CGRect)bounds {
 	
-	if ([self.text isEqualToString:kTextHidden]){
-		return CGRectMake(0, -20, 0, 0);
-	}
+	if ([self.text isEqualToString:kTextHidden]) return CGRectMake(0, -20, 0, 0);
 	
 	CGRect frame = CGRectOffset(bounds, cursorLocation.x, cursorLocation.y + 3);
 	frame.size.width -= cursorLocation.x + (addButton.hidden ? 0 : 24) + 8;
@@ -781,22 +772,18 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (CGRect)editingRectForBounds:(CGRect)bounds {
-	
 	return [self textRectForBounds:bounds];
 }
 
 - (CGRect)placeholderRectForBounds:(CGRect)bounds {
-	
 	return [self textRectForBounds:bounds];
 }
 
 - (NSString *)description {
-	
 	return [NSString stringWithFormat:@"<TITokenField %p 'Prompt: %@'>", self, ((UILabel *)[self viewWithTag:123]).text];
 }
 
 - (void)dealloc {
-	
 	[self setDelegate:nil];
 	[addButton release];
 	[tokensArray release];
@@ -958,9 +945,11 @@ CGFloat const kSeparatorHeight = 1;
 @implementation TITokenFieldShadow
 
 - (id)initWithFrame:(CGRect)frame {
+	
     if ((self = [super initWithFrame:frame])){
 		[self setBackgroundColor:[UIColor clearColor]];
     }
+	
     return self;
 }
 
