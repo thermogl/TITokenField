@@ -334,8 +334,6 @@ CGFloat const kSeparatorHeight = 1;
 	
 	if ([textField.text	isEqualToString:kTextHidden] && [string isEqualToString:@""]){
 		
-		NSLog(@"%@ - %@", string, NSStringFromRange(range));
-		
 		// When the user presses backspace and the text is hidden,
 		// we find the highlighted token, and remove it.
 		
@@ -659,13 +657,14 @@ CGFloat const kSeparatorHeight = 1;
 	
 	if (previousHeight && previousHeight != newHeight){
 		
-		[UIView animateWithDuration:0.3 animations:^{
-			[parentView.separator setOriginY:newHeight];
-			[parentView.textFieldShadow setOriginY:newHeight];
-			[parentView.resultsTable setOriginY:newHeight + 1];
-			[parentView.contentView setOriginY:newHeight];
-			[self setHeight:newHeight];
-		}];
+		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
+		// No idea why, but for now, obviously we won't animate this stuff.
+		
+		[parentView.separator setOriginY:newHeight];
+		[parentView.textFieldShadow setOriginY:newHeight];
+		[parentView.resultsTable setOriginY:newHeight + 1];
+		[parentView.contentView setOriginY:newHeight];
+		[self setHeight:newHeight];
 		
 		[parentView tokenFieldResized:self];
 	}
