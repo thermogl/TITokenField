@@ -152,7 +152,7 @@ CGFloat const kSeparatorHeight = 1;
 - (void)layoutSubviews {
 	
 	CGFloat relativeFieldHeight = tokenField.frame.size.height - self.contentOffset.y;
-	[resultsTable setHeight:self.frame.size.height - relativeFieldHeight];
+	[resultsTable setHeight:(self.frame.size.height - relativeFieldHeight)];
 }
 
 - (void)updateContentSize {
@@ -538,6 +538,8 @@ CGFloat const kSeparatorHeight = 1;
 	
 	if (title){
 		
+		if (![self isFirstResponder]) [self becomeFirstResponder];
+		
 		TIToken * token = [[TIToken alloc] initWithTitle:title];
 		[token setDelegate:self];
 		
@@ -546,10 +548,7 @@ CGFloat const kSeparatorHeight = 1;
 		[token release];
 		
 		[self updateHeight:NO];
-		
 		[self setText:kTextEmpty];
-		
-		if (![self isFirstResponder]) [self becomeFirstResponder];
 	}
 }
 
@@ -566,9 +565,7 @@ CGFloat const kSeparatorHeight = 1;
 	
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokensArray];
 	for (TIToken * tok in tokens){
-		if (tok != token){
-			[tok setHighlighted:NO];
-		}
+		if (tok != token) [tok setHighlighted:NO];
 	}
 	
 	[tokens release];
@@ -648,6 +645,9 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 #pragma mark View Handlers
+
+typedef void (^AnimationBlock)();
+
 - (void)updateHeight:(BOOL)scrollToTop {
 	
 	CGFloat previousHeight = self.frame.size.height;
@@ -660,11 +660,21 @@ CGFloat const kSeparatorHeight = 1;
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
 		// No idea why, but for now, obviously we won't animate this stuff.
 		
-		[parentView.separator setOriginY:newHeight];
-		[parentView.textFieldShadow setOriginY:newHeight];
-		[parentView.resultsTable setOriginY:newHeight + 1];
-		[parentView.contentView setOriginY:newHeight];
-		[self setHeight:newHeight];
+		AnimationBlock animationBlock = ^{
+			[parentView.separator setOriginY:newHeight];
+			[parentView.textFieldShadow setOriginY:newHeight];
+			[parentView.resultsTable setOriginY:newHeight + 1];
+			[parentView.contentView setOriginY:newHeight];
+			[self setHeight:newHeight];
+		};
+		
+		if (previousHeight < newHeight){
+			[UIView animateWithDuration:0.3 animations:^{animationBlock();}];
+		}
+		else
+		{
+			animationBlock();
+		}
 		
 		[parentView tokenFieldResized:self];
 	}
@@ -674,9 +684,7 @@ CGFloat const kSeparatorHeight = 1;
 								   addButton.frame.size.width, 
 								   addButton.frame.size.height)];
 	
-	if (scrollToTop){
-		[parentView setContentOffset:CGPointMake(0, 0) animated:YES];
-	}
+	if (scrollToTop) [parentView setContentOffset:CGPointMake(0, 0) animated:YES];
 }
 
 - (void)scrollForEdit:(BOOL)shouldMove {
