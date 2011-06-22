@@ -913,11 +913,11 @@ typedef void (^AnimationBlock)();
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
 	
+	[self setHighlighted:YES];
+	
 	if ([delegate respondsToSelector:@selector(tokenGotFocus:)]){
 		[delegate tokenGotFocus:self];
 	}
-	
-	[self setHighlighted:YES];
 }
 
 - (void)setHighlighted:(BOOL)flag {
