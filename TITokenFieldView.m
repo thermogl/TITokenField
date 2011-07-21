@@ -526,7 +526,6 @@ CGFloat const kSeparatorHeight = 1;
 		// This is not something we want,
 		// so instead, we add a subview.
 		[self setPromptText:@"To:"];
-		
 		[self setText:kTextEmpty];
     }
 	
