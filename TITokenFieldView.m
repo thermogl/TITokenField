@@ -218,9 +218,7 @@ CGFloat const kSeparatorHeight = 1;
     static NSString *CellIdentifier = @"ResultsCell";
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    if (!cell){
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
-    }
+    if (!cell) cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
 	
 	[cell.textLabel setText:[resultsArray objectAtIndex:indexPath.row]];
 	
@@ -248,11 +246,7 @@ CGFloat const kSeparatorHeight = 1;
 	if (![textField.text isEqualToString:kTextEmpty] && ![textField.text isEqualToString:kTextHidden] && ![textField.text isEqualToString:@""]){
 		
 		NSArray * titles = [[NSArray alloc] initWithArray:tokenTitles];
-		
-		for (NSString * title in titles){
-			[tokenField addToken:title];
-		}
-		
+		for (NSString * title in titles) [tokenField addToken:title];
 		[titles release];
 		
 	}
@@ -271,11 +265,7 @@ CGFloat const kSeparatorHeight = 1;
 - (void)textFieldDidEndEditing:(UITextField *)textField {
 	
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokenField.tokensArray];
-	
-	for (TIToken * token in tokens){
-		[token removeFromSuperview];
-	}
-	
+	for (TIToken * token in tokens) [token removeFromSuperview];
 	[tokens release];
 	
 	[self setTokenTitles:[tokenField getTokenTitles]];
@@ -489,10 +479,6 @@ CGFloat const kSeparatorHeight = 1;
 	
     if ((self = [super initWithFrame:frame])){
 		
-		NSMutableArray * array = [[NSMutableArray alloc] init];
-		[self setTokensArray:array];
-		[array release];
-		
 		[self setBorderStyle:UITextBorderStyleNone];
 		[self setTextColor:[UIColor blackColor]];
 		[self setFont:[UIFont systemFontOfSize:14]];
@@ -507,11 +493,10 @@ CGFloat const kSeparatorHeight = 1;
 		
 		UIButton * button = [UIButton buttonWithType:UIButtonTypeContactAdd];
 		
-		[button setFrame:CGRectMake(self.frame.size.width - button.frame.size.width - 6,
-									self.frame.size.height + self.frame.origin.y - button.frame.size.height - 6,
-									button.frame.size.width,
-									button.frame.size.height)];
-		
+		CGRect newFrame = button.frame;
+		newFrame.origin = CGPointMake(self.frame.size.width - button.frame.size.width - 6, 
+									  self.frame.size.height + self.frame.origin.y - button.frame.size.height - 6);
+		[button setFrame:newFrame];
 		[button setUserInteractionEnabled:YES];
 		[button setHidden:YES];
 		[button addTarget:self action:@selector(performButtonAction) forControlEvents:UIControlEventTouchUpInside];
@@ -527,6 +512,8 @@ CGFloat const kSeparatorHeight = 1;
 		// so instead, we add a subview.
 		[self setPromptText:@"To:"];
 		[self setText:kTextEmpty];
+		
+		tokensArray = [[NSMutableArray alloc] init];
     }
 	
     return self;
@@ -602,10 +589,7 @@ CGFloat const kSeparatorHeight = 1;
 			numberOfLines++;
 			cursorLocation.x = leftMargin;
 			
-			if (numberOfLines > 1){
-				cursorLocation.x = initialPadding;
-			}
-			
+			if (numberOfLines > 1) cursorLocation.x = initialPadding;
 			cursorLocation.y += lineHeight;
 		}
 		
@@ -633,10 +617,7 @@ CGFloat const kSeparatorHeight = 1;
 		numberOfLines++;
 		cursorLocation.x = leftMargin;
 		
-		if (numberOfLines > 1){
-			cursorLocation.x = initialPadding;
-		}
-		
+		if (numberOfLines > 1) cursorLocation.x = initialPadding;
 		cursorLocation.y += lineHeight;
 	}
 	
@@ -701,12 +682,9 @@ typedef void (^AnimationBlock)();
 - (NSArray *)getTokenTitles {
 	
 	NSMutableArray * titles = [[NSMutableArray alloc] init];
+	
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokensArray];
-	
-	for (TIToken * token in tokens){
-		[titles addObject:token.title];
-	}
-	
+	for (TIToken * token in tokens) [titles addObject:token.title];
 	[tokens release];
 	
 	return [titles autorelease];
@@ -723,11 +701,7 @@ typedef void (^AnimationBlock)();
 	}
 	
 	NSArray * tokens = [[NSArray alloc] initWithArray:tokensArray];
-	
-	for (TIToken * token in tokens){
-		[token setHighlighted:NO];
-	}
-	
+	for (TIToken * token in tokens) [token setHighlighted:NO];
 	[tokens release];
 	
 	if ([self.text isEqualToString:kTextHidden]) [self setText:kTextEmpty];
