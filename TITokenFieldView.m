@@ -277,7 +277,7 @@ CGFloat const kSeparatorHeight = 1;
 	[tokenField updateHeight:YES];
 	
 	if (untokSize.width > self.frame.size.width - 120){
-		untokenized = [NSString stringWithFormat:@"%i recipients", tokenTitles.count];
+		untokenized = [NSString stringWithFormat:@"%d recipients", tokenTitles.count];
 	}
 	
 	[textField setText:untokenized];
@@ -448,7 +448,7 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenFieldView %p 'Token count: %i'>", self, tokenTitles.count];
+	return [NSString stringWithFormat:@"<TITokenFieldView %p 'Token count: %d'>", self, tokenTitles.count];
 }
 
 - (void)dealloc {
