@@ -135,8 +135,8 @@
 }
 
 @property (nonatomic, getter=isHighlighted) BOOL highlighted;
-@property (nonatomic, retain) NSString * title;
-@property (nonatomic, retain) NSString * croppedTitle;
+@property (nonatomic, copy) NSString * title;
+@property (nonatomic, copy) NSString * croppedTitle;
 @property (nonatomic, assign) id <TITokenDelegate> delegate;
 
 - (id)initWithTitle:(NSString *)aTitle;

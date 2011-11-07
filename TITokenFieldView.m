@@ -804,6 +804,12 @@ typedef void (^AnimationBlock)();
 		//We lay the tokens out all at once, so it doesn't matter what the X,Y coords are.
 		[self setFrame:CGRectMake(0, 0, tokenSize.width + 17, tokenSize.height + 8)];
 		[self setBackgroundColor:[UIColor clearColor]];
+		
+		UILongPressGestureRecognizer * longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self 
+																										   action:@selector(tokenWasPressed:)];
+		[longPressRecognizer setMinimumPressDuration:0];
+		[self addGestureRecognizer:longPressRecognizer];
+		[longPressRecognizer release];
 	}
 	
 	return self;
@@ -884,23 +890,31 @@ typedef void (^AnimationBlock)();
 	CGContextRestoreGState(context);
 }
 
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+- (void)tokenWasPressed:(UIGestureRecognizer *)gestureRecognizer {
 	
-	[self setHighlighted:YES];
-	
-	if ([delegate respondsToSelector:@selector(tokenGotFocus:)]){
-		[delegate tokenGotFocus:self];
+	if (gestureRecognizer.state == UIGestureRecognizerStateChanged || gestureRecognizer.state == UIGestureRecognizerStateBegan){
+		
+		highlighted = CGRectContainsPoint(self.bounds, [gestureRecognizer locationInView:self]);
+		[self setNeedsDisplay];
 	}
+	
+	if (gestureRecognizer.state == UIGestureRecognizerStateEnded) [self setHighlighted:highlighted];
 }
 
 - (void)setHighlighted:(BOOL)flag {
+	
+	if (flag && [delegate respondsToSelector:@selector(tokenGotFocus:)]){
+		[delegate tokenGotFocus:self];
+	}
 	
 	if (!flag && [delegate respondsToSelector:@selector(tokenLostFocus:)]){
 		[delegate tokenLostFocus:self];
 	}
 	
-	highlighted = flag;
-	[self setNeedsDisplay];
+	if (highlighted != flag){
+		highlighted = flag;
+		[self setNeedsDisplay];
+	}
 }
 
 - (NSString *)description {
