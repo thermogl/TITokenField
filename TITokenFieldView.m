@@ -359,17 +359,8 @@ CGFloat const kSeparatorHeight = 1;
 	if (![text isEqualToString:kTextEmpty] && ![text isEqualToString:kTextHidden] && 
 		[[text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
 		
-		NSString * title = nil;
-		
-		if ([[text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "]){
-			title = [text substringWithRange:NSMakeRange(1, [text length] - 1)];
-		}
-		else
-		{
-			title = [text substringWithRange:NSMakeRange(0, [text length] - 1)];
-		}
-		
-		[tokenField addToken:title];
+		NSUInteger loc = [[text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
+		[tokenField addToken:[text substringWithRange:NSMakeRange(loc, text.length - 1)]];
 	}
 }
 
@@ -394,15 +385,8 @@ CGFloat const kSeparatorHeight = 1;
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	NSString * typedString = nil;
-	
-	if ([[substring substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "]){
-		typedString = [[substring substringWithRange:NSMakeRange(1, [substring length] - 1)] lowercaseString];
-	}
-	else
-	{
-		typedString = [[substring substringWithRange:NSMakeRange(0, [substring length] - 1)] lowercaseString];
-	}
+	NSUInteger loc = [[substring substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
+	NSString * typedString = [[substring substringWithRange:NSMakeRange(loc, substring.length - 1)] lowercaseString];
 	
 	NSArray * source = [[NSArray alloc] initWithArray:sourceArray];
 	
@@ -452,7 +436,6 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (void)dealloc {
-	
 	[self setDelegate:nil];
 	[tokenTitles release];
 	[resultsArray release];
@@ -794,7 +777,7 @@ typedef void (^AnimationBlock)();
 		[self setTitle:aTitle];
 		[self setCroppedTitle:aTitle];
 		
-		if ([aTitle length] > 24){
+		if (aTitle.length > 24){
 			NSString * shortTitle = [aTitle substringWithRange:NSMakeRange(0, 24)];
 			[self setCroppedTitle:[NSString stringWithFormat:@"%@...", shortTitle]];
 		}
@@ -903,17 +886,17 @@ typedef void (^AnimationBlock)();
 
 - (void)setHighlighted:(BOOL)flag {
 	
+	if (highlighted != flag){
+		highlighted = flag;
+		[self setNeedsDisplay];
+	}
+	
 	if (flag && [delegate respondsToSelector:@selector(tokenGotFocus:)]){
 		[delegate tokenGotFocus:self];
 	}
 	
 	if (!flag && [delegate respondsToSelector:@selector(tokenLostFocus:)]){
 		[delegate tokenLostFocus:self];
-	}
-	
-	if (highlighted != flag){
-		highlighted = flag;
-		[self setNeedsDisplay];
 	}
 }
 
