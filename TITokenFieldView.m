@@ -769,18 +769,21 @@ typedef void (^AnimationBlock)();
 @synthesize title;
 @synthesize delegate;
 @synthesize croppedTitle;
+@synthesize tintColor;
 
 - (id)initWithTitle:(NSString *)aTitle {
 	
 	if ((self = [super init])){
 		
-		[self setTitle:aTitle];
-		[self setCroppedTitle:aTitle];
+		title = [aTitle copy];
+		croppedTitle = [aTitle copy];
 		
 		if (aTitle.length > 24){
-			NSString * shortTitle = [aTitle substringWithRange:NSMakeRange(0, 24)];
-			[self setCroppedTitle:[NSString stringWithFormat:@"%@...", shortTitle]];
+			[croppedTitle release];
+			croppedTitle = [[[aTitle substringToIndex:24] stringByAppendingString:@"..."] copy];
 		}
+		
+		tintColor = [[UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1] retain];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		
@@ -812,31 +815,38 @@ typedef void (^AnimationBlock)();
 	CGFloat arcValue = (bounds.size.height / 2) + 1;
 	
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
-	CGPoint endPoint = CGPointMake(1, self.frame.size.height + 10);
+	CGPoint endPoint = CGPointMake(1, self.bounds.size.height + 10);
 	
+	// Draw the outline.
 	CGContextSaveGState(context);
 	CGContextBeginPath(context);
 	CGContextAddArc(context, arcValue, arcValue, arcValue, (M_PI / 2), (3 * M_PI / 2), NO);
 	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue, 3 * M_PI / 2, M_PI / 2, NO);
 	CGContextClosePath(context);
 	
+	CGFloat red = 1;
+	CGFloat green = 1;
+	CGFloat blue = 1;
+	CGFloat alpha = 1;
+	[tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
+	
 	if (highlighted){
-		CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:0.207 green:0.369 blue:1 alpha:1] CGColor]);
+		CGContextSetFillColor(context, (CGFloat[8]){red - 0.669, green - 0.537, blue + 0.027, alpha});
 		CGContextFillPath(context);
 		CGContextRestoreGState(context);
 	}
 	else
 	{
-		
 		CGContextClip(context);
 		CGFloat locations[2] = {0, 0.95};
-		CGFloat components[8] = {0.631, 0.733, 1, 1, 0.463, 0.510, 0.839, 1};
+		CGFloat components[8] = {red - 0.245, green - 0.173, blue + 0.027, alpha, red - 0.413, green - 0.396, blue - 0.134, alpha};
 		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, components, locations, 2);
 		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 		CGGradientRelease(gradient);
 		CGContextRestoreGState(context);
 	}
 	
+	// Draw the inner gradient.
 	CGContextSaveGState(context);
 	CGContextBeginPath(context);
 	CGContextAddArc(context, arcValue, arcValue, (bounds.size.height / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
@@ -845,31 +855,18 @@ typedef void (^AnimationBlock)();
 	
 	CGContextClip(context);
 	
-	if (highlighted){
-		
-		CGFloat locations[2] = {0, 0.8};
-		CGFloat components[8] = {0.365, 0.557, 1, 1, 0.251, 0.345, 1, 1};
-		CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, components, locations, 2);
-		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
-		CGGradientRelease(gradient);
-		
-		[[UIColor whiteColor] set];
-		[croppedTitle drawInRect:textBounds withFont:[UIFont systemFontOfSize:14]];
-	}
-	else
-	{
-		
-		CGFloat locations[2] = {0, 0.4};
-		CGFloat components[8] = {0.867, 0.906, 0.973, 1, 0.737, 0.808, 0.945, 1};
-		CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, components, locations, 2);
-		CGContextDrawLinearGradient (context, gradient, CGPointZero, endPoint, 0);
-		CGGradientRelease(gradient);
-		
-		[[UIColor blackColor] set];
-		[croppedTitle drawInRect:textBounds withFont:kTokenTitleFont];
-	}
+	CGFloat locations[2] = {0, highlighted ? 0.8 : 0.4};
+	CGFloat highlightedComp[8] = {red - 0.511, green - 0.349, blue + 0.027, alpha, red - 0.625, green - 0.561, blue + 0.027, alpha};
+	CGFloat nonHiglightedComp[8] = {red, green, blue, alpha, red - 0.139, green - 0.098, blue - 0.028, alpha};
 	
+	CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, highlighted ? highlightedComp : nonHiglightedComp, locations, 2);
+	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
+	CGGradientRelease(gradient);
 	CGColorSpaceRelease(colorspace);
+	
+	[(highlighted ? [UIColor whiteColor] : [UIColor blackColor]) set];
+	[croppedTitle drawInRect:textBounds withFont:kTokenTitleFont];
+	
 	CGContextRestoreGState(context);
 }
 
@@ -900,6 +897,17 @@ typedef void (^AnimationBlock)();
 	}
 }
 
+- (void)setTintColor:(UIColor *)newTintColor {
+	
+	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
+	
+	[newTintColor retain];
+	[tintColor release];
+	tintColor = newTintColor;
+	
+	[self setNeedsDisplay];
+}
+
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TIToken %p '%@'>", self, title];
 }
@@ -908,6 +916,7 @@ typedef void (^AnimationBlock)();
 	[self setDelegate:nil];
 	[croppedTitle release];
 	[title release];
+	[tintColor release];
     [super dealloc];
 }
 
