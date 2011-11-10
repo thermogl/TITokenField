@@ -776,14 +776,10 @@ typedef void (^AnimationBlock)();
 	if ((self = [super init])){
 		
 		title = [aTitle copy];
-		croppedTitle = [aTitle copy];
+		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		
-		if (aTitle.length > 24){
-			[croppedTitle release];
-			croppedTitle = [[[aTitle substringToIndex:24] stringByAppendingString:@"..."] copy];
-		}
-		
-		tintColor = [[UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1] retain];
+		//tintColor = [[UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1] retain];
+		tintColor = [[UIColor colorWithRed:0.871 green:0.749 blue:0.573 alpha:1.000] retain];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		
@@ -831,7 +827,9 @@ typedef void (^AnimationBlock)();
 	[tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
 	
 	if (highlighted){
-		CGContextSetFillColor(context, (CGFloat[8]){red - 0.669, green - 0.537, blue + 0.027, alpha});
+		CGContextSetFillColor(context, (CGFloat[8]){red * 0.236, green * 0.407, blue * 1.028, alpha});
+		//CGContextSetFillColor(context, (CGFloat[8]){red - 0.669, green - 0.537, blue + 0.027, alpha});
+		//CGContextSetFillColor(context, (CGFloat[8]){0.207, 0.369, 1, 1});
 		CGContextFillPath(context);
 		CGContextRestoreGState(context);
 	}
@@ -839,7 +837,9 @@ typedef void (^AnimationBlock)();
 	{
 		CGContextClip(context);
 		CGFloat locations[2] = {0, 0.95};
-		CGFloat components[8] = {red - 0.245, green - 0.173, blue + 0.027, alpha, red - 0.413, green - 0.396, blue - 0.134, alpha};
+		CGFloat components[8] = {red*0.720, green*0.809, blue*1.028, alpha, red*0.529, green*0.563, blue*0.862, alpha};
+		//CGFloat components[8] = {red - 0.245, green - 0.173, blue + 0.027, alpha, red - 0.413, green - 0.396, blue - 0.134, alpha};
+		//CGFloat components[8] = {0.631, 0.733, 1, 1, 0.463, 0.510, 0.839, 1};
 		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, components, locations, 2);
 		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 		CGGradientRelease(gradient);
@@ -856,8 +856,15 @@ typedef void (^AnimationBlock)();
 	CGContextClip(context);
 	
 	CGFloat locations[2] = {0, highlighted ? 0.8 : 0.4};
+	CGFloat nonHiglightedComp[8] = {red, green, blue, alpha, red*0.841, green*0.892, blue*0.973, alpha};
+	CGFloat highlightedComp[8] = {red*0.417, green*0.615, blue*1.028, alpha, red*0.287, green*0.381, blue*1.028, alpha};
+	/*
 	CGFloat highlightedComp[8] = {red - 0.511, green - 0.349, blue + 0.027, alpha, red - 0.625, green - 0.561, blue + 0.027, alpha};
 	CGFloat nonHiglightedComp[8] = {red, green, blue, alpha, red - 0.139, green - 0.098, blue - 0.028, alpha};
+	 */
+	/*CGFloat highlightedComp[8] = {0.365, 0.557, 1, 1, 0.251, 0.345, 1, 1};
+	 CGFloat nonHighlightedComp[8] = {0.867, 0.906, 0.973, 1, 0.737, 0.808, 0.945, 1};
+	 */
 	
 	CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, highlighted ? highlightedComp : nonHiglightedComp, locations, 2);
 	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
