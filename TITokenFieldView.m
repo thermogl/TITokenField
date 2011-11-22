@@ -29,6 +29,10 @@
 - (NSArray *)getTokenTitles;
 @end
 
+@interface UIColor (Private)
+- (void)tiGetRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
+@end
+
 @interface UIView (Private)
 - (void)setHeight:(CGFloat)height;
 - (void)setWidth:(CGFloat)width;
@@ -824,7 +828,7 @@ typedef void (^AnimationBlock)();
 	CGFloat green = 1;
 	CGFloat blue = 1;
 	CGFloat alpha = 1;
-	[tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
+	[tintColor tiGetRed:&red green:&green blue:&blue alpha:&alpha];
 	
 	if (highlighted){
 		CGContextSetFillColor(context, (CGFloat[8]){red * 0.236, green * 0.407, blue * 1.028, alpha});
@@ -991,6 +995,31 @@ typedef void (^AnimationBlock)();
 	CGRect newFrame = self.frame;
 	newFrame.origin.y = originY;
 	[self setFrame:newFrame];
+}
+
+@end
+
+@implementation UIColor (Private)
+
+- (void)tiGetRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
+	CGColorRef cgColor = [self CGColor];
+	const CGFloat* components = CGColorGetComponents(cgColor);
+
+	if (red) {
+		*red = components[0];
+	}
+
+	if (green) {
+		*green = components[1];
+	}
+
+	if (blue) {
+		*blue = components[2];
+	}
+
+	if (alpha) {
+		*alpha = CGColorGetAlpha(cgColor);
+	}
 }
 
 @end
