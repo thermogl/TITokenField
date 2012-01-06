@@ -779,8 +779,6 @@ typedef void (^AnimationBlock)();
 		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		
 		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
-		//tintColor = [[UIColor colorWithRed:0.871 green:0.749 blue:0.573 alpha:1.000] retain];
-        //tintColor = [UIColor blueColor];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		
@@ -821,26 +819,17 @@ typedef void (^AnimationBlock)();
 	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue, 3 * M_PI / 2, M_PI / 2, NO);
 	CGContextClosePath(context);
 	
-	
 	CGFloat red = 1;
 	CGFloat green = 1;
 	CGFloat blue = 1;
 	CGFloat alpha = 1;
     CGFloat white = 1;
     
-    // get the rgb value for the color
-	bool gotColor = [tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
-    
     // if rgb value couldn't be found, get the white value and transform that to rgb
-    if (!gotColor)
-    {
-        gotColor = [tintColor getWhite:&white alpha:&alpha];
+    if (![tintColor getRed:&red green:&green blue:&blue alpha:&alpha]){
+		[tintColor getWhite:&white alpha:&alpha];
         red = green = blue = white;
-        NSLog(@"red: %f, green: %f, blue: %f, white: %f, alpha: %f", red, green, blue, white, alpha);
-    
     }
-    
-	 
 	
 	if (highlighted){
         // highlighted outline color
