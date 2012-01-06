@@ -778,8 +778,9 @@ typedef void (^AnimationBlock)();
 		title = [aTitle copy];
 		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		
-		//tintColor = [[UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1] retain];
+		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
 		//tintColor = [[UIColor colorWithRed:0.871 green:0.749 blue:0.573 alpha:1.000] retain];
+        //tintColor = [UIColor blueColor];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		
@@ -820,18 +821,30 @@ typedef void (^AnimationBlock)();
 	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue, 3 * M_PI / 2, M_PI / 2, NO);
 	CGContextClosePath(context);
 	
-	/*
-	 CGFloat red = 1;
-	 CGFloat green = 1;
-	 CGFloat blue = 1;
-	 CGFloat alpha = 1;
-	 [tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
-	 */
+	
+	CGFloat red = 1;
+	CGFloat green = 1;
+	CGFloat blue = 1;
+	CGFloat alpha = 1;
+    CGFloat white = 1;
+    
+    // get the rgb value for the color
+	bool gotColor = [tintColor getRed:&red green:&green blue:&blue alpha:&alpha];
+    
+    // if rgb value couldn't be found, get the white value and transform that to rgb
+    if (!gotColor)
+    {
+        gotColor = [tintColor getWhite:&white alpha:&alpha];
+        red = green = blue = white;
+        NSLog(@"red: %f, green: %f, blue: %f, white: %f, alpha: %f", red, green, blue, white, alpha);
+    
+    }
+    
+	 
 	
 	if (highlighted){
-		//CGContextSetFillColor(context, (CGFloat[8]){red * 0.236, green * 0.407, blue * 1.028, alpha});
-		//CGContextSetFillColor(context, (CGFloat[8]){red - 0.669, green - 0.537, blue + 0.027, alpha});
-		CGContextSetFillColor(context, (CGFloat[8]){0.207, 0.369, 1, 1});
+        // highlighted outline color
+		CGContextSetFillColor(context, (CGFloat[8]){red, green, blue, 1});
 		CGContextFillPath(context);
 		CGContextRestoreGState(context);
 	}
@@ -839,14 +852,23 @@ typedef void (^AnimationBlock)();
 	{
 		CGContextClip(context);
 		CGFloat locations[2] = {0, 0.95};
-		//CGFloat components[8] = {red*0.720, green*0.809, blue*1.028, alpha, red*0.529, green*0.563, blue*0.862, alpha};
-		//CGFloat components[8] = {red - 0.245, green - 0.173, blue + 0.027, alpha, red - 0.413, green - 0.396, blue - 0.134, alpha};
-		CGFloat components[8] = {0.631, 0.733, 1, 1, 0.463, 0.510, 0.839, 1};
+        // unhighlighted outline color
+		CGFloat components[8] = {red + .2, green +.2, blue +.2, alpha, red, green, blue, alpha};
 		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, components, locations, 2);
 		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 		CGGradientRelease(gradient);
 		CGContextRestoreGState(context);
 	}
+    
+    // Draw a white background so we can use alpha to lighten the inner gradient
+    CGContextSaveGState(context);
+	CGContextBeginPath(context);
+	CGContextAddArc(context, arcValue, arcValue, (bounds.size.height / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
+	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue - 1, (3 * M_PI / 2), (M_PI / 2), NO);
+	CGContextClosePath(context);
+    CGContextSetFillColor(context, (CGFloat[8]){1, 1, 1, 1});
+    CGContextFillPath(context);
+    CGContextRestoreGState(context);
 	
 	// Draw the inner gradient.
 	CGContextSaveGState(context);
@@ -858,17 +880,9 @@ typedef void (^AnimationBlock)();
 	CGContextClip(context);
 	
 	CGFloat locations[2] = {0, highlighted ? 0.8 : 0.4};
-	/*
-	 CGFloat nonHighlightedComp[8] = {red, green, blue, alpha, red*0.841, green*0.892, blue*0.973, alpha};
-	 CGFloat highlightedComp[8] = {red*0.417, green*0.615, blue*1.028, alpha, red*0.287, green*0.381, blue*1.028, alpha};
-	 */
-	/*
-	 CGFloat highlightedComp[8] = {red - 0.511, green - 0.349, blue + 0.027, alpha, red - 0.625, green - 0.561, blue + 0.027, alpha};
-	 CGFloat nonHighlightedComp[8] = {red, green, blue, alpha, red - 0.139, green - 0.098, blue - 0.028, alpha};
-	 */
-	CGFloat highlightedComp[8] = {0.365, 0.557, 1, 1, 0.251, 0.345, 1, 1};
-	CGFloat nonHighlightedComp[8] = {0.867, 0.906, 0.973, 1, 0.737, 0.808, 0.945, 1};
-	
+    CGFloat highlightedComp[8] = {red, green, blue, .6, red, green, blue, 1};
+    CGFloat nonHighlightedComp[8] = {red, green, blue, .2, red, green, blue, .4};
+	 
 	CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, highlighted ? highlightedComp : nonHighlightedComp, locations, 2);
 	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 	CGGradientRelease(gradient);
