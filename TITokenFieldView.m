@@ -31,7 +31,6 @@
 
 @interface UIColor (Private)
 - (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
-- (BOOL)ti_getWhite:(CGFloat *)white alpha:(CGFloat *)alpha;
 @end
 
 @interface UIView (Private)
@@ -829,13 +828,7 @@ typedef void (^AnimationBlock)();
 	CGFloat green = 1;
 	CGFloat blue = 1;
 	CGFloat alpha = 1;
-    CGFloat white = 1;
-    
-    // if rgb value couldn't be found, get the white value and transform that to rgb
-    if (![tintColor ti_getRed:&red green:&green blue:&blue alpha:&alpha]){
-		[tintColor ti_getWhite:&white alpha:&alpha];
-        red = green = blue = white;
-    }
+	[tintColor ti_getRed:&red green:&green blue:&blue alpha:&alpha];
 	
 	if (highlighted){
         // highlighted outline color
@@ -986,29 +979,24 @@ typedef void (^AnimationBlock)();
 
 - (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
 	
-	if (CGColorGetNumberOfComponents(self.CGColor) > 2){
+	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(self.CGColor));
+	const CGFloat * components = CGColorGetComponents(self.CGColor);
 	
-		const CGFloat * components = CGColorGetComponents(self.CGColor);
+	if (colorSpaceModel == kCGColorSpaceModelMonochrome){
+		
+		if (red) *red = components[0];
+		if (green) *green = components[0];
+		if (blue) *blue = components[0];
+		if (alpha) *alpha = components[1];
+		return YES;
+	}
+	
+	if (colorSpaceModel == kCGColorSpaceModelRGB){
+		
 		if (red) *red = components[0];
 		if (green) *green = components[1];
 		if (blue) *blue = components[2];
-		if (alpha) *alpha = CGColorGetAlpha(self.CGColor);
-	
-		return YES;
-		
-	}
-	
-	return NO;
-}
-
-- (BOOL)ti_getWhite:(CGFloat *)white alpha:(CGFloat *)alpha {
-	
-	if (CGColorSpaceGetModel(CGColorGetColorSpace(self.CGColor)) == kCGColorSpaceModelMonochrome){
-		
-		const CGFloat * components = CGColorGetComponents(self.CGColor);
-		if (white) *white = components[0];
-		if (alpha) *alpha = CGColorGetAlpha(self.CGColor);
-		
+		if (alpha) *alpha = components[3];
 		return YES;
 	}
 	
