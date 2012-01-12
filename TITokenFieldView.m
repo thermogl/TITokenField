@@ -29,6 +29,11 @@
 - (NSArray *)getTokenTitles;
 @end
 
+@interface UIColor (Private)
+- (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
+- (BOOL)ti_getWhite:(CGFloat *)white alpha:(CGFloat *)alpha;
+@end
+
 @interface UIView (Private)
 - (void)setHeight:(CGFloat)height;
 - (void)setWidth:(CGFloat)width;
@@ -779,6 +784,7 @@ typedef void (^AnimationBlock)();
 		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		
 		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
+		//tintColor = [[UIColor grayColor] retain];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		
@@ -826,8 +832,8 @@ typedef void (^AnimationBlock)();
     CGFloat white = 1;
     
     // if rgb value couldn't be found, get the white value and transform that to rgb
-    if (![tintColor getRed:&red green:&green blue:&blue alpha:&alpha]){
-		[tintColor getWhite:&white alpha:&alpha];
+    if (![tintColor ti_getRed:&red green:&green blue:&blue alpha:&alpha]){
+		[tintColor ti_getWhite:&white alpha:&alpha];
         red = green = blue = white;
     }
 	
@@ -975,6 +981,41 @@ typedef void (^AnimationBlock)();
 //==========================================================
 // - Private Additions
 //==========================================================
+
+@implementation UIColor (Private)
+
+- (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
+	
+	if (CGColorGetNumberOfComponents(self.CGColor) > 2){
+	
+		const CGFloat * components = CGColorGetComponents(self.CGColor);
+		if (red) *red = components[0];
+		if (green) *green = components[1];
+		if (blue) *blue = components[2];
+		if (alpha) *alpha = CGColorGetAlpha(self.CGColor);
+	
+		return YES;
+		
+	}
+	
+	return NO;
+}
+
+- (BOOL)ti_getWhite:(CGFloat *)white alpha:(CGFloat *)alpha {
+	
+	if (CGColorSpaceGetModel(CGColorGetColorSpace(self.CGColor)) == kCGColorSpaceModelMonochrome){
+		
+		const CGFloat * components = CGColorGetComponents(self.CGColor);
+		if (white) *white = components[0];
+		if (alpha) *alpha = CGColorGetAlpha(self.CGColor);
+		
+		return YES;
+	}
+	
+	return NO;
+}
+
+@end
 
 @implementation UIView (Private)
 
