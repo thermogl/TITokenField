@@ -436,7 +436,7 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenFieldView %p 'Token count: %d'>", self, tokenTitles.count];
+	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, tokenTitles.count];
 }
 
 - (void)dealloc {
@@ -747,7 +747,7 @@ typedef void (^AnimationBlock)();
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenField %p 'Prompt: %@'>", self, ((UILabel *)[self viewWithTag:123]).text];
+	return [NSString stringWithFormat:@"<TITokenField %p; prompt = \"%@\">", self, ((UILabel *)[self viewWithTag:123]).text];
 }
 
 - (void)dealloc {
@@ -921,7 +921,7 @@ typedef void (^AnimationBlock)();
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TIToken %p '%@'>", self, title];
+	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\">", self, title];
 }
 
 - (void)dealloc {
