@@ -28,7 +28,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class TITokenField, TIToken, TITokenFieldShadow;
+@class TITokenField, TIToken;
 
 //==========================================================
 // - Delegate Methods
@@ -61,7 +61,6 @@
 	BOOL showAlreadyTokenized;
 	id <TITokenFieldViewDelegate> delegate;
 	
-	TITokenFieldShadow * textFieldShadow;
 	UIView * separator;
 	UITableView * resultsTable;
 	UIView * contentView;
@@ -77,7 +76,6 @@
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
 @property (nonatomic, assign) id <TITokenFieldViewDelegate> delegate;
 
-@property (nonatomic, readonly) TITokenFieldShadow * textFieldShadow;
 @property (nonatomic, readonly) UIView * separator;
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
