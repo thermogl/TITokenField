@@ -141,8 +141,8 @@
 @interface TIToken : UIControl {
 	
 	NSString * title;
-	NSString * croppedTitle;
 	
+	UIFont * font;
 	UIColor * tintColor;
 	
 	BOOL selected;
@@ -152,7 +152,7 @@
 }
 
 @property (nonatomic, copy) NSString * title;
-@property (nonatomic, copy) NSString * croppedTitle;
+@property (nonatomic, retain) UIFont * font;
 @property (nonatomic, retain) UIColor * tintColor;
 @property (nonatomic, getter=isHighlighted) BOOL highlighted;
 @property (nonatomic, getter=isSelected) BOOL selected;
@@ -160,5 +160,6 @@
 
 - (id)initWithTitle:(NSString *)aTitle;
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
+- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont;
 
 @end

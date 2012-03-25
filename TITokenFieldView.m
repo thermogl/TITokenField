@@ -45,8 +45,7 @@
 NSString * const kTextEmpty = @" "; // Just a space
 NSString * const kTextHidden = @"`"; // This character isn't available on iOS (yet) so it's safe.
 
-CGFloat const kTokenFieldHeight = 42;
-CGFloat const kSeparatorHeight = 1;
+CGFloat const kVisibleTokenFieldHeight = 42;
 
 #pragma mark Main Shit
 - (id)initWithFrame:(CGRect)frame {
@@ -60,22 +59,23 @@ CGFloat const kSeparatorHeight = 1;
 		showAlreadyTokenized = NO;
 		resultsArray = [[NSMutableArray alloc] init];
 		
-		// This view is created for convenience, because it resizes and moves with the rest of the subviews.
-		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight, self.bounds.size.width, self.bounds.size.height - kTokenFieldHeight)];
-		[contentView setBackgroundColor:[UIColor clearColor]];
-		[self addSubview:contentView];
-		[contentView release];
-		
-		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kTokenFieldHeight)];
+		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kVisibleTokenFieldHeight)];
 		[tokenField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
 		[tokenField setDelegate:self];
 		[self addSubview:tokenField];
 		[tokenField release];
 		
-		separator = [[UIView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight, self.bounds.size.width, kSeparatorHeight)];
+		separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height, self.bounds.size.width, 1)];
 		[separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
 		[self addSubview:separator];
 		[separator release];
+		
+		// This view is created for convenience, because it resizes and moves with the rest of the subviews.
+		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height, self.bounds.size.width, 
+															   self.bounds.size.height - tokenField.bounds.size.height)];
+		[contentView setBackgroundColor:[UIColor clearColor]];
+		[self addSubview:contentView];
+		[contentView release];
 		
 		if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad){
 			
@@ -91,7 +91,7 @@ CGFloat const kSeparatorHeight = 1;
 		}
 		else
 		{
-			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight + 1, self.bounds.size.width, 10)];
+			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height + 1, self.bounds.size.width, 10)];
 			[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
 			[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
 			[resultsTable setDelegate:self];
@@ -119,7 +119,7 @@ CGFloat const kSeparatorHeight = 1;
 	[separator ti_setWidth:width];
 	[resultsTable ti_setWidth:width];
 	[contentView ti_setWidth:width];
-	[contentView ti_setHeight:frame.size.height - kTokenFieldHeight];
+	[contentView ti_setHeight:frame.size.height - tokenField.bounds.size.height];
 	[tokenField ti_setWidth:width];
 	
 	if (popoverController.popoverVisible){
@@ -506,11 +506,12 @@ CGFloat const kSeparatorHeight = 1;
 		NSMutableArray * titles = [[NSMutableArray alloc] init];
 		for (TIToken * token in tokens) [titles addObject:token.title];
 		
-		untokenized = [titles componentsJoinedByString:@", "];
+		untokenized = [self.tokenTitles componentsJoinedByString:@", "];
 		CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
+		CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 		
-		if (untokSize.width > self.bounds.size.width - 120){
-			untokenized = [NSString stringWithFormat:@"%d recipients",  titles.count];
+		if (tokens.count > 1 && untokSize.width > availableWidth){
+			untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
 		}
 		
 		[titles release];
@@ -559,7 +560,7 @@ CGFloat const kSeparatorHeight = 1;
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
 	
-	// Stop the cut, copy, select and selectAll appearing when the text is 'empty'.
+	// Stop the cut, copy, select and selectAll appearing when the field is 'empty'.
 	if (action == @selector(cut:) || action == @selector(copy:) || action == @selector(select:) || action == @selector(selectAll:))
 		return ![self.text isEqualToString:kTextEmpty];
 	
@@ -579,7 +580,7 @@ CGFloat const kSeparatorHeight = 1;
 - (void)addTokenWithTitle:(NSString *)title {
 	
 	if (title){
-		TIToken * token = [[TIToken alloc] initWithTitle:title];
+		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
 		[self addToken:token];
 		[token release];
 	}
@@ -758,7 +759,7 @@ CGFloat const kSeparatorHeight = 1;
 		[scrollView setScrollsToTop:!enabled];
 		[scrollView setScrollEnabled:!enabled];
 	
-		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : (self.bounds.size.height - kTokenFieldHeight) + 1);
+		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : (self.bounds.size.height - kVisibleTokenFieldHeight) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
 	
@@ -781,7 +782,7 @@ CGFloat const kSeparatorHeight = 1;
 		
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setFont:[UIFont systemFontOfSize:15]];
+			[label setFont:[UIFont systemFontOfSize:self.font.pointSize + 1]];
 			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
 			[self setLeftView:label];
 			[label release];
@@ -834,7 +835,8 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{8, 11}, self.leftView.bounds.size});
+	CGFloat fontHeight = (self.font.ascender - self.font.descender) + 1;
+	return ((CGRect){{8, ceil(fontHeight / 1.75)}, self.leftView.bounds.size});
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
@@ -859,49 +861,49 @@ CGFloat const kSeparatorHeight = 1;
 //==========================================================
 #pragma mark - TIToken -
 //==========================================================
-#define kTokenTitleFont [UIFont systemFontOfSize:14]
+
+CGFloat const kTITokenMaxWidth = 150;
 
 @implementation TIToken
 @synthesize highlighted;
 @synthesize selected;
 @synthesize title;
-@synthesize croppedTitle;
+@synthesize font;
 @synthesize tintColor;
 @synthesize representedObject;
 
+- (id)initWithTitle:(NSString *)aTitle {
+	return [self initWithTitle:aTitle representedObject:nil];
+}
+
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object {
+	return [self initWithTitle:aTitle representedObject:object font:[UIFont systemFontOfSize:14]];
+}
+
+- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont {
 	
 	if ((self = [super init])){
 		
 		title = [aTitle copy];
-		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		representedObject = [object retain];
+		
+		font = [aFont retain];
 		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
 		
-		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
-		[self setFrame:CGRectMake(0, 0, tokenSize.width + 17, tokenSize.height + 8)];
+		CGSize tokenSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
+		[self setFrame:CGRectMake(0, 0, tokenSize.width + 18, tokenSize.height + 8)];
 		[self setBackgroundColor:[UIColor clearColor]];
 	}
 	
 	return self;
 }
 
-- (id)initWithTitle:(NSString *)aTitle {
-	return [self initWithTitle:aTitle representedObject:nil];
-}
-
 - (void)drawRect:(CGRect)rect {
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	
-	CGSize titleSize = [croppedTitle sizeWithFont:kTokenTitleFont];
-	
-	CGRect bounds = CGRectMake(0, 0, titleSize.width + 17, titleSize.height + 5);
-	CGRect textBounds = bounds;
-	textBounds.origin.x = (bounds.size.width - titleSize.width) / 2;
-	textBounds.origin.y += 4;
-	
-	CGFloat arcValue = (bounds.size.height / 2) + 1;
+	CGSize titleSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 17) lineBreakMode:UILineBreakModeTailTruncation];
+	CGFloat arcValue = ((self.bounds.size.height - 4) / 2) + 1;
 	
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	CGPoint endPoint = CGPointMake(0, self.bounds.size.height + 10);
@@ -910,7 +912,7 @@ CGFloat const kSeparatorHeight = 1;
 	CGContextSaveGState(context);
 	CGContextBeginPath(context);
 	CGContextAddArc(context, arcValue, arcValue, arcValue, (M_PI / 2), (3 * M_PI / 2), NO);
-	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue, 3 * M_PI / 2, M_PI / 2, NO);
+	CGContextAddArc(context, self.bounds.size.width - arcValue, arcValue, arcValue, 3 * M_PI / 2, M_PI / 2, NO);
 	CGContextClosePath(context);
 	
 	CGFloat red = 1;
@@ -940,8 +942,8 @@ CGFloat const kSeparatorHeight = 1;
     // Draw a white background so we can use alpha to lighten the inner gradient
     CGContextSaveGState(context);
 	CGContextBeginPath(context);
-	CGContextAddArc(context, arcValue, arcValue, (bounds.size.height / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
-	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue - 1, (3 * M_PI / 2), (M_PI / 2), NO);
+	CGContextAddArc(context, arcValue, arcValue, ((self.bounds.size.height - 4) / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
+	CGContextAddArc(context, self.bounds.size.width - arcValue, arcValue, arcValue - 1, (3 * M_PI / 2), (M_PI / 2), NO);
 	CGContextClosePath(context);
     CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
     CGContextFillPath(context);
@@ -950,8 +952,8 @@ CGFloat const kSeparatorHeight = 1;
 	// Draw the inner gradient.
 	CGContextSaveGState(context);
 	CGContextBeginPath(context);
-	CGContextAddArc(context, arcValue, arcValue, (bounds.size.height / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
-	CGContextAddArc(context, bounds.size.width - arcValue, arcValue, arcValue - 1, (3 * M_PI / 2), (M_PI / 2), NO);
+	CGContextAddArc(context, arcValue, arcValue, ((self.bounds.size.height - 4) / 2), (M_PI / 2) , (3 * M_PI / 2), NO);
+	CGContextAddArc(context, self.bounds.size.width - arcValue, arcValue, arcValue - 1, (3 * M_PI / 2), (M_PI / 2), NO);
 	CGContextClosePath(context);
 	
 	CGContextClip(context);
@@ -964,11 +966,14 @@ CGFloat const kSeparatorHeight = 1;
 	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 	CGGradientRelease(gradient);
 	CGColorSpaceRelease(colorspace);
+	CGContextRestoreGState(context);
 	
 	[(selected || highlighted ? [UIColor whiteColor] : [UIColor blackColor]) set];
-	[croppedTitle drawInRect:textBounds withFont:kTokenTitleFont];
 	
-	CGContextRestoreGState(context);
+	CGFloat hPadding = (self.bounds.size.width - titleSize.width) / 2;
+	CGFloat vPadding = (self.bounds.size.height - titleSize.height) / 2;
+	CGRect textBounds = CGRectMake(hPadding, vPadding, self.bounds.size.width - (hPadding * 2), self.bounds.size.height - (vPadding * 2));
+	[title drawInRect:textBounds withFont:font lineBreakMode:UILineBreakModeTailTruncation];
 }
 
 - (void)setHighlighted:(BOOL)flag {
@@ -987,6 +992,20 @@ CGFloat const kSeparatorHeight = 1;
 	}
 }
 
+- (void)setTitle:(NSString *)newTitle {
+	
+}
+
+- (void)setFont:(UIFont *)newFont {
+	
+	if (!newFont) newFont = [UIFont systemFontOfSize:14];
+	[newFont retain];
+	[font release];
+	font = newFont;
+	
+	[self setNeedsDisplay];
+}
+
 - (void)setTintColor:(UIColor *)newTintColor {
 	
 	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
@@ -1003,7 +1022,6 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (void)dealloc {
-	[croppedTitle release];
 	[title release];
 	[tintColor release];
 	[representedObject release];
