@@ -556,7 +556,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 	
 	return [super keyboardInputShouldDelete:keyboardInput];
 }
- */
+*/
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
 	
@@ -577,13 +577,17 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 }
 
 #pragma mark Token Handling
-- (void)addTokenWithTitle:(NSString *)title {
+- (TIToken *)addTokenWithTitle:(NSString *)title {
 	
 	if (title){
 		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
 		[self addToken:token];
 		[token release];
+		
+		return token;
 	}
+	
+	return nil;
 }
 
 - (void)addToken:(TIToken *)token {
@@ -658,7 +662,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 - (CGFloat)layoutTokens {
 	
 	// Adapted from Joe Hewitt's Three20 layout method.
-	
 	CGFloat fontHeight = (self.font.ascender - self.font.descender) + 1;
 	CGFloat lineHeight = fontHeight + 15;
 	CGFloat topMargin = floor(fontHeight / 1.75);
@@ -677,7 +680,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 		if (token.superview){
 			
 			CGFloat lineWidth = cursorLocation.x + token.bounds.size.width + rightMargin;
-			
 			if (lineWidth >= self.bounds.size.width){
 				
 				numberOfLines++;
@@ -688,7 +690,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 			}
 			
 			CGRect newFrame = (CGRect){cursorLocation, token.bounds.size};
-			
 			if (!CGRectEqualToRect(token.frame, newFrame)){
 				
 				[token setFrame:newFrame];
@@ -698,11 +699,9 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 			}
 			
 			cursorLocation.x += token.bounds.size.width + tokenPadding;
-			
 		}
 		
 		CGFloat leftoverWidth = self.bounds.size.width - (cursorLocation.x + rightMarginWithButton);
-		
 		if (leftoverWidth < 50){
 			
 			numberOfLines++;
@@ -725,7 +724,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 	if (previousHeight && previousHeight != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
-		
 		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
 			[self ti_setHeight:newHeight];
 			
@@ -751,14 +749,14 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 	[self updateHeightAnimated:animated];
 	
 	if (resultsModeEnabled != enabled){
-	
+		
 		//Hide / show the shadow
 		[self.layer setMasksToBounds:!enabled];
-	
+		
 		UIScrollView * scrollView = self.scrollView;
 		[scrollView setScrollsToTop:!enabled];
 		[scrollView setScrollEnabled:!enabled];
-	
+		
 		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : (self.bounds.size.height - kVisibleTokenFieldHeight) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
@@ -779,7 +777,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 	if (text){
 		
 		UILabel * label = (UILabel *)self.leftView;
-		
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
 			[label setFont:[UIFont systemFontOfSize:self.font.pointSize + 1]];
@@ -840,7 +837,6 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
-	
 	return ((CGRect){{bounds.size.width - addButton.bounds.size.width - 6, 
 		bounds.size.height - addButton.bounds.size.height - 6}, addButton.bounds.size});
 }
@@ -889,13 +885,19 @@ CGFloat const kTITokenMaxWidth = 150;
 		
 		font = [aFont retain];
 		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
+		[self sizeToFit];
 		
-		CGSize tokenSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
-		[self setFrame:CGRectMake(0, 0, tokenSize.width + 18, tokenSize.height + 8)];
 		[self setBackgroundColor:[UIColor clearColor]];
 	}
 	
 	return self;
+}
+
+- (void)sizeToFit {
+	
+	CGSize tokenSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
+	[self setFrame:((CGRect){self.frame.origin, {tokenSize.width + 18, tokenSize.height + 8}})];
+	[self setNeedsDisplay];
 }
 
 - (void)drawRect:(CGRect)rect {
@@ -994,6 +996,13 @@ CGFloat const kTITokenMaxWidth = 150;
 
 - (void)setTitle:(NSString *)newTitle {
 	
+	if (newTitle){
+		NSString * copy = [newTitle copy];
+		[title release];
+		title = copy;
+		
+		[self sizeToFit];
+	}
 }
 
 - (void)setFont:(UIFont *)newFont {
@@ -1003,7 +1012,7 @@ CGFloat const kTITokenMaxWidth = 150;
 	[font release];
 	font = newFont;
 	
-	[self setNeedsDisplay];
+	[self sizeToFit];
 }
 
 - (void)setTintColor:(UIColor *)newTintColor {

@@ -118,7 +118,7 @@
 @property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
 
 - (void)addToken:(TIToken *)title;
-- (void)addTokenWithTitle:(NSString *)title;
+- (TIToken *)addTokenWithTitle:(NSString *)title;
 - (void)removeToken:(TIToken *)token;
 
 - (void)selectToken:(TIToken *)token;
