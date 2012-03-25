@@ -31,9 +31,8 @@
 @class TITokenField, TIToken;
 
 //==========================================================
-// - Delegate Methods
+#pragma mark - Delegate Methods -
 //==========================================================
-
 @protocol TITokenFieldViewDelegate <UIScrollViewDelegate>
 @optional
 - (BOOL)tokenFieldShouldReturn:(TITokenField *)tokenField;
@@ -46,16 +45,9 @@
 - (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
-@protocol TITokenDelegate <NSObject>
-@optional
-- (void)tokenGotFocus:(TIToken *)token;
-- (void)tokenLostFocus:(TIToken *)token;
-@end
-
 //==========================================================
-// - TITokenFieldView
+#pragma mark - TITokenFieldView -
 //==========================================================
-
 @interface TITokenFieldView : UIScrollView <UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource> {
 	
 	BOOL showAlreadyTokenized;
@@ -68,32 +60,29 @@
 	NSArray * sourceArray;
 	NSMutableArray * resultsArray;
 	
-	NSArray * tokenTitles;
-	
 	TITokenField * tokenField;
 }
 
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
 @property (nonatomic, assign) id <TITokenFieldViewDelegate> delegate;
-
+@property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, readonly) UIView * separator;
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
-
 @property (nonatomic, copy) NSArray * sourceArray;
-@property (nonatomic, readonly, retain) NSArray * tokenTitles;
-@property (nonatomic, readonly) TITokenField * tokenField;
+@property (nonatomic, readonly) NSArray * tokenTitles;
 
 - (void)updateContentSize;
 @end
 
 //==========================================================
-// - TITokenField
+#pragma mark - TITokenField -
 //==========================================================
-
-@interface TITokenField : UITextField <TITokenDelegate> {
-
-	NSMutableArray * tokensArray;
+@interface TITokenField : UITextField {
+	
+	NSMutableArray * tokens;
+	TIToken * selectedToken;
+	
 	CGPoint cursorLocation;
 	int numberOfLines;
 	
@@ -103,43 +92,52 @@
 	SEL addButtonSelector;
 }
 
-@property (nonatomic, retain) NSMutableArray * tokensArray;
+@property (nonatomic, readonly) NSMutableArray * tokens;
+@property (nonatomic, readonly) TIToken * selectedToken;
+@property (nonatomic, readonly) NSArray * tokenTitles;
 @property (nonatomic, readonly) int numberOfLines;
-@property (nonatomic, retain) UIButton * addButton;
 @property (nonatomic, assign) id addButtonTarget;
 @property (nonatomic, assign) SEL addButtonSelector;
 
-- (void)addToken:(NSString *)title;
+- (void)addToken:(TIToken *)title;
+- (void)addTokenWithTitle:(NSString *)title;
 - (void)removeToken:(TIToken *)token;
+
+- (void)selectToken:(TIToken *)token;
+- (void)deselectSelectedToken;
 
 - (CGFloat)layoutTokens;
 
+// Pass nil to any argument in either method to hide the related button.
 - (void)setAddButtonAction:(SEL)action target:(id)sender;
 - (void)setPromptText:(NSString *)aText;
 
 @end
 
 //==========================================================
-// - TIToken
+#pragma mark - TIToken -
 //==========================================================
-
-@interface TIToken : UIView {
-	
-	id <TITokenDelegate> delegate;
-	BOOL highlighted;
+@interface TIToken : UIControl {
 	
 	NSString * title;
 	NSString * croppedTitle;
 	
 	UIColor * tintColor;
+	
+	BOOL selected;
+	BOOL highlighted;
+	
+	id representedObject;
 }
 
-@property (nonatomic, assign) id <TITokenDelegate> delegate;
-@property (nonatomic, getter=isHighlighted) BOOL highlighted;
 @property (nonatomic, copy) NSString * title;
 @property (nonatomic, copy) NSString * croppedTitle;
 @property (nonatomic, retain) UIColor * tintColor;
+@property (nonatomic, getter=isHighlighted) BOOL highlighted;
+@property (nonatomic, getter=isSelected) BOOL selected;
+@property (nonatomic, retain) id representedObject;
 
 - (id)initWithTitle:(NSString *)aTitle;
+- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
 
 @end

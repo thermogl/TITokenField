@@ -50,7 +50,7 @@
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-	[UIView animateWithDuration:duration animations:^{[self resizeViews];}]; // Make it pretty.
+	[UIView animateWithDuration:duration animations:^{[self resizeViews];}]; // Make it pweeetty.
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -61,10 +61,10 @@
 	
 	// Show some kind of contacts picker in here.
 	// For now, it's a good chance to show how to add tokens.
-	[tokenFieldView.tokenField addToken:@"New Name"];
+	[tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
 	
 	// You can access token titles with 'tokenFieldView.tokenTitles'.
-	// Eg, NSLog(@"%@", tokenFieldView.tokenTitles);
+	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification {
