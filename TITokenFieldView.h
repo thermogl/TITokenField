@@ -89,7 +89,7 @@
 //==========================================================
 @interface TITokenField : UITextField {
 	
-	id <TITokenFieldDelegate> tokenFieldDelegate;
+	id <TITokenFieldDelegate> delegate;
 	
 	NSMutableArray * tokens;
 	TIToken * selectedToken;
@@ -107,7 +107,7 @@
 	NSCharacterSet * tokenizingCharacters;
 }
 
-@property (nonatomic, assign) id <TITokenFieldDelegate> tokenFieldDelegate;
+@property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
 @property (nonatomic, readonly) NSArray * tokens;
 @property (nonatomic, readonly) TIToken * selectedToken;
 @property (nonatomic, readonly) NSArray * tokenTitles;
@@ -119,11 +119,12 @@
 
 - (void)addToken:(TIToken *)title;
 - (void)addTokenWithTitle:(NSString *)title;
-- (void)addTokenFromCurrentText;
 - (void)removeToken:(TIToken *)token;
 
 - (void)selectToken:(TIToken *)token;
 - (void)deselectSelectedToken;
+
+- (void)tokenizeText;
 
 - (CGFloat)layoutTokens;
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;

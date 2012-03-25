@@ -34,8 +34,8 @@
 @end
 
 @implementation TITokenFieldView
+@dynamic delegate;
 @synthesize showAlreadyTokenized;
-@synthesize delegate;
 @synthesize tokenField;
 @synthesize resultsTable;
 @synthesize contentView;
@@ -60,7 +60,7 @@ CGFloat const kSeparatorHeight = 1;
 		showAlreadyTokenized = NO;
 		resultsArray = [[NSMutableArray alloc] init];
 		
-		// This view (contentView) is created for convenience, because it resizes and moves with the rest of the subviews.
+		// This view is created for convenience, because it resizes and moves with the rest of the subviews.
 		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight, self.bounds.size.width, self.bounds.size.height - kTokenFieldHeight)];
 		[contentView setBackgroundColor:[UIColor clearColor]];
 		[self addSubview:contentView];
@@ -69,7 +69,6 @@ CGFloat const kSeparatorHeight = 1;
 		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kTokenFieldHeight)];
 		[tokenField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
 		[tokenField setDelegate:self];
-		[tokenField setTokenFieldDelegate:self];
 		[self addSubview:tokenField];
 		[tokenField release];
 		
@@ -170,6 +169,11 @@ CGFloat const kSeparatorHeight = 1;
 	return tokenField.tokenTitles;
 }
 
+- (void)setDelegate:(id<TITokenFieldViewDelegate>)del {
+	delegate = del;
+	[super setDelegate:delegate];
+}
+
 #pragma mark TableView Methods
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -259,7 +263,7 @@ CGFloat const kSeparatorHeight = 1;
 	}
 	
 	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
-		[tokenField addTokenFromCurrentText];
+		[tokenField tokenizeText];
 		return NO;
 	}
 	
@@ -268,7 +272,7 @@ CGFloat const kSeparatorHeight = 1;
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 	
-	[tokenField addTokenFromCurrentText];
+	[tokenField tokenizeText];
 	
 	if ([delegate respondsToSelector:@selector(tokenFieldShouldReturn:)]){
 		return [delegate tokenFieldShouldReturn:tokenField];
@@ -400,7 +404,7 @@ CGFloat const kSeparatorHeight = 1;
 @end
 
 @implementation TITokenField
-@synthesize tokenFieldDelegate;
+@dynamic delegate;
 @synthesize tokens;
 @synthesize resultsModeEnabled;
 @synthesize numberOfLines;
@@ -469,6 +473,11 @@ CGFloat const kSeparatorHeight = 1;
 	[super setText:((text.length == 0 || [text isEqualToString:@""]) ? kTextEmpty : text)];
 }
 
+- (void)setDelegate:(id<TITokenFieldDelegate>)del {
+	delegate = del;
+	[super setDelegate:delegate];
+}
+
 - (NSArray *)tokens {
 	return [[tokens copy] autorelease];
 }
@@ -487,7 +496,7 @@ CGFloat const kSeparatorHeight = 1;
 	[selectedToken setSelected:NO];
 	selectedToken = nil;
 	
-	[self addTokenFromCurrentText];
+	[self tokenizeText];
 	for (TIToken * token in tokens) [token removeFromSuperview];
 	
 	NSString * untokenized = kTextEmpty;
@@ -517,6 +526,36 @@ CGFloat const kSeparatorHeight = 1;
 		[self setText:kTextEmpty];
 	}
 }
+
+/* This stuff is private, really wish it wasn't
+- (BOOL)keyboardInput:(id)input shouldInsertText:(NSString *)text isMarkedText:(BOOL)markedText {
+	
+	if ([text rangeOfCharacterFromSet:tokenizingCharacters].location != NSNotFound){
+		[self tokenizeText];
+		return NO;
+	}
+	
+	if ([self.text isEqualToString:kTextHidden]) return NO;
+	if ([text isEqualToString:@"\n"]) [self tokenizeText];
+	
+	return [super keyboardInput:input shouldInsertText:text isMarkedText:markedText];
+}
+
+- (BOOL)keyboardInputShouldDelete:(id)keyboardInput {
+	
+	if (tokens.count && [self.text isEqualToString:kTextEmpty]){
+		[self selectToken:[tokens lastObject]];
+		return NO;
+	}
+	
+	if ([self.text isEqualToString:kTextHidden]){
+		[self removeToken:self.selectedToken];
+		return NO;
+	}
+	
+	return [super keyboardInputShouldDelete:keyboardInput];
+}
+ */
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
 	
@@ -560,16 +599,6 @@ CGFloat const kSeparatorHeight = 1;
 	[self setText:kTextEmpty];
 }
 
-- (void)addTokenFromCurrentText {
-	
-	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && 
-		[[self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
-		
-		NSUInteger loc = [[self.text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
-		[self addTokenWithTitle:[self.text substringWithRange:NSMakeRange(loc, self.text.length - 1)]];
-	}
-}
-
 - (void)removeToken:(TIToken *)token {
 	
 	if (token == selectedToken)  
@@ -601,6 +630,16 @@ CGFloat const kSeparatorHeight = 1;
 	selectedToken = nil;
 	
 	[self setText:kTextEmpty];
+}
+
+- (void)tokenizeText {
+	
+	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && 
+		[[self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
+		
+		NSUInteger loc = [[self.text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
+		[self addTokenWithTitle:[self.text substringWithRange:NSMakeRange(loc, self.text.length - 1)]];
+	}
 }
 
 - (void)tokenTouchDown:(TIToken *)token {
@@ -689,14 +728,14 @@ CGFloat const kSeparatorHeight = 1;
 		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
 			[self ti_setHeight:newHeight];
 			
-			if ([tokenFieldDelegate respondsToSelector:@selector(tokenFieldWillResize:animated:)]){
-				[tokenFieldDelegate tokenFieldWillResize:self animated:animated];
+			if ([delegate respondsToSelector:@selector(tokenFieldWillResize:animated:)]){
+				[delegate tokenFieldWillResize:self animated:animated];
 			}
 			
 		} completion:^(BOOL complete){
 			
-			if ([tokenFieldDelegate respondsToSelector:@selector(tokenFieldDidResize:animated:)]){
-				[tokenFieldDelegate tokenFieldDidResize:self animated:animated];
+			if ([delegate respondsToSelector:@selector(tokenFieldDidResize:animated:)]){
+				[delegate tokenFieldDidResize:self animated:animated];
 			}
 		}];
 	}
