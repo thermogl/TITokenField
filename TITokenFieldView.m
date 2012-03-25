@@ -61,19 +61,16 @@ CGFloat const kSeparatorHeight = 1;
     if ((self = [super initWithFrame:frame])){
 		
 		[self setBackgroundColor:[UIColor clearColor]];
-		[self setDelaysContentTouches:NO];
+		[self setDelaysContentTouches:YES];
 		[self setMultipleTouchEnabled:NO];
-		[self setScrollEnabled:YES];
 		
 		showAlreadyTokenized = NO;
-		
 		resultsArray = [[NSMutableArray alloc] init];
 		
 		// This view (contentView) is created for convenience, because it resizes and moves with the rest of the subviews.
 		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight, self.bounds.size.width, self.bounds.size.height - kTokenFieldHeight)];
 		[contentView setBackgroundColor:[UIColor clearColor]];
 		[self addSubview:contentView];
-		[self setContentSize:CGSizeMake(self.bounds.size.width, self.contentView.frame.origin.y + self.contentView.bounds.size.height + 2)];
 		[contentView release];
 		
 		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kTokenFieldHeight)];
@@ -279,7 +276,7 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)tokenFieldResized:(TITokenField *)aTokenField {
 	
-	[self setContentSize:CGSizeMake(self.bounds.size.width, contentView.frame.origin.y + contentView.bounds.size.height + 2)];
+	[self updateContentSize];
 	
 	if ([delegate respondsToSelector:@selector(tokenField:didChangeToFrame:)]){
 		[delegate tokenField:aTokenField didChangeToFrame:aTokenField.frame];
@@ -782,7 +779,7 @@ CGFloat const kSeparatorHeight = 1;
 		title = [aTitle copy];
 		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		representedObject = [object retain];
-		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
+		tintColor = [[UIColor colorWithRed:0.385 green:0.503 blue:0.968 alpha:1] retain];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		[self setFrame:CGRectMake(0, 0, tokenSize.width + 17, tokenSize.height + 8)];
@@ -836,7 +833,7 @@ CGFloat const kSeparatorHeight = 1;
 		CGContextClip(context);
 		CGFloat locations[2] = {0, 0.95};
         // unhighlighted outline color
-		CGFloat components[8] = {red + .2, green +.2, blue +.2, alpha, red, green, blue, alpha};
+		CGFloat components[8] = {red + 0.2, green + 0.2, blue + 0.2, alpha, red, green, blue, alpha};
 		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, components, locations, 2);
 		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 		CGGradientRelease(gradient);
@@ -863,8 +860,8 @@ CGFloat const kSeparatorHeight = 1;
 	CGContextClip(context);
 	
 	CGFloat locations[2] = {0, selected || highlighted ? 0.8 : 0.4};
-    CGFloat highlightedComp[8] = {red, green, blue, .6, red, green, blue, 1};
-    CGFloat nonHighlightedComp[8] = {red, green, blue, .2, red, green, blue, .4};
+    CGFloat highlightedComp[8] = {red, green, blue, 0.6, red, green, blue, 1};
+    CGFloat nonHighlightedComp[8] = {red, green, blue, 0.2, red, green, blue, 0.4};
 	
 	CGGradientRef gradient = CGGradientCreateWithColorComponents (colorspace, selected || highlighted ? highlightedComp : nonHighlightedComp, locations, 2);
 	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
