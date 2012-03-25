@@ -100,6 +100,8 @@ CGFloat const kSeparatorHeight = 1;
 			[resultsTable setHidden:YES];
 			[self addSubview:resultsTable];
 			[resultsTable release];
+			
+			popoverController = nil;
 		}
 		
 		[self bringSubviewToFront:separator];
