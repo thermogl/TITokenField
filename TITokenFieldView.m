@@ -126,8 +126,11 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)layoutSubviews {
 	
+	[super layoutSubviews];
+	
 	CGFloat relativeFieldHeight = tokenField.bounds.size.height - self.contentOffset.y;
-	[resultsTable ti_setHeight:(self.bounds.size.height - relativeFieldHeight)];
+	CGFloat newHeight = self.bounds.size.height - relativeFieldHeight;
+	if (newHeight > -1) [resultsTable ti_setHeight:newHeight];
 }
 
 - (void)updateContentSize {
@@ -237,37 +240,25 @@ CGFloat const kSeparatorHeight = 1;
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
 	
-	if ([string isEqualToString:@""] && [textField.text isEqualToString:kTextEmpty] && tokenField.tokens.count){
+	if (tokenField.tokens.count && [string isEqualToString:@""] && [textField.text isEqualToString:kTextEmpty]){
 		
-		//When the backspace is pressed, we capture it, highlight the last token, and hide the cursor.
-		
-		TIToken * tok = [tokenField.tokens lastObject];
-		[tok setSelected:YES];
+		// When the backspace is pressed, we capture it, select the last token, and hide the cursor.
+		[tokenField selectToken:[tokenField.tokens lastObject]];
 		[tokenField setText:kTextHidden];
 		[tokenField updateHeight:NO];
 		
 		return NO;
 	}
 	
-	if ([textField.text isEqualToString:kTextHidden] && ![string isEqualToString:@""]){
-		// When the text is hidden, we don't want the user to be able to type anything.
+	if ([textField.text isEqualToString:kTextHidden]){
+		
+		if ([string isEqualToString:@""])
+			[tokenField removeToken:tokenField.selectedToken];
+		
 		return NO;
 	}
 	
-	if ([textField.text	isEqualToString:kTextHidden] && [string isEqualToString:@""]){
-		
-		// When the user presses backspace and the text is hidden,
-		// we find the highlighted token, and remove it.
-		
-		for (TIToken * tok in [NSArray arrayWithArray:tokenField.tokens]){
-			if (tok.selected){
-				[tokenField removeToken:tok];
-				return NO;
-			}
-		}
-	}
-	
-	if ([string isEqualToString:@","]){
+	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
 		[tokenField processLeftoverText];
 		return NO;
 	}
@@ -288,7 +279,7 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)tokenFieldResized:(TITokenField *)aTokenField {
 	
-	[self setContentSize:CGSizeMake(self.bounds.size.width, self.contentView.frame.origin.y + self.contentView.bounds.size.height + 2)];
+	[self setContentSize:CGSizeMake(self.bounds.size.width, contentView.frame.origin.y + contentView.bounds.size.height + 2)];
 	
 	if ([delegate respondsToSelector:@selector(tokenField:didChangeToFrame:)]){
 		[delegate tokenField:aTokenField didChangeToFrame:aTokenField.frame];
@@ -374,6 +365,7 @@ CGFloat const kSeparatorHeight = 1;
 @synthesize addButtonSelector;
 @synthesize addButtonTarget;
 @synthesize selectedToken;
+@synthesize tokenizingCharacters;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -397,26 +389,24 @@ CGFloat const kSeparatorHeight = 1;
 - (void)setup {
 	
 	[self setBorderStyle:UITextBorderStyleNone];
-	[self setTextColor:[UIColor blackColor]];
 	[self setFont:[UIFont systemFontOfSize:14]];
 	[self setBackgroundColor:[UIColor whiteColor]];
 	[self setAutocorrectionType:UITextAutocorrectionTypeNo];
 	[self setAutocapitalizationType:UITextAutocapitalizationTypeNone];
-	[self setTextAlignment:UITextAlignmentLeft];
-	[self setKeyboardType:UIKeyboardTypeDefault];
-	[self setReturnKeyType:UIReturnKeyDefault];
-	[self setClearsOnBeginEditing:NO];
 	
 	[self addTarget:self action:@selector(didBeginEditing) forControlEvents:UIControlEventEditingDidBegin];
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
+	
+	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
+	[self.layer setShadowOpacity:0.6];
+	[self.layer setShadowRadius:12];
 	
 	addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
 	[addButton setUserInteractionEnabled:YES];
 	[addButton setHidden:YES];
 	[addButton addTarget:self action:@selector(performButtonAction) forControlEvents:UIControlEventTouchUpInside];
 	[self setRightView:addButton];
-	
 	[self setAddButtonAction:nil target:nil];
 	
 	[self setPromptText:@"To:"];
@@ -424,10 +414,7 @@ CGFloat const kSeparatorHeight = 1;
 	
 	tokens = [[NSMutableArray alloc] init];
 	selectedToken = nil;
-	
-	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
-	[self.layer setShadowOpacity:0.6];
-	[self.layer setShadowRadius:12];
+	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
 }
 
 - (void)setFrame:(CGRect)frame {
@@ -443,6 +430,10 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)setText:(NSString *)text {
 	[super setText:((text.length == 0 || [text isEqualToString:@""]) ? kTextEmpty : text)];
+}
+
+- (NSArray *)tokens {
+	return [[tokens copy] autorelease];
 }
 
 #pragma mark Event Handling
@@ -658,10 +649,10 @@ CGFloat const kSeparatorHeight = 1;
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
 		
 		[UIView animateWithDuration:(previousHeight < newHeight ? 0.3 : 0) animations:^{
+			[self ti_setHeight:newHeight];
 			[parentView.separator ti_setOriginY:newHeight];
 			[parentView.resultsTable ti_setOriginY:newHeight + 1];
 			[parentView.contentView ti_setOriginY:newHeight];
-			[self ti_setHeight:newHeight];
 		} completion:^(BOOL complete){
 			[parentView tokenFieldResized:self];
 			if (scrollToTop) [parentView setContentOffset:CGPointMake(0, 0) animated:YES];
@@ -765,6 +756,7 @@ CGFloat const kSeparatorHeight = 1;
 - (void)dealloc {
 	[self setDelegate:nil];
 	[tokens release];
+	[tokenizingCharacters release];
     [super dealloc];
 }
 

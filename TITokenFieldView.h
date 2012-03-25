@@ -90,14 +90,17 @@
 	
 	id addButtonTarget;
 	SEL addButtonSelector;
+	
+	NSCharacterSet * tokenizingCharacters;
 }
 
-@property (nonatomic, readonly) NSMutableArray * tokens;
+@property (nonatomic, readonly) NSArray * tokens;
 @property (nonatomic, readonly) TIToken * selectedToken;
 @property (nonatomic, readonly) NSArray * tokenTitles;
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic, assign) id addButtonTarget;
 @property (nonatomic, assign) SEL addButtonSelector;
+@property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
 
 - (void)addToken:(TIToken *)title;
 - (void)addTokenWithTitle:(NSString *)title;
