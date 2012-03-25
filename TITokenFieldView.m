@@ -23,21 +23,14 @@
 - (void)ti_setOriginY:(CGFloat)originY;
 @end
 
-@interface TITokenField (Private)
-- (void)processLeftoverText;
-- (void)setShadowHidden:(BOOL)hidden;
-- (void)updateHeight:(BOOL)scrollToTop;
-- (void)scrollForEdit:(BOOL)shouldMove;
-- (void)performButtonAction;
-@end
-
 //==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
 
 @interface TITokenFieldView (Private)
+- (void)setSearchResultsVisible:(BOOL)visible;
 - (void)resultsForSubstring:(NSString *)substring;
-- (void)tokenFieldResized:(TITokenField *)aTokenField;
+- (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated;
 @end
 
 @implementation TITokenFieldView
@@ -76,6 +69,7 @@ CGFloat const kSeparatorHeight = 1;
 		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kTokenFieldHeight)];
 		[tokenField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
 		[tokenField setDelegate:self];
+		[tokenField setTokenFieldDelegate:self];
 		[self addSubview:tokenField];
 		[tokenField release];
 		
@@ -84,14 +78,29 @@ CGFloat const kSeparatorHeight = 1;
 		[self addSubview:separator];
 		[separator release];
 		
-		resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight + 1, self.bounds.size.width, 10)];
-		[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
-		[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
-		[resultsTable setDelegate:self];
-		[resultsTable setDataSource:self];
-		[resultsTable setHidden:YES];
-		[self addSubview:resultsTable];
-		[resultsTable release];
+		if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad){
+			
+			UITableViewController * tableViewController = [[UITableViewController alloc] initWithStyle:UITableViewStylePlain];
+			[tableViewController.tableView setDelegate:self];
+			[tableViewController.tableView setDataSource:self];
+			[tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
+			
+			resultsTable = tableViewController.tableView;
+			
+			popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
+			[tableViewController release];
+		}
+		else
+		{
+			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, kTokenFieldHeight + 1, self.bounds.size.width, 10)];
+			[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
+			[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
+			[resultsTable setDelegate:self];
+			[resultsTable setDataSource:self];
+			[resultsTable setHidden:YES];
+			[self addSubview:resultsTable];
+			[resultsTable release];
+		}
 		
 		[self bringSubviewToFront:separator];
 		[self bringSubviewToFront:tokenField];
@@ -111,6 +120,11 @@ CGFloat const kSeparatorHeight = 1;
 	[contentView ti_setWidth:width];
 	[contentView ti_setHeight:frame.size.height - kTokenFieldHeight];
 	[tokenField ti_setWidth:width];
+	
+	if (popoverController.popoverVisible){
+		[popoverController dismissPopoverAnimated:NO];
+		[self presentpopoverAtTokenFieldCaretAnimated:NO];
+	}
 	
 	[self updateContentSize];
 	[self layoutSubviews];
@@ -167,19 +181,12 @@ CGFloat const kSeparatorHeight = 1;
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 	
-	// Hide the UITableView and shadow, then resize if there are no matches.
-	
 	if ([delegate respondsToSelector:@selector(tokenField:didFinishSearch:)]){
 		[delegate tokenField:tokenField didFinishSearch:resultsArray];
 	}
 	
-	BOOL hideTable = !resultsArray.count;
-	[resultsTable setHidden:hideTable];
-	[tokenField setShadowHidden:hideTable];
-	[tokenField scrollForEdit:!hideTable];
-	
-	[separator setBackgroundColor:(hideTable ? [UIColor colorWithWhite:0.7 alpha:1] : 
-								   [UIColor colorWithRed:0.588 green:0.588 blue:0.588 alpha:0.4])];
+	BOOL hasResults = resultsArray.count;
+	[self setSearchResultsVisible:hasResults];
 	
 	return resultsArray.count;
 }
@@ -220,13 +227,10 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
-	[resultsTable setHidden:YES];
+	[self setSearchResultsVisible:NO];
 }
 
 - (void)textFieldDidChange:(UITextField *)textField {
-	
-	[tokenField setShadowHidden:NO];
-	[resultsTable setHidden:NO];
 	
 	[self resultsForSubstring:textField.text];
 	
@@ -239,11 +243,8 @@ CGFloat const kSeparatorHeight = 1;
 	
 	if (tokenField.tokens.count && [string isEqualToString:@""] && [textField.text isEqualToString:kTextEmpty]){
 		
-		// When the backspace is pressed, we capture it, select the last token, and hide the cursor.
+		// When the backspace is pressed on an empty field we select the last token.
 		[tokenField selectToken:[tokenField.tokens lastObject]];
-		[tokenField setText:kTextHidden];
-		[tokenField updateHeight:NO];
-		
 		return NO;
 	}
 	
@@ -256,7 +257,7 @@ CGFloat const kSeparatorHeight = 1;
 	}
 	
 	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
-		[tokenField processLeftoverText];
+		[tokenField addTokenFromCurrentText];
 		return NO;
 	}
 	
@@ -265,7 +266,7 @@ CGFloat const kSeparatorHeight = 1;
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 	
-	[tokenField processLeftoverText];
+	[tokenField addTokenFromCurrentText];
 	
 	if ([delegate respondsToSelector:@selector(tokenFieldShouldReturn:)]){
 		return [delegate tokenFieldShouldReturn:tokenField];
@@ -274,7 +275,15 @@ CGFloat const kSeparatorHeight = 1;
 	return YES;
 }
 
-- (void)tokenFieldResized:(TITokenField *)aTokenField {
+- (void)tokenFieldWillResize:(TITokenField *)aTokenField animated:(BOOL)animated {
+	
+	CGFloat newHeight = aTokenField.bounds.size.height;
+	[separator ti_setOriginY:newHeight];
+	[resultsTable ti_setOriginY:newHeight + 1];
+	[contentView ti_setOriginY:newHeight];
+}
+
+- (void)tokenFieldDidResize:(TITokenField *)aTokenField animated:(BOOL)animated {
 	
 	[self updateContentSize];
 	
@@ -284,6 +293,20 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 #pragma mark Results Methods
+- (void)setSearchResultsVisible:(BOOL)visible {
+	
+	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad){
+		
+		if (visible) [self presentpopoverAtTokenFieldCaretAnimated:YES];
+		else [popoverController dismissPopoverAnimated:YES];
+	}
+	else
+	{
+		[resultsTable setHidden:!visible];
+		[tokenField setResultsModeEnabled:visible]; 
+	}
+}
+
 - (void)resultsForSubstring:(NSString *)substring {
 	
 	// The brute force searching method.
@@ -293,7 +316,6 @@ CGFloat const kSeparatorHeight = 1;
 	// GCD would be great for that.
 	
 	[resultsArray removeAllObjects];
-	[resultsTable reloadData];
 	
 	NSUInteger loc = [[substring substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
 	NSString * typedString = [[substring substringWithRange:NSMakeRange(loc, substring.length - 1)] lowercaseString];
@@ -338,6 +360,15 @@ CGFloat const kSeparatorHeight = 1;
 	[resultsTable reloadData];
 }
 
+- (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
+	
+    UITextPosition * position = [tokenField positionFromPosition:tokenField.beginningOfDocument offset:2];
+    CGRect caretRect = [tokenField caretRectForPosition:position];
+	
+	[popoverController presentPopoverFromRect:caretRect inView:tokenField 
+					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
+}
+
 #pragma mark - Other stuff
 
 - (NSString *)description {
@@ -348,6 +379,7 @@ CGFloat const kSeparatorHeight = 1;
 	[self setDelegate:nil];
 	[resultsArray release];
 	[sourceArray release];
+	[popoverController release];
 	[super dealloc];
 }
 
@@ -356,8 +388,19 @@ CGFloat const kSeparatorHeight = 1;
 //==========================================================
 #pragma mark - TITokenField -
 //==========================================================
+@interface TITokenField ()
+@property (nonatomic, readonly) UIScrollView * scrollView;
+@end
+
+@interface TITokenField (Private)
+- (void)updateHeightAnimated:(BOOL)animated;
+- (void)performButtonAction;
+@end
+
 @implementation TITokenField
+@synthesize tokenFieldDelegate;
 @synthesize tokens;
+@synthesize resultsModeEnabled;
 @synthesize numberOfLines;
 @synthesize addButtonSelector;
 @synthesize addButtonTarget;
@@ -416,13 +459,8 @@ CGFloat const kSeparatorHeight = 1;
 
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
-	[self setShadowHidden:!self.layer.shadowPath];
-	[self updateHeight:YES];
-}
-
-- (void)setShadowHidden:(BOOL)hidden {
-	[self.layer setMasksToBounds:hidden];
-	[self.layer setShadowPath:(hidden ? nil : [[UIBezierPath bezierPathWithRect:self.bounds] CGPath])];
+	[self.layer setShadowPath:[[UIBezierPath bezierPathWithRect:self.bounds] CGPath]];
+	[self updateHeightAnimated:NO];
 }
 
 - (void)setText:(NSString *)text {
@@ -431,6 +469,10 @@ CGFloat const kSeparatorHeight = 1;
 
 - (NSArray *)tokens {
 	return [[tokens copy] autorelease];
+}
+
+- (UIScrollView *)scrollView {
+	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
 }
 
 #pragma mark Event Handling
@@ -443,7 +485,7 @@ CGFloat const kSeparatorHeight = 1;
 	[selectedToken setSelected:NO];
 	selectedToken = nil;
 	
-	[self processLeftoverText];
+	[self addTokenFromCurrentText];
 	for (TIToken * token in tokens) [token removeFromSuperview];
 	
 	NSString * untokenized = kTextEmpty;
@@ -464,24 +506,13 @@ CGFloat const kSeparatorHeight = 1;
 	}
 	
 	[self setText:untokenized];
-	[self setShadowHidden:YES];
-	[self updateHeight:NO];
+	[self setResultsModeEnabled:NO];
 }
 
 - (void)didChangeText {
 	
 	if (self.text.length == 0 || [self.text isEqualToString:@""]){
 		[self setText:kTextEmpty];
-	}
-}
-
-- (void)processLeftoverText {
-	
-	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && 
-		[[self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
-		
-		NSUInteger loc = [[self.text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
-		[self addTokenWithTitle:[self.text substringWithRange:NSMakeRange(loc, self.text.length - 1)]];
 	}
 }
 
@@ -523,8 +554,18 @@ CGFloat const kSeparatorHeight = 1;
 	
 	if (![tokens containsObject:token]) [tokens addObject:token];
 	
-	[self updateHeight:NO];
+	[self setResultsModeEnabled:NO];
 	[self setText:kTextEmpty];
+}
+
+- (void)addTokenFromCurrentText {
+	
+	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && 
+		[[self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
+		
+		NSUInteger loc = [[self.text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
+		[self addTokenWithTitle:[self.text substringWithRange:NSMakeRange(loc, self.text.length - 1)]];
+	}
 }
 
 - (void)removeToken:(TIToken *)token {
@@ -536,7 +577,7 @@ CGFloat const kSeparatorHeight = 1;
 	[tokens removeObject:token];
 	
 	[self setText:kTextEmpty];
-	[self updateHeight:NO];
+	[self setResultsModeEnabled:NO];
 }
 
 - (void)selectToken:(TIToken *)token {
@@ -634,38 +675,53 @@ CGFloat const kSeparatorHeight = 1;
 }
 
 #pragma mark View Handlers
-- (void)updateHeight:(BOOL)scrollToTop {
+- (void)updateHeightAnimated:(BOOL)animated {
 	
 	CGFloat previousHeight = self.bounds.size.height;
 	CGFloat newHeight = [self layoutTokens];
-	
-	TITokenFieldView * parentView = (TITokenFieldView *)self.superview;
 	
 	if (previousHeight && previousHeight != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
 		
-		[UIView animateWithDuration:(previousHeight < newHeight ? 0.3 : 0) animations:^{
+		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
 			[self ti_setHeight:newHeight];
-			[parentView.separator ti_setOriginY:newHeight];
-			[parentView.resultsTable ti_setOriginY:newHeight + 1];
-			[parentView.contentView ti_setOriginY:newHeight];
+			
+			if ([tokenFieldDelegate respondsToSelector:@selector(tokenFieldWillResize:animated:)]){
+				[tokenFieldDelegate tokenFieldWillResize:self animated:animated];
+			}
+			
 		} completion:^(BOOL complete){
-			[parentView tokenFieldResized:self];
-			if (scrollToTop) [parentView setContentOffset:CGPointMake(0, 0) animated:YES];
+			
+			if ([tokenFieldDelegate respondsToSelector:@selector(tokenFieldDidResize:animated:)]){
+				[tokenFieldDelegate tokenFieldDidResize:self animated:animated];
+			}
 		}];
 	}
 }
 
-- (void)scrollForEdit:(BOOL)shouldMove {
+- (void)setResultsModeEnabled:(BOOL)enabled {
+	[self setResultsModeEnabled:enabled animated:YES];
+}
+
+- (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated {
 	
-	TITokenFieldView * parentView = (TITokenFieldView *)self.superview;
+	[self updateHeightAnimated:animated];
 	
-	[parentView setScrollsToTop:!shouldMove];
-	[parentView setScrollEnabled:!shouldMove];
+	if (resultsModeEnabled != enabled){
 	
-	CGFloat offset = numberOfLines == 1 || !shouldMove ? 0 : (self.bounds.size.height - kTokenFieldHeight) + 1;
-	[parentView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:YES];
+		//Hide / show the shadow
+		[self.layer setMasksToBounds:!enabled];
+	
+		UIScrollView * scrollView = self.scrollView;
+		[scrollView setScrollsToTop:!enabled];
+		[scrollView setScrollEnabled:!enabled];
+	
+		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : (self.bounds.size.height - kTokenFieldHeight) + 1);
+		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
+	}
+	
+	resultsModeEnabled = enabled;
 }
 
 #pragma mark Other
@@ -700,7 +756,7 @@ CGFloat const kSeparatorHeight = 1;
 		[self setLeftView:nil];
 	}
 	
-	[self layoutTokens];
+	[self updateHeightAnimated:YES];
 }
 
 - (void)setAddButtonAction:(SEL)action target:(id)sender {
@@ -779,7 +835,7 @@ CGFloat const kSeparatorHeight = 1;
 		title = [aTitle copy];
 		croppedTitle = [(aTitle.length > 24 ? [[aTitle substringToIndex:24] stringByAppendingString:@"..."] : aTitle) copy];
 		representedObject = [object retain];
-		tintColor = [[UIColor colorWithRed:0.385 green:0.503 blue:0.968 alpha:1] retain];
+		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
 		
 		CGSize tokenSize = [croppedTitle sizeWithFont:kTokenTitleFont];
 		[self setFrame:CGRectMake(0, 0, tokenSize.width + 17, tokenSize.height + 8)];
