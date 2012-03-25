@@ -45,8 +45,6 @@
 NSString * const kTextEmpty = @" "; // Just a space
 NSString * const kTextHidden = @"`"; // This character isn't available on iOS (yet) so it's safe.
 
-CGFloat const kVisibleTokenFieldHeight = 42;
-
 #pragma mark Main Shit
 - (id)initWithFrame:(CGRect)frame {
 	
@@ -59,7 +57,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 		showAlreadyTokenized = NO;
 		resultsArray = [[NSMutableArray alloc] init];
 		
-		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, kVisibleTokenFieldHeight)];
+		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 42)];
 		[tokenField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
 		[tokenField setDelegate:self];
 		[self addSubview:tokenField];
@@ -322,6 +320,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 	// GCD would be great for that.
 	
 	[resultsArray removeAllObjects];
+	[resultsTable reloadData];
 	
 	NSUInteger loc = [[substring substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
 	NSString * typedString = [[substring substringWithRange:NSMakeRange(loc, substring.length - 1)] lowercaseString];
@@ -662,14 +661,14 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 - (CGFloat)layoutTokens {
 	
 	// Adapted from Joe Hewitt's Three20 layout method.
-	CGFloat fontHeight = (self.font.ascender - self.font.descender) + 1;
-	CGFloat lineHeight = fontHeight + 15;
-	CGFloat topMargin = floor(fontHeight / 1.75);
+	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
 	CGFloat leftMargin = self.leftView ? self.leftView.bounds.size.width + 12 : 8;
 	CGFloat rightMargin = 16;
 	CGFloat rightMarginWithButton = addButton.hidden ? 8 : 46;
 	CGFloat initialPadding = 8;
 	CGFloat tokenPadding = 4;
+	CGFloat linePadding = topMargin + 5;
+	CGFloat lineHeightWithPadding = self.font.lineHeight + linePadding;
 	
 	numberOfLines = 1;
 	cursorLocation.x = leftMargin;
@@ -686,7 +685,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 				cursorLocation.x = leftMargin;
 				
 				if (numberOfLines > 1) cursorLocation.x = initialPadding;
-				cursorLocation.y += lineHeight;
+				cursorLocation.y += lineHeightWithPadding;
 			}
 			
 			CGRect newFrame = (CGRect){cursorLocation, token.bounds.size};
@@ -708,11 +707,11 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 			cursorLocation.x = leftMargin;
 			
 			if (numberOfLines > 1) cursorLocation.x = initialPadding;
-			cursorLocation.y += lineHeight;
+			cursorLocation.y += lineHeightWithPadding;
 		}
 	}
 	
-	return cursorLocation.y + fontHeight + topMargin + 5;
+	return cursorLocation.y + lineHeightWithPadding;
 }
 
 #pragma mark View Handlers
@@ -757,7 +756,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 		[scrollView setScrollsToTop:!enabled];
 		[scrollView setScrollEnabled:!enabled];
 		
-		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : (self.bounds.size.height - kVisibleTokenFieldHeight) + 1);
+		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : cursorLocation.y - floor(self.font.lineHeight * 4 / 7) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
 	
@@ -832,8 +831,7 @@ CGFloat const kVisibleTokenFieldHeight = 42;
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
-	CGFloat fontHeight = (self.font.ascender - self.font.descender) + 1;
-	return ((CGRect){{8, ceil(fontHeight / 1.75)}, self.leftView.bounds.size});
+	return ((CGRect){{8, ceilf(self.font.lineHeight / 1.75)}, self.leftView.bounds.size});
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
