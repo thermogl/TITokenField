@@ -24,7 +24,7 @@
 	[tokenFieldView setDelegate:self];
 	[tokenFieldView setSourceArray:[Names listOfNames]];
 	[tokenFieldView.tokenField setAddButtonAction:@selector(showContactsPicker) target:self];
-	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]];
+	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
 	
 	messageView = [[UITextView alloc] initWithFrame:tokenFieldView.contentView.bounds];
 	[messageView setScrollEnabled:NO];

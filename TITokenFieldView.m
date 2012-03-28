@@ -42,9 +42,6 @@
 @synthesize separator;
 @synthesize sourceArray;
 
-NSString * const kTextEmpty = @" "; // Just a space
-NSString * const kTextHidden = @"`"; // This character isn't available on iOS (yet) so it's safe.
-
 #pragma mark Main Shit
 - (id)initWithFrame:(CGRect)frame {
 	
@@ -63,14 +60,16 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		[self addSubview:tokenField];
 		[tokenField release];
 		
-		separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height, self.bounds.size.width, 1)];
+		CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
+		
+		separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
 		[separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
 		[self addSubview:separator];
 		[separator release];
 		
 		// This view is created for convenience, because it resizes and moves with the rest of the subviews.
-		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height, self.bounds.size.width, 
-															   self.bounds.size.height - tokenField.bounds.size.height)];
+		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 
+															   self.bounds.size.height - tokenFieldBottom - 1)];
 		[contentView setBackgroundColor:[UIColor clearColor]];
 		[self addSubview:contentView];
 		[contentView release];
@@ -89,7 +88,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		}
 		else
 		{
-			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenField.bounds.size.height + 1, self.bounds.size.width, 10)];
+			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 10)];
 			[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
 			[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
 			[resultsTable setDelegate:self];
@@ -117,7 +116,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[separator ti_setWidth:width];
 	[resultsTable ti_setWidth:width];
 	[contentView ti_setWidth:width];
-	[contentView ti_setHeight:frame.size.height - tokenField.bounds.size.height];
+	[contentView ti_setHeight:(frame.size.height - CGRectGetMaxY(tokenField.frame))];
 	[tokenField ti_setWidth:width];
 	
 	if (popoverController.popoverVisible){
@@ -138,16 +137,12 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	
 	[super layoutSubviews];
 	
-	CGFloat relativeFieldHeight = tokenField.bounds.size.height - self.contentOffset.y;
+	CGFloat relativeFieldHeight = CGRectGetMaxY(tokenField.frame) - self.contentOffset.y;
 	CGFloat newHeight = self.bounds.size.height - relativeFieldHeight;
 	if (newHeight > -1) [resultsTable ti_setHeight:newHeight];
 }
 
 - (void)updateContentSize {
-	
-	// I add 1 here so it'll do that elastic scrolling thing.
-	// As a user, I like to drag a view around just for the sake of it.
-	// Hopefully other people get the same weird kick :)
 	[self setContentSize:CGSizeMake(self.bounds.size.width, self.contentView.frame.origin.y + self.contentView.bounds.size.height + 1)];
 }
 
@@ -189,9 +184,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		[delegate tokenField:tokenField didFinishSearch:resultsArray];
 	}
 	
-	BOOL hasResults = resultsArray.count;
-	[self setSearchResultsVisible:hasResults];
-	
+	[self setSearchResultsVisible:(resultsArray.count > 0)];
 	return resultsArray.count;
 }
 
@@ -219,10 +212,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 #pragma mark TextField Methods
 
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
-	
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
-	
     return YES;
 }
 
@@ -235,56 +226,15 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (void)textFieldDidChange:(UITextField *)textField {
-	
 	[self resultsForSubstring:textField.text];
-	
-	if ([delegate respondsToSelector:@selector(tokenFieldTextDidChange:)]){
-		[delegate tokenFieldTextDidChange:tokenField];
-	}
-}
-
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
-	
-	if (tokenField.tokens.count && [string isEqualToString:@""] && [textField.text isEqualToString:kTextEmpty]){
-		
-		// When the backspace is pressed on an empty field we select the last token.
-		[tokenField selectToken:[tokenField.tokens lastObject]];
-		return NO;
-	}
-	
-	if ([textField.text isEqualToString:kTextHidden]){
-		
-		if ([string isEqualToString:@""])
-			[tokenField removeToken:tokenField.selectedToken];
-		
-		return NO;
-	}
-	
-	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
-		[tokenField tokenizeText];
-		return NO;
-	}
-	
-	return YES;
-}
-
-- (BOOL)textFieldShouldReturn:(UITextField *)textField {
-	
-	[tokenField tokenizeText];
-	
-	if ([delegate respondsToSelector:@selector(tokenFieldShouldReturn:)]){
-		return [delegate tokenFieldShouldReturn:tokenField];
-	}
-	
-	return YES;
 }
 
 - (void)tokenFieldWillResize:(TITokenField *)aTokenField animated:(BOOL)animated {
 	
-	CGFloat newHeight = aTokenField.bounds.size.height;
-	[separator ti_setOriginY:newHeight];
-	[resultsTable ti_setOriginY:newHeight + 1];
-	[contentView ti_setOriginY:newHeight];
+	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
+	[separator ti_setOriginY:tokenFieldBottom];
+	[resultsTable ti_setOriginY:(tokenFieldBottom + 1)];
+	[contentView ti_setOriginY:(tokenFieldBottom + 1)];
 }
 
 - (void)tokenFieldDidResize:(TITokenField *)aTokenField animated:(BOOL)animated {
@@ -393,6 +343,14 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 //==========================================================
 #pragma mark - TITokenField -
 //==========================================================
+NSString * const kTextEmpty = @" "; // Just a space
+NSString * const kTextHidden = @"`"; // This character isn't available on iOS (yet) so it's safe.
+
+@interface TITokenFieldInternalDelegate ()
+@property (nonatomic, assign) id <UITextFieldDelegate> delegate;
+@property (nonatomic, assign) TITokenField * tokenField;
+@end
+
 @interface TITokenField ()
 @property (nonatomic, readonly) UIScrollView * scrollView;
 @end
@@ -403,7 +361,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @end
 
 @implementation TITokenField
-@dynamic delegate;
+@synthesize delegate;
 @synthesize tokens;
 @synthesize resultsModeEnabled;
 @synthesize numberOfLines;
@@ -457,6 +415,10 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[self setPromptText:@"To:"];
 	[self setText:kTextEmpty];
 	
+	internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
+	[internalDelegate setTokenField:self];
+	[super setDelegate:internalDelegate];
+	
 	tokens = [[NSMutableArray alloc] init];
 	selectedToken = nil;
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
@@ -474,7 +436,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)setDelegate:(id<TITokenFieldDelegate>)del {
 	delegate = del;
-	[super setDelegate:delegate];
+	[internalDelegate setDelegate:delegate];
 }
 
 - (NSArray *)tokens {
@@ -521,41 +483,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (void)didChangeText {
-	
-	if (self.text.length == 0 || [self.text isEqualToString:@""]){
-		[self setText:kTextEmpty];
-	}
+	if (self.text.length == 0) [self setText:kTextEmpty];
 }
-
-/* This stuff is private, really wish it wasn't
-- (BOOL)keyboardInput:(id)input shouldInsertText:(NSString *)text isMarkedText:(BOOL)markedText {
-	
-	if ([text rangeOfCharacterFromSet:tokenizingCharacters].location != NSNotFound){
-		[self tokenizeText];
-		return NO;
-	}
-	
-	if ([self.text isEqualToString:kTextHidden]) return NO;
-	if ([text isEqualToString:@"\n"]) [self tokenizeText];
-	
-	return [super keyboardInput:input shouldInsertText:text isMarkedText:markedText];
-}
-
-- (BOOL)keyboardInputShouldDelete:(id)keyboardInput {
-	
-	if (tokens.count && [self.text isEqualToString:kTextEmpty]){
-		[self selectToken:[tokens lastObject]];
-		return NO;
-	}
-	
-	if ([self.text isEqualToString:kTextHidden]){
-		[self removeToken:self.selectedToken];
-		return NO;
-	}
-	
-	return [super keyboardInputShouldDelete:keyboardInput];
-}
-*/
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
 	
@@ -568,10 +497,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
 	
-	if (selectedToken && touch.view == self){
-		[self deselectSelectedToken];
-	}
-	
+	if (selectedToken && touch.view == self) [self deselectSelectedToken];
 	return [super beginTrackingWithTouch:touch withEvent:event];
 }
 
@@ -582,7 +508,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
 		[self addToken:token];
 		[token release];
-		
 		return token;
 	}
 	
@@ -638,11 +563,14 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)tokenizeText {
 	
-	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && 
-		[[self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] != 0){
+	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
 		
-		NSUInteger loc = [[self.text substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
-		[self addTokenWithTitle:[self.text substringWithRange:NSMakeRange(loc, self.text.length - 1)]];
+		NSArray * components = [self.text componentsSeparatedByCharactersInSet:tokenizingCharacters];
+		for (NSString * component in components){
+			
+			component = [component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			if (component.length) [self addTokenWithTitle:component];
+		}
 	}
 }
 
@@ -831,7 +759,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{8, ceilf(self.font.lineHeight / 1.75)}, self.leftView.bounds.size});
+	return ((CGRect){{8, ceilf(self.font.lineHeight * 4 / 7)}, self.leftView.bounds.size});
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
@@ -845,6 +773,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)dealloc {
 	[self setDelegate:nil];
+	[internalDelegate release];
 	[tokens release];
 	[tokenizingCharacters release];
     [super dealloc];
@@ -853,17 +782,105 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @end
 
 //==========================================================
+#pragma mark - TITokenFieldDelegate -
+//==========================================================
+@implementation TITokenFieldInternalDelegate 
+@synthesize delegate;
+@synthesize tokenField;
+
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+	
+	if ([delegate respondsToSelector:@selector(textFieldShouldBeginEditing:)]){
+		return [delegate textFieldShouldBeginEditing:textField];
+	}
+	
+	return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+	
+	if ([delegate respondsToSelector:@selector(textFieldDidBeginEditing:)]){
+		[delegate textFieldDidBeginEditing:textField];
+	}
+}
+
+- (BOOL)textFieldShouldEndEditing:(UITextField *)textField {
+	
+	if ([delegate respondsToSelector:@selector(textFieldShouldEndEditing:)]){
+		return [delegate textFieldShouldEndEditing:textField];
+	}
+	
+	return YES;
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField {
+	
+	if ([delegate respondsToSelector:@selector(textFieldDidEndEditing:)]){
+		[delegate textFieldDidEndEditing:textField];
+	}
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+	
+	if (tokenField.tokens.count && [string isEqualToString:@""] && [tokenField.text isEqualToString:kTextEmpty]){
+		[tokenField selectToken:[tokenField.tokens lastObject]];
+		return NO;
+	}
+	
+	if ([textField.text isEqualToString:kTextHidden]){
+		
+		if ([string isEqualToString:@""])
+			[tokenField removeToken:tokenField.selectedToken];
+		
+		return NO;
+	}
+	
+	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
+		[tokenField tokenizeText];
+		return NO;
+	}
+	
+	if ([delegate respondsToSelector:@selector(textField:shouldChangeCharactersInRange:replacementString:)]){
+		return [delegate textField:textField shouldChangeCharactersInRange:range replacementString:string];
+	}
+	
+	return YES;
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+	
+	[tokenField tokenizeText];
+	
+	if ([delegate respondsToSelector:@selector(textFieldShouldReturn:)]){
+		[delegate textFieldShouldReturn:textField];
+	}
+	
+	return YES;
+}
+
+- (BOOL)textFieldShouldClear:(UITextField *)textField {
+	
+	if ([delegate respondsToSelector:@selector(textFieldShouldClear:)]){
+		return [delegate textFieldShouldClear:textField];
+	}
+	
+	return YES;
+}
+
+@end
+
+
+//==========================================================
 #pragma mark - TIToken -
 //==========================================================
 
-CGFloat const kTITokenMaxWidth = 150;
-
 @implementation TIToken
-@synthesize highlighted;
-@synthesize selected;
 @synthesize title;
 @synthesize font;
 @synthesize tintColor;
+@synthesize maxWidth;
+@synthesize highlighted;
+@synthesize selected;
 @synthesize representedObject;
 
 - (id)initWithTitle:(NSString *)aTitle {
@@ -883,6 +900,7 @@ CGFloat const kTITokenMaxWidth = 150;
 		
 		font = [aFont retain];
 		tintColor = [[UIColor colorWithRed:0.367 green:0.406 blue:0.973 alpha:1] retain];
+		maxWidth = 150;
 		[self sizeToFit];
 		
 		[self setBackgroundColor:[UIColor clearColor]];
@@ -893,7 +911,7 @@ CGFloat const kTITokenMaxWidth = 150;
 
 - (void)sizeToFit {
 	
-	CGSize tokenSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
+	CGSize tokenSize = [title sizeWithFont:font forWidth:(maxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
 	[self setFrame:((CGRect){self.frame.origin, {tokenSize.width + 18, tokenSize.height + 8}})];
 	[self setNeedsDisplay];
 }
@@ -902,7 +920,7 @@ CGFloat const kTITokenMaxWidth = 150;
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(kTITokenMaxWidth - 17) lineBreakMode:UILineBreakModeTailTruncation];
+	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - 18) lineBreakMode:UILineBreakModeTailTruncation];
 	CGFloat arcValue = ((self.bounds.size.height - 4) / 2) + 1;
 	
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
@@ -1022,6 +1040,14 @@ CGFloat const kTITokenMaxWidth = 150;
 	tintColor = newTintColor;
 	
 	[self setNeedsDisplay];
+}
+
+- (void)setMaxWidth:(CGFloat)width {
+	
+	if (maxWidth != width){
+		maxWidth = width;
+		[self sizeToFit];
+	}
 }
 
 - (NSString *)description {

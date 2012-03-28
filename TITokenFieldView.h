@@ -35,10 +35,7 @@
 //==========================================================
 @protocol TITokenFieldViewDelegate <UIScrollViewDelegate>
 @optional
-- (BOOL)tokenFieldShouldReturn:(TITokenField *)tokenField;
-
 - (void)tokenField:(TITokenField *)tokenField didChangeToFrame:(CGRect)frame;
-- (void)tokenFieldTextDidChange:(TITokenField *)tokenField;
 - (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
 
 - (UITableViewCell *)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView cellForObject:(id)object;
@@ -49,6 +46,14 @@
 @optional
 - (void)tokenFieldWillResize:(TITokenField *)tokenField animated:(BOOL)animated;
 - (void)tokenFieldDidResize:(TITokenField *)tokenField animated:(BOOL)animated;
+@end
+
+@interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
+	
+	id <UITextFieldDelegate> delegate;
+	TITokenField * tokenField;
+}
+
 @end
 
 //==========================================================
@@ -90,6 +95,7 @@
 @interface TITokenField : UITextField {
 	
 	id <TITokenFieldDelegate> delegate;
+	TITokenFieldInternalDelegate * internalDelegate;
 	
 	NSMutableArray * tokens;
 	TIToken * selectedToken;
@@ -100,7 +106,6 @@
 	int numberOfLines;
 	
 	UIButton * addButton;
-	
 	id addButtonTarget;
 	SEL addButtonSelector;
 	
@@ -145,6 +150,8 @@
 	UIFont * font;
 	UIColor * tintColor;
 	
+	CGFloat maxWidth;
+	
 	BOOL selected;
 	BOOL highlighted;
 	
@@ -154,6 +161,7 @@
 @property (nonatomic, copy) NSString * title;
 @property (nonatomic, retain) UIFont * font;
 @property (nonatomic, retain) UIColor * tintColor;
+@property (nonatomic, assign) CGFloat maxWidth;
 @property (nonatomic, getter=isHighlighted) BOOL highlighted;
 @property (nonatomic, getter=isSelected) BOOL selected;
 @property (nonatomic, retain) id representedObject;
