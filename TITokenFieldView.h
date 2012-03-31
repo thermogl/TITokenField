@@ -101,7 +101,7 @@
 	TIToken * selectedToken;
 	
 	BOOL resultsModeEnabled;
-	BOOL removesTokensOnEndsEditing;
+	BOOL removesTokensOnEndEditing;
 	
 	CGPoint cursorLocation;
 	int numberOfLines;
