@@ -1007,16 +1007,15 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		disclosureWidth += hTextPadding / 4;
 		
 		CGContextAddPath(context, disclosurePath);
+		CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
 		
 		if (drawHighlighted){
-			CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
 			CGContextFillPath(context);
 		}
 		else
 		{
 			CGContextSaveGState(context);
 			CGContextSetShadowWithColor(context, CGSizeMake(0, 1), 1, [[[UIColor whiteColor] colorWithAlphaComponent:0.6] CGColor]);
-			CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
 			CGContextFillPath(context);
 			CGContextRestoreGState(context);
 			
@@ -1157,6 +1156,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (void)dealloc {
 	[title release];
+	[font release];
 	[tintColor release];
 	[representedObject release];
     [super dealloc];
