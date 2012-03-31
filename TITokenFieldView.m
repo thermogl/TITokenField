@@ -363,6 +363,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @implementation TITokenField
 @synthesize delegate;
 @synthesize tokens;
+@synthesize editable;
 @synthesize resultsModeEnabled;
 @synthesize removesTokensOnEndEditing;
 @synthesize numberOfLines;
@@ -422,6 +423,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	
 	tokens = [[NSMutableArray alloc] init];
 	selectedToken = nil;
+	editable = YES;
 	removesTokensOnEndEditing = YES;
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
 }
@@ -447,6 +449,10 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (UIScrollView *)scrollView {
 	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
+}
+
+- (BOOL)becomeFirstResponder {
+	return (editable ? [super becomeFirstResponder] : NO);
 }
 
 #pragma mark Event Handling
@@ -554,8 +560,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	selectedToken = token;
 	[selectedToken setSelected:YES];
 	
-	if (![self isFirstResponder]) 
-		[self becomeFirstResponder];
+	[self becomeFirstResponder];
 	
 	[self setText:kTextHidden];
 }
@@ -590,7 +595,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (void)tokenTouchUpInside:(TIToken *)token {
-	[self selectToken:token];
+	if (editable) [self selectToken:token];
 }
 
 - (CGFloat)layoutTokens {
@@ -674,28 +679,28 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	}
 }
 
-- (void)setResultsModeEnabled:(BOOL)enabled {
-	[self setResultsModeEnabled:enabled animated:YES];
+- (void)setResultsModeEnabled:(BOOL)flag {
+	[self setResultsModeEnabled:flag animated:YES];
 }
 
-- (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated {
+- (void)setResultsModeEnabled:(BOOL)flag animated:(BOOL)animated {
 	
 	[self updateHeightAnimated:animated];
 	
-	if (resultsModeEnabled != enabled){
+	if (resultsModeEnabled != flag){
 		
 		//Hide / show the shadow
-		[self.layer setMasksToBounds:!enabled];
+		[self.layer setMasksToBounds:!flag];
 		
 		UIScrollView * scrollView = self.scrollView;
-		[scrollView setScrollsToTop:!enabled];
-		[scrollView setScrollEnabled:!enabled];
+		[scrollView setScrollsToTop:!flag];
+		[scrollView setScrollEnabled:!flag];
 		
-		CGFloat offset = ((numberOfLines == 1 || !enabled) ? 0 : cursorLocation.y - floor(self.font.lineHeight * 4 / 7) + 1);
+		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : cursorLocation.y - floor(self.font.lineHeight * 4 / 7) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
 	
-	resultsModeEnabled = enabled;
+	resultsModeEnabled = flag;
 }
 
 #pragma mark Other
@@ -882,7 +887,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 //==========================================================
 
 CGFloat const hTextPadding = 18;
-UILineBreakMode const lineBreakMode = UILineBreakModeTailTruncation;
+CGFloat const kDisclosureThickness = 2.5;
+UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
 
 @interface TIToken (Private)
 CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath);
@@ -928,11 +934,11 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGFloat disclosureWidth = 0;
 	if (hasDisclosureIndicator){
-		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize + 1, 2, &disclosureWidth));
+		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &disclosureWidth));
 		disclosureWidth += hTextPadding / 4;
 	}
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:lineBreakMode];
+	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:kLineBreakMode];
 	[self setFrame:((CGRect){self.frame.origin, {titleSize.width + hTextPadding + disclosureWidth, titleSize.height + 8}})];
 	[self setNeedsDisplay];
 }
@@ -1003,7 +1009,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if (hasDisclosureIndicator){
 		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - (hTextPadding / 2), (self.bounds.size.height / 2) - 1);
-		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize + 1, 2, &disclosureWidth);
+		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &disclosureWidth);
 		disclosureWidth += hTextPadding / 4;
 		
 		CGContextAddPath(context, disclosurePath);
@@ -1028,7 +1034,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 			CGGradientRelease(disclosureGradient);
 			
 			arrowPoint.y += 0.5;
-			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize + 1, 2, NULL);
+			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, NULL);
 			CGContextAddPath(context, innerShadowPath);
 			CGContextSetStrokeColor(context, (CGFloat[4]){0, 0, 0, 0.3});
 			CGContextStrokePath(context);
@@ -1040,13 +1046,13 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGColorSpaceRelease(colorspace);
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:lineBreakMode];
+	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:kLineBreakMode];
 	CGFloat vPadding = (self.bounds.size.height - titleSize.height) / 2;
 	CGFloat titleWidth = self.bounds.size.width - hTextPadding - disclosureWidth;
 	CGRect textBounds = CGRectMake(hTextPadding / 2, vPadding - 1, titleWidth, self.bounds.size.height - (vPadding * 2));
 	
 	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
-	[title drawInRect:textBounds withFont:font lineBreakMode:lineBreakMode];
+	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
 }
 
 CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath) {
@@ -1061,7 +1067,7 @@ CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath)
 
 CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat height, CGFloat thickness, CGFloat * width) {
 	
-	thickness = thickness / cosf(M_PI / 4);
+	thickness /= cosf(M_PI / 4);
 	
 	CGMutablePathRef path = CGPathCreateMutable();
 	CGPathMoveToPoint(path, NULL, arrowPointFront.x, arrowPointFront.y);
