@@ -364,6 +364,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @synthesize delegate;
 @synthesize tokens;
 @synthesize resultsModeEnabled;
+@synthesize removesTokensOnEndEditing;
 @synthesize numberOfLines;
 @synthesize addButtonSelector;
 @synthesize addButtonTarget;
@@ -422,6 +423,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	tokens = [[NSMutableArray alloc] init];
 	selectedToken = nil;
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
+	removesTokensOnEndEditing = NO;
 }
 
 - (void)setFrame:(CGRect)frame {
@@ -458,27 +460,32 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	selectedToken = nil;
 	
 	[self tokenizeText];
-	for (TIToken * token in tokens) [token removeFromSuperview];
 	
-	NSString * untokenized = kTextEmpty;
-	
-	if (tokens.count){
+	if (removesTokensOnEndsEditing){
 		
-		NSMutableArray * titles = [[NSMutableArray alloc] init];
-		for (TIToken * token in tokens) [titles addObject:token.title];
+		for (TIToken * token in tokens) [token removeFromSuperview];
 		
-		untokenized = [self.tokenTitles componentsJoinedByString:@", "];
-		CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
-		CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
+		NSString * untokenized = kTextEmpty;
 		
-		if (tokens.count > 1 && untokSize.width > availableWidth){
-			untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+		if (tokens.count){
+			
+			NSMutableArray * titles = [[NSMutableArray alloc] init];
+			for (TIToken * token in tokens) [titles addObject:token.title];
+			
+			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
+			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
+			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
+			
+			if (tokens.count > 1 && untokSize.width > availableWidth){
+				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+			}
+			
+			[titles release];
 		}
 		
-		[titles release];
+		[self setText:untokenized];
 	}
 	
-	[self setText:untokenized];
 	[self setResultsModeEnabled:NO];
 }
 
@@ -878,7 +885,6 @@ CGFloat const hTextPadding = 18;
 UILineBreakMode const lineBreakMode = UILineBreakModeTailTruncation;
 
 @interface TIToken (Private)
-- (CGFloat)drawDisclosureIndicator;
 CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath);
 CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat height, CGFloat thickness, CGFloat * width);
 @end

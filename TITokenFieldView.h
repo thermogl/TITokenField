@@ -101,6 +101,7 @@
 	TIToken * selectedToken;
 	
 	BOOL resultsModeEnabled;
+	BOOL removesTokensOnEndsEditing;
 	
 	CGPoint cursorLocation;
 	int numberOfLines;
@@ -117,6 +118,7 @@
 @property (nonatomic, readonly) TIToken * selectedToken;
 @property (nonatomic, readonly) NSArray * tokenTitles;
 @property (nonatomic, assign) BOOL resultsModeEnabled;
+@property (nonatomic, assign) BOOL removesTokensOnEndEditing;
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic, assign) id addButtonTarget;
 @property (nonatomic, assign) SEL addButtonSelector;

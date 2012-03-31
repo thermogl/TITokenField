@@ -64,7 +64,8 @@
 	// For now, it's a good chance to show how to add tokens.
 	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
 	[token setHasDisclosureIndicator:YES];
-	[token setTintColor:[UIColor colorWithRed:0.230 green:0.764 blue:0.090 alpha:1.000]];
+	[token setTintColor:[UIColor colorWithRed:0.23 green:0.764 blue:0.09 alpha:1]];
+	// Maybe TITokenField should listen to frame changes of its tokens.
 	
 	// You can access token titles with 'tokenFieldView.tokenTitles'.
 	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).
