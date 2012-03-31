@@ -11,7 +11,6 @@
 @interface TokenFieldExampleAppDelegate : NSObject <UIApplicationDelegate> {
 	
     UIWindow * window;
-    UINavigationController * navigationController;
 }
 
 @end

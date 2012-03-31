@@ -8,7 +8,6 @@
 
 #import "Names.h"
 
-
 @implementation Names
 
 + (NSArray *)listOfNames {

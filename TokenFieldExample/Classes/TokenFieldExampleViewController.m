@@ -62,7 +62,9 @@
 	
 	// Show some kind of contacts picker in here.
 	// For now, it's a good chance to show how to add tokens.
-	[tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
+	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
+	[token setHasDisclosureIndicator:YES];
+	[token setTintColor:[UIColor colorWithRed:0.230 green:0.764 blue:0.090 alpha:1.000]];
 	
 	// You can access token titles with 'tokenFieldView.tokenTitles'.
 	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).

@@ -11,30 +11,25 @@
 
 @implementation TokenFieldExampleAppDelegate
 
-
-#pragma mark -
-#pragma mark Application lifecycle
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
 	
 	window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	
 	TokenFieldExampleViewController * viewController = [[TokenFieldExampleViewController alloc] init];
-	navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+	UINavigationController * navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
 	[viewController release];
 	
-    [window addSubview:navigationController.view];
+    [window setRootViewController:navigationController];
+	[navigationController release];
+	
     [window makeKeyAndVisible];
 
     return YES;
 }
 
-
 - (void)dealloc {
-    [navigationController release];
     [window release];
     [super dealloc];
 }
-
 
 @end

@@ -151,9 +151,7 @@
 	UIColor * tintColor;
 	
 	CGFloat maxWidth;
-	
-	BOOL selected;
-	BOOL highlighted;
+	BOOL hasDisclosureIndicator;
 	
 	id representedObject;
 }
@@ -162,8 +160,7 @@
 @property (nonatomic, retain) UIFont * font;
 @property (nonatomic, retain) UIColor * tintColor;
 @property (nonatomic, assign) CGFloat maxWidth;
-@property (nonatomic, getter=isHighlighted) BOOL highlighted;
-@property (nonatomic, getter=isSelected) BOOL selected;
+@property (nonatomic, assign) BOOL hasDisclosureIndicator;
 @property (nonatomic, retain) id representedObject;
 
 - (id)initWithTitle:(NSString *)aTitle;

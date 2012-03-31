@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-
 @interface Names : NSObject
 + (NSArray *)listOfNames;
 @end
