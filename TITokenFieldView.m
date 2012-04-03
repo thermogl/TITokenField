@@ -28,6 +28,8 @@
 //==========================================================
 
 @interface TITokenFieldView (Private)
+- (NSString *)displayStringForRepresentedObject:(id)object;
+- (NSString *)searchResultStringForRepresentedObject:(id)object;
 - (void)setSearchResultsVisible:(BOOL)visible;
 - (void)resultsForSubstring:(NSString *)substring;
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated;
@@ -190,22 +192,24 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForObject:)]){
-		return [delegate tokenField:tokenField resultsTableView:tableView cellForObject:[resultsArray objectAtIndex:indexPath.row]];
+	id representedObject = [resultsArray objectAtIndex:indexPath.row];
+	
+	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForRepresentedObject:)]){
+		return [delegate tokenField:tokenField resultsTableView:tableView cellForRepresentedObject:representedObject];
 	}
 	
     static NSString * CellIdentifier = @"ResultsCell";
     
     UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (!cell) cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
-	[cell.textLabel setText:[resultsArray objectAtIndex:indexPath.row]];
+	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
 	
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	[tokenField addTokenWithTitle:[resultsArray objectAtIndex:indexPath.row]];
+	[tokenField addTokenWithTitle:[self displayStringForRepresentedObject:[resultsArray objectAtIndex:indexPath.row]]];
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -247,6 +251,28 @@
 }
 
 #pragma mark Results Methods
+- (NSString *)displayStringForRepresentedObject:(id)object {
+	
+	if ([delegate respondsToSelector:@selector(tokenField:displayStringForRepresentedObject:)]){
+		return [delegate tokenField:tokenField displayStringForRepresentedObject:object];
+	}
+	
+	if ([object isKindOfClass:[NSString class]]){
+		return (NSString *)object;
+	}
+	
+	return [NSString stringWithFormat:@"%@", object];
+}
+
+- (NSString *)searchResultStringForRepresentedObject:(id)object {
+	
+	if ([delegate respondsToSelector:@selector(tokenField:searchResultStringForRepresentedObject:)]){
+		return [delegate tokenField:tokenField searchResultStringForRepresentedObject:object];
+	}
+	
+	return [self displayStringForRepresentedObject:object];
+}
+
 - (void)setSearchResultsVisible:(BOOL)visible {
 	
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
@@ -422,7 +448,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[super setDelegate:internalDelegate];
 	
 	tokens = [[NSMutableArray alloc] init];
-	selectedToken = nil;
 	editable = YES;
 	removesTokensOnEndEditing = YES;
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
@@ -436,6 +461,14 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)setText:(NSString *)text {
 	[super setText:((text.length == 0 || [text isEqualToString:@""]) ? kTextEmpty : text)];
+}
+
+- (void)setFont:(UIFont *)font {
+	[super setFont:font];
+	
+	if ([self.leftView isKindOfClass:[UILabel class]]){
+		[self setPromptText:((UILabel *)self.leftView).text];
+	}
 }
 
 - (void)setDelegate:(id<TITokenFieldDelegate>)del {
@@ -504,7 +537,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	// Stop the cut, copy, select and selectAll appearing when the field is 'empty'.
 	if (action == @selector(cut:) || action == @selector(copy:) || action == @selector(select:) || action == @selector(selectAll:))
 		return ![self.text isEqualToString:kTextEmpty];
-	
+	 
 	return [super canPerformAction:action withSender:sender];
 }
 
@@ -616,6 +649,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	
 	for (TIToken * token in tokens){
 		
+		[token setFont:self.font];
+		
 		if (token.superview){
 			
 			CGFloat lineWidth = cursorLocation.x + token.bounds.size.width + rightMargin;
@@ -718,7 +753,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setFont:[UIFont systemFontOfSize:self.font.pointSize + 1]];
 			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
 			[self setLeftView:label];
 			[label release];
@@ -727,6 +761,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		}
 		
 		[label setText:text];
+		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
 		[label sizeToFit];
 	}
 	else
@@ -794,7 +829,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @end
 
 //==========================================================
-#pragma mark - TITokenFieldDelegate -
+#pragma mark - TITokenFieldInternalDelegate -
 //==========================================================
 @implementation TITokenFieldInternalDelegate 
 @synthesize delegate;
@@ -840,11 +875,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	}
 	
 	if ([textField.text isEqualToString:kTextHidden]){
-		
-		if ([string isEqualToString:@""])
-			[tokenField removeToken:tokenField.selectedToken];
-		
-		return NO;
+		[tokenField removeToken:tokenField.selectedToken];
+		return (![string isEqualToString:@""]);
 	}
 	
 	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
@@ -886,7 +918,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 #pragma mark - TIToken -
 //==========================================================
 
-CGFloat const hTextPadding = 18;
+CGFloat const hTextPadding = 14;
 CGFloat const kDisclosureThickness = 2.5;
 UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
 
@@ -935,7 +967,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGFloat disclosureWidth = 0;
 	if (hasDisclosureIndicator){
 		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &disclosureWidth));
-		disclosureWidth += hTextPadding / 4;
+		disclosureWidth += ceilf(hTextPadding / 2);
 	}
 	
 	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:kLineBreakMode];
@@ -1010,7 +1042,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	if (hasDisclosureIndicator){
 		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - (hTextPadding / 2), (self.bounds.size.height / 2) - 1);
 		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &disclosureWidth);
-		disclosureWidth += hTextPadding / 4;
+		disclosureWidth += ceilf(hTextPadding / 2);
 		
 		CGContextAddPath(context, disclosurePath);
 		CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});

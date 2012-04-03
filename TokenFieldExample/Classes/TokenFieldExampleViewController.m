@@ -101,9 +101,8 @@
 
 - (void)textViewDidChange:(UITextView *)textView {
 	
-	CGFloat fontHeight = (textView.font.ascender - textView.font.descender) + 1;
-	CGFloat originHeight = tokenFieldView.frame.size.height - tokenFieldView.tokenField.frame.size.height;
-	CGFloat newHeight = textView.contentSize.height + fontHeight;
+	CGFloat oldHeight = tokenFieldView.frame.size.height - tokenFieldView.tokenField.frame.size.height;
+	CGFloat newHeight = textView.contentSize.height + textView.font.lineHeight;
 	
 	CGRect newTextFrame = textView.frame;
 	newTextFrame.size = textView.contentSize;
@@ -112,9 +111,9 @@
 	CGRect newFrame = tokenFieldView.contentView.frame;
 	newFrame.size.height = newHeight;
 	
-	if (newHeight < originHeight){
-		newTextFrame.size.height = originHeight;
-		newFrame.size.height = originHeight;
+	if (newHeight < oldHeight){
+		newTextFrame.size.height = oldHeight;
+		newFrame.size.height = oldHeight;
 	}
 		
 	[tokenFieldView.contentView setFrame:newFrame];
