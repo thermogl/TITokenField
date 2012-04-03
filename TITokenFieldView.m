@@ -781,7 +781,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 - (void)performButtonAction {
 	
 	if (!self.editing) [self becomeFirstResponder];	
-	[addButtonTarget performSelector:addButtonSelector];
+	[addButtonTarget performSelector:addButtonSelector withObject:addButton];
 }
 
 - (CGRect)textRectForBounds:(CGRect)bounds {
@@ -916,6 +916,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 //==========================================================
 
 CGFloat const hTextPadding = 14;
+CGFloat const vTextPadding = 8;
 CGFloat const kDisclosureThickness = 2.5;
 UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
 
@@ -965,18 +966,18 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
 		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &accessoryWidth));
-		accessoryWidth += ceilf(hTextPadding / 2);
+		accessoryWidth += floorf(hTextPadding / 2);
 	}
 	
 	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	[self setFrame:((CGRect){self.frame.origin, {titleSize.width + hTextPadding + accessoryWidth, titleSize.height + 8}})];
+	[self setFrame:((CGRect){self.frame.origin, {floorf(titleSize.width + hTextPadding + accessoryWidth), floorf(titleSize.height + vTextPadding)}})];
 	[self setNeedsDisplay];
 }
 
 - (void)drawRect:(CGRect)rect {
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();
-	CGFloat arcValue = ((self.bounds.size.height - 4) / 2) + 1;
+	CGFloat arcValue = ((self.bounds.size.height - (vTextPadding / 2)) / 2) + 1;
 	BOOL drawHighlighted = (self.selected || self.highlighted);
 	
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
@@ -1038,9 +1039,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGFloat accessoryWidth = 0;
 	
 	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
-		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - (hTextPadding / 2), (self.bounds.size.height / 2) - 1);
+		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - floorf(hTextPadding / 2), (self.bounds.size.height / 2) - 1);
 		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &accessoryWidth);
-		accessoryWidth += ceilf(hTextPadding / 2);
+		accessoryWidth += floorf(hTextPadding / 2);
 		
 		CGContextAddPath(context, disclosurePath);
 		CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
@@ -1077,9 +1078,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGColorSpaceRelease(colorspace);
 	
 	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	CGFloat vPadding = (self.bounds.size.height - titleSize.height) / 2;
-	CGFloat titleWidth = self.bounds.size.width - hTextPadding - accessoryWidth;
-	CGRect textBounds = CGRectMake(hTextPadding / 2, vPadding - 1, titleWidth, self.bounds.size.height - (vPadding * 2));
+	CGFloat vPadding = floor((self.bounds.size.height - titleSize.height) / 2);
+	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding - accessoryWidth);
+	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
 	
 	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
 	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
