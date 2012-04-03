@@ -148,6 +148,11 @@
 //==========================================================
 #pragma mark - TIToken -
 //==========================================================
+typedef enum {
+	TITokenAccessoryTypeNone = 0,
+	TITokenAccessoryTypeDisclosureIndicator = 1,
+} TITokenAccessoryType;
+
 @interface TIToken : UIControl {
 	
 	NSString * title;
@@ -156,16 +161,16 @@
 	UIColor * tintColor;
 	
 	CGFloat maxWidth;
-	BOOL hasDisclosureIndicator;
+	TITokenAccessoryType accessoryType;
 	
 	id representedObject;
 }
 
 @property (nonatomic, copy) NSString * title;
 @property (nonatomic, retain) UIFont * font;
-@property (nonatomic, retain) UIColor * tintColor;
+@property (nonatomic, retain) UIColor * tintColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, assign) CGFloat maxWidth;
-@property (nonatomic, assign) BOOL hasDisclosureIndicator;
+@property (nonatomic, assign) TITokenAccessoryType accessoryType;
 @property (nonatomic, retain) id representedObject;
 
 - (id)initWithTitle:(NSString *)aTitle;

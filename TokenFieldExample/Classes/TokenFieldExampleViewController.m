@@ -63,7 +63,7 @@
 	// Show some kind of contacts picker in here.
 	// For now, it's a good chance to show how to add tokens.
 	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
-	[token setHasDisclosureIndicator:YES];
+	[token setAccessoryType:TITokenAccessoryTypeDisclosureIndicator];
 	[token setTintColor:[UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1]];
 	// Maybe TITokenField should listen to frame changes of its tokens.
 	

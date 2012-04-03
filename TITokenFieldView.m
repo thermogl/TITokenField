@@ -305,7 +305,7 @@
 	
 	for (NSString * sourceObject in sourceCopy){
 		
-		NSString * query = [sourceObject lowercaseString];		
+		NSString * query = [[self searchResultStringForRepresentedObject:sourceObject] lowercaseString];		
 		if ([query rangeOfString:typedString].location != NSNotFound){
 			
 			if (showAlreadyTokenized){
@@ -932,7 +932,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @synthesize font;
 @synthesize tintColor;
 @synthesize maxWidth;
-@synthesize hasDisclosureIndicator;
+@synthesize accessoryType;
 @synthesize representedObject;
 
 - (id)initWithTitle:(NSString *)aTitle {
@@ -949,7 +949,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		
 		title = [aTitle copy];
 		representedObject = [object retain];
-		hasDisclosureIndicator = NO;
+		accessoryType = TITokenAccessoryTypeNone;
 		
 		font = [aFont retain];
 		tintColor = [[UIColor colorWithRed:0.216 green:0.373 blue:0.965 alpha:1] retain];
@@ -964,14 +964,15 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (void)sizeToFit {
 	
-	CGFloat disclosureWidth = 0;
-	if (hasDisclosureIndicator){
-		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &disclosureWidth));
-		disclosureWidth += ceilf(hTextPadding / 2);
+	CGFloat accessoryWidth = 0;
+	
+	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
+		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &accessoryWidth));
+		accessoryWidth += ceilf(hTextPadding / 2);
 	}
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:kLineBreakMode];
-	[self setFrame:((CGRect){self.frame.origin, {titleSize.width + hTextPadding + disclosureWidth, titleSize.height + 8}})];
+	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
+	[self setFrame:((CGRect){self.frame.origin, {titleSize.width + hTextPadding + accessoryWidth, titleSize.height + 8}})];
 	[self setNeedsDisplay];
 }
 
@@ -1037,12 +1038,12 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGGradientRelease(gradient);
 	CGContextRestoreGState(context);
 	
-	CGFloat disclosureWidth = 0;
+	CGFloat accessoryWidth = 0;
 	
-	if (hasDisclosureIndicator){
+	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
 		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - (hTextPadding / 2), (self.bounds.size.height / 2) - 1);
-		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &disclosureWidth);
-		disclosureWidth += ceilf(hTextPadding / 2);
+		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &accessoryWidth);
+		accessoryWidth += ceilf(hTextPadding / 2);
 		
 		CGContextAddPath(context, disclosurePath);
 		CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
@@ -1078,9 +1079,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGColorSpaceRelease(colorspace);
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - disclosureWidth) lineBreakMode:kLineBreakMode];
+	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
 	CGFloat vPadding = (self.bounds.size.height - titleSize.height) / 2;
-	CGFloat titleWidth = self.bounds.size.width - hTextPadding - disclosureWidth;
+	CGFloat titleWidth = self.bounds.size.width - hTextPadding - accessoryWidth;
 	CGRect textBounds = CGRectMake(hTextPadding / 2, vPadding - 1, titleWidth, self.bounds.size.height - (vPadding * 2));
 	
 	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
@@ -1180,10 +1181,10 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 }
 
-- (void)setHasDisclosureIndicator:(BOOL)flag {
+- (void)setAccessoryType:(TITokenAccessoryType)type {
 	
-	if (hasDisclosureIndicator != flag){
-		hasDisclosureIndicator = flag;
+	if (accessoryType != type){
+		accessoryType = type;
 		[self sizeToFit];
 	}
 }
