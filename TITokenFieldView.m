@@ -305,7 +305,7 @@
 	
 	for (NSString * sourceObject in sourceCopy){
 		
-		NSString * query = [sourceObject lowercaseString];		
+		NSString * query = [[self searchResultStringForRepresentedObject:sourceObject] lowercaseString];		
 		if ([query rangeOfString:typedString].location != NSNotFound){
 			
 			if (showAlreadyTokenized){
