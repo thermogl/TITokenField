@@ -317,7 +317,7 @@
 				
 				for (TIToken * token in tokenField.tokens){
 					
-					if (token.representedObject == sourceObject){
+					if ([token.representedObject isEqual:sourceObject]){
 						shouldAdd = NO;
 						break;
 					}
