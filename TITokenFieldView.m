@@ -209,7 +209,10 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	[tokenField addTokenWithTitle:[self displayStringForRepresentedObject:[resultsArray objectAtIndex:indexPath.row]]];
+	id representedObject = [resultsArray objectAtIndex:indexPath.row];
+	TIToken * token = [tokenField addTokenWithTitle:[self displayStringForRepresentedObject:representedObject]];
+	[token setRepresentedObject:representedObject];
+	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -308,28 +311,22 @@
 		NSString * query = [[self searchResultStringForRepresentedObject:sourceObject] lowercaseString];		
 		if ([query rangeOfString:typedString].location != NSNotFound){
 			
-			if (showAlreadyTokenized){
-				if (![resultsArray containsObject:sourceObject]){
-					[resultsArray addObject:sourceObject];
-				}
-			}
-			else
-			{
-				BOOL shouldAdd = YES;
+			BOOL shouldAdd = YES;
+			
+			if (!showAlreadyTokenized){
 				
-				NSArray * tokensCopy = [tokenField.tokens copy];
-				for (TIToken * token in tokensCopy){
-					if ([[token.title lowercaseString] rangeOfString:query].location != NSNotFound){
+				for (TIToken * token in tokenField.tokens){
+					
+					if (token.representedObject == sourceObject){
 						shouldAdd = NO;
 						break;
 					}
 				}
-				[tokensCopy release];
-				
-				if (shouldAdd){
-					if (![resultsArray containsObject:sourceObject]){
-						[resultsArray addObject:sourceObject];
-					}
+			}
+			
+			if (shouldAdd){
+				if (![resultsArray containsObject:sourceObject]){
+					[resultsArray addObject:sourceObject];
 				}
 			}
 		}
