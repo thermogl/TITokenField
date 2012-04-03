@@ -337,7 +337,9 @@
 	
 	[sourceCopy release];
 	
-	[resultsArray sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+	[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+		return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+	}];
 	[resultsTable reloadData];
 }
 
