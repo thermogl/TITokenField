@@ -301,15 +301,13 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	NSUInteger loc = [[substring substringWithRange:NSMakeRange(0, 1)] isEqualToString:@" "] ? 1 : 0;
-	NSString * typedString = [[substring substringWithRange:NSMakeRange(loc, substring.length - 1)] lowercaseString];
+	NSString * strippedString = [substring stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
 	NSArray * sourceCopy = [sourceArray copy];
-	
 	for (NSString * sourceObject in sourceCopy){
 		
 		NSString * query = [[self searchResultStringForRepresentedObject:sourceObject] lowercaseString];		
-		if ([query rangeOfString:typedString].location != NSNotFound){
+		if ([query rangeOfString:strippedString].location != NSNotFound){
 			
 			BOOL shouldAdd = YES;
 			
@@ -549,7 +547,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 #pragma mark Token Handling
 - (TIToken *)addTokenWithTitle:(NSString *)title {
 	
-	if (title){
+	if (title.length){
 		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
 		[self addToken:token];
 		[token release];
