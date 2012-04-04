@@ -599,9 +599,9 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		shouldRemove = [delegate tokenField:self willRemoveToken:token];
 	}
 	
-	if (shouldRemove){
+	if (token == selectedToken) [self deselectSelectedToken];
 	
-		if (token == selectedToken) selectedToken = nil;
+	if (shouldRemove){
 	
 		[token removeFromSuperview];
 		[tokens removeObject:token];
@@ -610,7 +610,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 			[delegate tokenField:self didRemoveToken:token];
 		}
 		
-		[self setText:kTextEmpty];
 		[self setResultsModeEnabled:NO];
 	}
 }
