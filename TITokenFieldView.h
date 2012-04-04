@@ -35,7 +35,6 @@
 //==========================================================
 @protocol TITokenFieldViewDelegate <UIScrollViewDelegate>
 @optional
-- (void)tokenField:(TITokenField *)tokenField didChangeToFrame:(CGRect)frame;
 - (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
 - (NSString *)tokenField:(TITokenField *)tokenField displayStringForRepresentedObject:(id)object;
 - (NSString *)tokenField:(TITokenField *)tokenField searchResultStringForRepresentedObject:(id)object;
@@ -45,8 +44,10 @@
 
 @protocol TITokenFieldDelegate <UITextFieldDelegate>
 @optional
-- (void)tokenFieldWillResize:(TITokenField *)tokenField animated:(BOOL)animated;
-- (void)tokenFieldDidResize:(TITokenField *)tokenField animated:(BOOL)animated;
+- (BOOL)tokenField:(TITokenField *)tokenField willAddToken:(TIToken *)token;
+- (void)tokenField:(TITokenField *)tokenField didAddToken:(TIToken *)token;
+- (BOOL)tokenField:(TITokenField *)tokenField willRemoveToken:(TIToken *)token;
+- (void)tokenField:(TITokenField *)tokenField didRemoveToken:(TIToken *)token;
 @end
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
@@ -93,6 +94,11 @@
 //==========================================================
 #pragma mark - TITokenField -
 //==========================================================
+typedef enum {
+	TITokenFieldControlEventFrameWillChange = 1 << 24,
+	TITokenFieldControlEventFrameDidChange = 1 << 25,
+} TITokenFieldControlEvents;
+
 @interface TITokenField : UITextField {
 	
 	id <TITokenFieldDelegate> delegate;

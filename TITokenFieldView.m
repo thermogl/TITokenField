@@ -57,7 +57,11 @@
 		resultsArray = [[NSMutableArray alloc] init];
 		
 		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 42)];
-		[tokenField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+		[tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
+		[tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
+		[tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
+		[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
+		[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
 		[tokenField setDelegate:self];
 		[self addSubview:tokenField];
 		[tokenField release];
@@ -219,25 +223,20 @@
 
 #pragma mark TextField Methods
 
-- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+- (void)tokenFieldDidBeginEditing:(TITokenField *)field {
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
-    return YES;
 }
 
-- (void)textFieldDidBeginEditing:(UITextField *)textField {
-	[resultsTable reloadData];
-}
-
-- (void)textFieldDidEndEditing:(UITextField *)textField {
+- (void)tokenFieldDidEndEditing:(TITokenField *)field {
 	[self setSearchResultsVisible:NO];
 }
 
-- (void)textFieldDidChange:(UITextField *)textField {
-	[self resultsForSubstring:textField.text];
+- (void)tokenFieldTextDidChange:(TITokenField *)field {
+	[self resultsForSubstring:field.text];
 }
 
-- (void)tokenFieldWillResize:(TITokenField *)aTokenField animated:(BOOL)animated {
+- (void)tokenFieldFrameWillChange:(TITokenField *)field {
 	
 	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
 	[separator ti_setOriginY:tokenFieldBottom];
@@ -245,13 +244,8 @@
 	[contentView ti_setOriginY:(tokenFieldBottom + 1)];
 }
 
-- (void)tokenFieldDidResize:(TITokenField *)aTokenField animated:(BOOL)animated {
-	
+- (void)tokenFieldFrameDidChange:(TITokenField *)field {
 	[self updateContentSize];
-	
-	if ([delegate respondsToSelector:@selector(tokenField:didChangeToFrame:)]){
-		[delegate tokenField:aTokenField didChangeToFrame:aTokenField.frame];
-	}
 }
 
 #pragma mark Results Methods
@@ -302,7 +296,7 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	NSString * strippedString = [substring stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSString * strippedString = [[substring stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
 	
 	NSArray * sourceCopy = [sourceArray copy];
 	for (NSString * sourceObject in sourceCopy){
@@ -574,28 +568,51 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)addToken:(TIToken *)token {
 	
-	[self becomeFirstResponder];
+	BOOL shouldAdd = YES;
+	if ([delegate respondsToSelector:@selector(tokenField:willAddToken:)]){
+		shouldAdd = [delegate tokenField:self willAddToken:token];
+	}
 	
-	[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
-	[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
-	[self addSubview:token];
+	if (shouldAdd){
 	
-	if (![tokens containsObject:token]) [tokens addObject:token];
+		[self becomeFirstResponder];
 	
-	[self setResultsModeEnabled:NO];
-	[self setText:kTextEmpty];
+		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
+		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+		[self addSubview:token];
+	
+		if (![tokens containsObject:token]) [tokens addObject:token];
+		
+		if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
+			[delegate tokenField:self didAddToken:token];
+		}
+		
+		[self setResultsModeEnabled:NO];
+		[self setText:kTextEmpty];
+	}
 }
 
 - (void)removeToken:(TIToken *)token {
 	
-	if (token == selectedToken)  
-		selectedToken = nil;
+	BOOL shouldRemove = YES;
+	if ([delegate respondsToSelector:@selector(tokenField:willRemoveToken:)]){
+		shouldRemove = [delegate tokenField:self willRemoveToken:token];
+	}
 	
-	[token removeFromSuperview];
-	[tokens removeObject:token];
+	if (shouldRemove){
 	
-	[self setText:kTextEmpty];
-	[self setResultsModeEnabled:NO];
+		if (token == selectedToken) selectedToken = nil;
+	
+		[token removeFromSuperview];
+		[tokens removeObject:token];
+		
+		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
+			[delegate tokenField:self didRemoveToken:token];
+		}
+		
+		[self setText:kTextEmpty];
+		[self setResultsModeEnabled:NO];
+	}
 }
 
 - (void)selectToken:(TIToken *)token {
@@ -713,16 +730,10 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
 		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
 			[self ti_setHeight:newHeight];
-			
-			if ([delegate respondsToSelector:@selector(tokenFieldWillResize:animated:)]){
-				[delegate tokenFieldWillResize:self animated:animated];
-			}
+			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
 			
 		} completion:^(BOOL complete){
-			
-			if ([delegate respondsToSelector:@selector(tokenFieldDidResize:animated:)]){
-				[delegate tokenFieldDidResize:self animated:animated];
-			}
+			[self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
 		}];
 	}
 }

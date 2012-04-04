@@ -23,6 +23,9 @@
 	tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
 	[tokenFieldView setDelegate:self];
 	[tokenFieldView setSourceArray:[Names listOfNames]];
+	
+	[tokenFieldView.tokenField setDelegate:self];
+	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
 	[tokenFieldView.tokenField setAddButtonAction:@selector(showContactsPicker) target:self];
 	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
 	
@@ -66,7 +69,6 @@
 	[token setAccessoryType:TITokenAccessoryTypeDisclosureIndicator];
 	[token setTintColor:[UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1]];
 	[tokenFieldView.tokenField layoutTokensAnimated:NO];
-	// Maybe TITokenField should listen to frame changes of its tokens.
 	
 	// You can access token titles with 'tokenFieldView.tokenTitles'.
 	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).
@@ -96,7 +98,16 @@
 	[messageView setFrame:tokenFieldView.contentView.bounds];
 }
 
-- (void)tokenField:(TITokenField *)tokenField didChangeToFrame:(CGRect)frame {
+- (BOOL)tokenField:(TITokenField *)tokenField willRemoveToken:(TIToken *)token {
+	
+	if ([token.title isEqualToString:@"Tom Irving"]){
+		return NO;
+	}
+	
+	return YES;
+}
+
+- (void)tokenFieldFrameDidChange:(TITokenField *)tokenField {
 	[self textViewDidChange:messageView];
 }
 
