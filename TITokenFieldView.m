@@ -743,6 +743,13 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	return [titles autorelease];
 }
 
+- (NSArray *)tokenObjects {
+	
+	NSMutableArray * objects = [[NSMutableArray alloc] init];
+	for (TIToken * token in tokens) [objects addObject:token.representedObject];
+	return [objects autorelease];
+}
+
 - (void)setPromptText:(NSString *)text {
 	
 	if (text){

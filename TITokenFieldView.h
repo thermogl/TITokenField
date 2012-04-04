@@ -119,6 +119,7 @@
 @property (nonatomic, readonly) NSArray * tokens;
 @property (nonatomic, readonly) TIToken * selectedToken;
 @property (nonatomic, readonly) NSArray * tokenTitles;
+@property (nonatomic, readonly) NSArray * tokenObjects;
 @property (nonatomic, assign) BOOL editable;
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
