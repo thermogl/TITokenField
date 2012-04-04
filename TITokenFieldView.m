@@ -637,12 +637,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 - (void)tokenizeText {
 	
 	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
-		
-		NSArray * components = [self.text componentsSeparatedByCharactersInSet:tokenizingCharacters];
-		for (NSString * component in components){
-			
-			component = [component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			if (component.length) [self addTokenWithTitle:component];
+		for (NSString * component in [self.text componentsSeparatedByCharactersInSet:tokenizingCharacters]){
+			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 		}
 	}
 }
