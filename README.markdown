@@ -1,11 +1,16 @@
 # TITokenFieldView
-### A control which mimics the To: field in Mail and Messages. Kinda like an NSTokenField.
+
+### Kinda like an NSTokenField for iOS (see Messages / Mail apps).
 
 ## Usage
 
 See the "TokenFieldExample" app for details on usage. It's limited at the moment to one tokenising field and a content view below because it's pulled straight from one of my apps. Multiple field support requires tweaking.
 
 If you're using an external picker, like the contacts picker included with iOS, make sure you call dismissModalViewController… before calling addToken on the field, otherwise existing tokens will be lost.
+
+## ARC?
+
+Nah.
 
 ## License
 
