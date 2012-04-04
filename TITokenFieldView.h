@@ -137,7 +137,7 @@
 
 - (void)tokenizeText;
 
-- (CGFloat)layoutTokens;
+- (CGFloat)layoutTokensAnimated:(BOOL)animated;
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
 
 // Pass nil to any argument in either method to hide the related button.

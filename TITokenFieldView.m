@@ -44,7 +44,7 @@
 @synthesize separator;
 @synthesize sourceArray;
 
-#pragma mark Main Shit
+#pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
 	
     if ((self = [super initWithFrame:frame])){
@@ -110,6 +110,7 @@
     return self;
 }
 
+#pragma mark Property Overrides
 - (void)setFrame:(CGRect)frame {
 	
 	[super setFrame:frame];
@@ -135,6 +136,16 @@
 	[self layoutSubviews];
 }
 
+- (NSArray *)tokenTitles {
+	return tokenField.tokenTitles;
+}
+
+- (void)setDelegate:(id<TITokenFieldViewDelegate>)del {
+	delegate = del;
+	[super setDelegate:delegate];
+}
+
+#pragma mark Event Handling
 - (void)layoutSubviews {
 	
 	[super layoutSubviews];
@@ -160,17 +171,7 @@
 	return [tokenField resignFirstResponder];
 }
 
-- (NSArray *)tokenTitles {
-	return tokenField.tokenTitles;
-}
-
-- (void)setDelegate:(id<TITokenFieldViewDelegate>)del {
-	delegate = del;
-	[super setDelegate:delegate];
-}
-
 #pragma mark TableView Methods
-
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
 	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:heightForRowAtIndexPath:)]){
@@ -347,8 +348,7 @@
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
 
-#pragma mark - Other stuff
-
+#pragma mark Other
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
 }
@@ -450,6 +450,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
 }
 
+#pragma mark Property Overrides
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
 	[self.layer setShadowPath:[[UIBezierPath bezierPathWithRect:self.bounds] CGPath]];
@@ -477,15 +478,29 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	return [[tokens copy] autorelease];
 }
 
+- (NSArray *)tokenTitles {
+	
+	NSMutableArray * titles = [[NSMutableArray alloc] init];
+	for (TIToken * token in tokens) [titles addObject:token.title];
+	return [titles autorelease];
+}
+
+- (NSArray *)tokenObjects {
+	
+	NSMutableArray * objects = [[NSMutableArray alloc] init];
+	for (TIToken * token in tokens) [objects addObject:(token.representedObject ? token.representedObject : token.title)];
+	return [objects autorelease];
+}
+
 - (UIScrollView *)scrollView {
 	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
 }
 
+#pragma mark Event Handling
 - (BOOL)becomeFirstResponder {
 	return (editable ? [super becomeFirstResponder] : NO);
 }
 
-#pragma mark Event Handling
 - (void)didBeginEditing {
 	for (TIToken * token in tokens) [self addToken:token];
 }
@@ -628,7 +643,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	if (editable) [self selectToken:token];
 }
 
-- (CGFloat)layoutTokens {
+- (CGFloat)layoutTokensAnimated:(BOOL)animated {
 	
 	// Adapted from Joe Hewitt's Three20 layout method.
 	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
@@ -637,8 +652,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	CGFloat rightMarginWithButton = addButton.hidden ? 8 : 46;
 	CGFloat initialPadding = 8;
 	CGFloat tokenPadding = 4;
-	CGFloat linePadding = topMargin + 5;
-	CGFloat lineHeightWithPadding = self.font.lineHeight + linePadding;
+	CGFloat lineHeightWithPadding = self.font.lineHeight + topMargin + 5;
 	
 	numberOfLines = 1;
 	cursorLocation.x = leftMargin;
@@ -664,9 +678,11 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 			if (!CGRectEqualToRect(token.frame, newFrame)){
 				
 				[token setFrame:newFrame];
-				[token setAlpha:0.6];
 				
-				[UIView animateWithDuration:0.3 animations:^{[token setAlpha:1];}];
+				if (animated){
+					[token setAlpha:0.6];
+					[UIView animateWithDuration:0.3 animations:^{[token setAlpha:1];}];
+				}
 			}
 			
 			cursorLocation.x += token.bounds.size.width + tokenPadding;
@@ -690,7 +706,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 - (void)updateHeightAnimated:(BOOL)animated {
 	
 	CGFloat previousHeight = self.bounds.size.height;
-	CGFloat newHeight = [self layoutTokens];
+	CGFloat newHeight = [self layoutTokensAnimated:animated];
 	
 	if (previousHeight && previousHeight != newHeight){
 		
@@ -735,21 +751,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	resultsModeEnabled = flag;
 }
 
-#pragma mark Other
-- (NSArray *)tokenTitles {
-	
-	NSMutableArray * titles = [[NSMutableArray alloc] init];
-	for (TIToken * token in tokens) [titles addObject:token.title];
-	return [titles autorelease];
-}
-
-- (NSArray *)tokenObjects {
-	
-	NSMutableArray * objects = [[NSMutableArray alloc] init];
-	for (TIToken * token in tokens) [objects addObject:token.representedObject];
-	return [objects autorelease];
-}
-
+#pragma mark Left / Right view stuff
 - (void)setPromptText:(NSString *)text {
 	
 	if (text){
@@ -791,6 +793,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[addButtonTarget performSelector:addButtonSelector withObject:addButton];
 }
 
+#pragma mark Layout
 - (CGRect)textRectForBounds:(CGRect)bounds {
 	
 	if ([self.text isEqualToString:kTextHidden]) return CGRectMake(0, -20, 0, 0);
@@ -818,6 +821,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		bounds.size.height - addButton.bounds.size.height - 6}, addButton.bounds.size});
 }
 
+#pragma mark Other
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TITokenField %p; prompt = \"%@\">", self, ((UILabel *)self.leftView).text];
 }
@@ -940,6 +944,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @synthesize accessoryType;
 @synthesize representedObject;
 
+#pragma mark Init
 - (id)initWithTitle:(NSString *)aTitle {
 	return [self initWithTitle:aTitle representedObject:nil];
 }
@@ -967,6 +972,72 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	return self;
 }
 
+#pragma mark Property Overrides
+- (void)setHighlighted:(BOOL)flag {
+	
+	if (self.highlighted != flag){
+		[super setHighlighted:flag];
+		[self setNeedsDisplay];
+	}
+}
+
+- (void)setSelected:(BOOL)flag {
+	
+	if (self.selected != flag){
+		[super setSelected:flag];
+		[self setNeedsDisplay];
+	}
+}
+
+- (void)setTitle:(NSString *)newTitle {
+	
+	if (newTitle){
+		NSString * copy = [newTitle copy];
+		[title release];
+		title = copy;
+		
+		[self sizeToFit];
+	}
+}
+
+- (void)setFont:(UIFont *)newFont {
+	
+	if (!newFont) newFont = [UIFont systemFontOfSize:14];
+	[newFont retain];
+	[font release];
+	font = newFont;
+	
+	[self sizeToFit];
+}
+
+- (void)setTintColor:(UIColor *)newTintColor {
+	
+	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
+	
+	[newTintColor retain];
+	[tintColor release];
+	tintColor = newTintColor;
+	
+	[self setNeedsDisplay];
+}
+
+- (void)setMaxWidth:(CGFloat)width {
+	
+	if (maxWidth != width){
+		maxWidth = width;
+		[self sizeToFit];
+	}
+}
+
+- (void)setAccessoryType:(TITokenAccessoryType)type {
+	
+	if (accessoryType != type){
+		accessoryType = type;
+		[self sizeToFit];
+	}
+}
+
+#pragma Layout
 - (void)sizeToFit {
 	
 	CGFloat accessoryWidth = 0;
@@ -981,6 +1052,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	[self setNeedsDisplay];
 }
 
+#pragma Drawing
 - (void)drawRect:(CGRect)rect {
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();
@@ -1130,70 +1202,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	return path;
 }
 
-- (void)setHighlighted:(BOOL)flag {
-	
-	if (self.highlighted != flag){
-		[super setHighlighted:flag];
-		[self setNeedsDisplay];
-	}
-}
-
-- (void)setSelected:(BOOL)flag {
-	
-	if (self.selected != flag){
-		[super setSelected:flag];
-		[self setNeedsDisplay];
-	}
-}
-
-- (void)setTitle:(NSString *)newTitle {
-	
-	if (newTitle){
-		NSString * copy = [newTitle copy];
-		[title release];
-		title = copy;
-		
-		[self sizeToFit];
-	}
-}
-
-- (void)setFont:(UIFont *)newFont {
-	
-	if (!newFont) newFont = [UIFont systemFontOfSize:14];
-	[newFont retain];
-	[font release];
-	font = newFont;
-	
-	[self sizeToFit];
-}
-
-- (void)setTintColor:(UIColor *)newTintColor {
-	
-	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
-	
-	[newTintColor retain];
-	[tintColor release];
-	tintColor = newTintColor;
-	
-	[self setNeedsDisplay];
-}
-
-- (void)setMaxWidth:(CGFloat)width {
-	
-	if (maxWidth != width){
-		maxWidth = width;
-		[self sizeToFit];
-	}
-}
-
-- (void)setAccessoryType:(TITokenAccessoryType)type {
-	
-	if (accessoryType != type){
-		accessoryType = type;
-		[self sizeToFit];
-	}
-}
-
+#pragma mark Other
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\">", self, title];
 }
