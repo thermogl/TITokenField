@@ -10,20 +10,6 @@
 #import <QuartzCore/QuartzCore.h>
 
 //==========================================================
-#pragma mark - Private Additions -
-//==========================================================
-
-@interface UIColor (Private)
-- (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
-@end
-
-@interface UIView (Private)
-- (void)ti_setHeight:(CGFloat)height;
-- (void)ti_setWidth:(CGFloat)width;
-- (void)ti_setOriginY:(CGFloat)originY;
-@end
-
-//==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
 
@@ -120,11 +106,10 @@
 	[super setFrame:frame];
 	
 	CGFloat width = frame.size.width;
-	[separator ti_setWidth:width];
-	[resultsTable ti_setWidth:width];
-	[contentView ti_setWidth:width];
-	[contentView ti_setHeight:(frame.size.height - CGRectGetMaxY(tokenField.frame))];
-	[tokenField ti_setWidth:width];
+	[separator setFrame:((CGRect){separator.frame.origin, {width, separator.bounds.size.height}})];
+	[resultsTable setFrame:((CGRect){resultsTable.frame.origin, {width, resultsTable.bounds.size.height}})];
+	[contentView setFrame:((CGRect){contentView.frame.origin, {width, (frame.size.height - CGRectGetMaxY(tokenField.frame))}})];
+	[tokenField setFrame:((CGRect){tokenField.frame.origin, {width, tokenField.bounds.size.height}})];
 	
 	if (popoverController.popoverVisible){
 		[popoverController dismissPopoverAnimated:NO];
@@ -156,11 +141,11 @@
 	
 	CGFloat relativeFieldHeight = CGRectGetMaxY(tokenField.frame) - self.contentOffset.y;
 	CGFloat newHeight = self.bounds.size.height - relativeFieldHeight;
-	if (newHeight > -1) [resultsTable ti_setHeight:newHeight];
+	if (newHeight > -1) [resultsTable setFrame:((CGRect){resultsTable.frame.origin, {resultsTable.bounds.size.width, newHeight}})];
 }
 
 - (void)updateContentSize {
-	[self setContentSize:CGSizeMake(self.bounds.size.width, self.contentView.frame.origin.y + self.contentView.bounds.size.height + 1)];
+	[self setContentSize:CGSizeMake(self.bounds.size.width, CGRectGetMaxY(contentView.frame) + 1)];
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -239,9 +224,9 @@
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
 	
 	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
-	[separator ti_setOriginY:tokenFieldBottom];
-	[resultsTable ti_setOriginY:(tokenFieldBottom + 1)];
-	[contentView ti_setOriginY:(tokenFieldBottom + 1)];
+	[separator setFrame:((CGRect){{separator.frame.origin.x, tokenFieldBottom}, separator.bounds.size})];
+	[resultsTable setFrame:((CGRect){{resultsTable.frame.origin.x, (tokenFieldBottom + 1)}, resultsTable.bounds.size})];
+	[contentView setFrame:((CGRect){{contentView.frame.origin.x, (tokenFieldBottom + 1)}, contentView.bounds.size})];
 }
 
 - (void)tokenFieldFrameDidChange:(TITokenField *)field {
@@ -317,10 +302,8 @@
 				}
 			}
 			
-			if (shouldAdd){
-				if (![resultsArray containsObject:sourceObject]){
-					[resultsArray addObject:sourceObject];
-				}
+			if (shouldAdd && ![resultsArray containsObject:sourceObject]){
+				[resultsArray addObject:sourceObject];
 			}
 		}
 	}
@@ -594,12 +577,12 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)removeToken:(TIToken *)token {
 	
+	if (token == selectedToken) [self deselectSelectedToken];
+	
 	BOOL shouldRemove = YES;
 	if ([delegate respondsToSelector:@selector(tokenField:willRemoveToken:)]){
 		shouldRemove = [delegate tokenField:self willRemoveToken:token];
 	}
-	
-	if (token == selectedToken) [self deselectSelectedToken];
 	
 	if (shouldRemove){
 	
@@ -717,14 +700,12 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 #pragma mark View Handlers
 - (void)updateHeightAnimated:(BOOL)animated {
 	
-	CGFloat previousHeight = self.bounds.size.height;
 	CGFloat newHeight = [self layoutTokensAnimated:animated];
-	
-	if (previousHeight && previousHeight != newHeight){
+	if (self.bounds.size.height != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
 		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
-			[self ti_setHeight:newHeight];
+			[self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
 			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
 			
 		} completion:^(BOOL complete){
@@ -794,8 +775,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (void)performButtonAction {
-	
-	if (!self.editing) [self becomeFirstResponder];	
 	[addButtonTarget performSelector:addButtonSelector withObject:addButton];
 }
 
@@ -940,6 +919,7 @@ UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
 @interface TIToken (Private)
 CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath);
 CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat height, CGFloat thickness, CGFloat * width);
+- (BOOL)getTintColorRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
 @end
 
 @implementation TIToken
@@ -1079,7 +1059,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGFloat green = 1;
 	CGFloat blue = 1;
 	CGFloat alpha = 1;
-	[tintColor ti_getRed:&red green:&green blue:&blue alpha:&alpha];
+	[self getTintColorRed:&red green:&green blue:&blue alpha:&alpha];
 	
 	if (drawHighlighted){
 		CGContextSetFillColor(context, (CGFloat[4]){red, green, blue, 1});
@@ -1208,30 +1188,10 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	return path;
 }
 
-#pragma mark Other
-- (NSString *)description {
-	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\">", self, title];
-}
-
-- (void)dealloc {
-	[title release];
-	[font release];
-	[tintColor release];
-	[representedObject release];
-    [super dealloc];
-}
-
-@end
-
-//==========================================================
-#pragma mark - Private Additions -
-//==========================================================
-@implementation UIColor (Private)
-
-- (BOOL)ti_getRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
+- (BOOL)getTintColorRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
 	
-	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(self.CGColor));
-	const CGFloat * components = CGColorGetComponents(self.CGColor);
+	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(tintColor.CGColor));
+	const CGFloat * components = CGColorGetComponents(tintColor.CGColor);
 	
 	if (colorSpaceModel == kCGColorSpaceModelMonochrome){
 		
@@ -1254,29 +1214,17 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	return NO;
 }
 
-@end
-
-@implementation UIView (Private)
-
-- (void)ti_setHeight:(CGFloat)height {
-	
-	CGRect newFrame = self.frame;
-	newFrame.size.height = height;
-	[self setFrame:newFrame];
+#pragma mark Other
+- (NSString *)description {
+	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\">", self, title];
 }
 
-- (void)ti_setWidth:(CGFloat)width {
-	
-	CGRect newFrame = self.frame;
-	newFrame.size.width = width;
-	[self setFrame:newFrame];
-}
-
-- (void)ti_setOriginY:(CGFloat)originY {
-	
-	CGRect newFrame = self.frame;
-	newFrame.origin.y = originY;
-	[self setFrame:newFrame];
+- (void)dealloc {
+	[title release];
+	[font release];
+	[tintColor release];
+	[representedObject release];
+    [super dealloc];
 }
 
 @end
