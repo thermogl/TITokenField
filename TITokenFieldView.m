@@ -746,7 +746,13 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 - (NSArray *)tokenObjects {
 	
 	NSMutableArray * objects = [[NSMutableArray alloc] init];
-	for (TIToken * token in tokens) [objects addObject:token.representedObject];
+	for (TIToken * token in tokens) {
+		if (token.representedObject) {
+			[objects addObject:token.representedObject];
+		} else {
+			[objects addObject:token.title];
+		}
+	}
 	return [objects autorelease];
 }
 
