@@ -111,12 +111,8 @@ typedef enum {
 	BOOL resultsModeEnabled;
 	BOOL removesTokensOnEndEditing;
 	
-	CGPoint cursorLocation;
+	CGPoint tokenCaret;
 	int numberOfLines;
-	
-	UIButton * addButton;
-	id addButtonTarget;
-	SEL addButtonSelector;
 	
 	NSCharacterSet * tokenizingCharacters;
 }
@@ -144,8 +140,7 @@ typedef enum {
 - (void)layoutTokensAnimated:(BOOL)animated;
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
 
-// Pass nil to any argument in either method to hide the related button.
-- (void)setAddButtonAction:(SEL)action target:(id)sender;
+// Pass nil to hide label
 - (void)setPromptText:(NSString *)aText;
 
 @end

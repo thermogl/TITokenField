@@ -352,11 +352,13 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @end
 
 @interface TITokenField ()
+@property (nonatomic, readonly) CGFloat leftViewWidth;
+@property (nonatomic, readonly) CGFloat rightViewWidth;
 @property (nonatomic, readonly) UIScrollView * scrollView;
 @end
 
 @interface TITokenField (Private)
-- (CGFloat)layoutTokensInternalAnimated:(BOOL)animated;
+- (CGFloat)layoutTokensInternal;
 @end
 
 @implementation TITokenField
@@ -403,13 +405,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
 	[self.layer setShadowOpacity:0.6];
 	[self.layer setShadowRadius:12];
-	
-	addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
-	[addButton setUserInteractionEnabled:YES];
-	[addButton setHidden:YES];
-	[addButton addTarget:self action:@selector(performButtonAction) forControlEvents:UIControlEventTouchUpInside];
-	[self setRightView:addButton];
-	[self setAddButtonAction:nil target:nil];
 	
 	[self setPromptText:@"To:"];
 	[self setText:kTextEmpty];
@@ -635,69 +630,48 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	if (editable) [self selectToken:token];
 }
 
-- (CGFloat)layoutTokensInternalAnimated:(BOOL)animated {
+- (CGFloat)layoutTokensInternal {
 	
-	// Adapted from Joe Hewitt's Three20 layout method.
 	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
-	CGFloat leftMargin = self.leftView ? self.leftView.bounds.size.width + 12 : 8;
-	CGFloat rightMargin = 16;
-	CGFloat rightMarginWithButton = addButton.hidden ? 8 : 46;
-	CGFloat initialPadding = 8;
-	CGFloat tokenPadding = 4;
-	CGFloat lineHeightWithPadding = self.font.lineHeight + topMargin + 5;
+	CGFloat leftMargin = self.leftViewWidth + 12;
+	CGFloat hPadding = 8;
+	CGFloat rightMargin = self.rightViewWidth + hPadding;
+	CGFloat lineHeight = self.font.lineHeight + topMargin + 5;
 	
 	numberOfLines = 1;
-	cursorLocation.x = leftMargin;
-	cursorLocation.y = topMargin - 1;
+	tokenCaret = (CGPoint){leftMargin, (topMargin - 1)};
 	
 	for (TIToken * token in tokens){
 		
 		[token setFont:self.font];
+		[token setMaxWidth:(self.bounds.size.width - rightMargin - (numberOfLines > 1 ? hPadding : leftMargin))];
 		
 		if (token.superview){
 			
-			CGFloat lineWidth = cursorLocation.x + token.bounds.size.width + rightMargin;
-			if (lineWidth >= self.bounds.size.width){
-				
+			if (tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
 				numberOfLines++;
-				cursorLocation.x = leftMargin;
-				
-				if (numberOfLines > 1) cursorLocation.x = initialPadding;
-				cursorLocation.y += lineHeightWithPadding;
+				tokenCaret.x = (numberOfLines > 1 ? hPadding : leftMargin);
+				tokenCaret.y += lineHeight;
 			}
 			
-			CGRect newFrame = (CGRect){cursorLocation, token.bounds.size};
-			if (!CGRectEqualToRect(token.frame, newFrame)){
-				
-				[token setFrame:newFrame];
-				
-				if (animated){
-					[token setAlpha:0.6];
-					[UIView animateWithDuration:0.3 animations:^{[token setAlpha:1];}];
-				}
+			[token setFrame:(CGRect){tokenCaret, token.bounds.size}];
+			tokenCaret.x += token.bounds.size.width + 4;
+			
+			if (self.bounds.size.width - tokenCaret.x - rightMargin < 50){
+				numberOfLines++;
+				tokenCaret.x = (numberOfLines > 1 ? hPadding : leftMargin);
+				tokenCaret.y += lineHeight;
 			}
-			
-			cursorLocation.x += token.bounds.size.width + tokenPadding;
-		}
-		
-		CGFloat leftoverWidth = self.bounds.size.width - (cursorLocation.x + rightMarginWithButton);
-		if (leftoverWidth < 50){
-			
-			numberOfLines++;
-			cursorLocation.x = leftMargin;
-			
-			if (numberOfLines > 1) cursorLocation.x = initialPadding;
-			cursorLocation.y += lineHeightWithPadding;
 		}
 	}
 	
-	return cursorLocation.y + lineHeightWithPadding;
+	return tokenCaret.y + lineHeight;
 }
 
 #pragma mark View Handlers
 - (void)layoutTokensAnimated:(BOOL)animated {
 	
-	CGFloat newHeight = [self layoutTokensInternalAnimated:animated];
+	CGFloat newHeight = [self layoutTokensInternal];
 	if (self.bounds.size.height != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
@@ -728,7 +702,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		[scrollView setScrollsToTop:!flag];
 		[scrollView setScrollEnabled:!flag];
 		
-		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : cursorLocation.y - floor(self.font.lineHeight * 4 / 7) + 1);
+		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
 	
@@ -762,26 +736,13 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	[self layoutTokensAnimated:YES];
 }
 
-- (void)setAddButtonAction:(SEL)action target:(id)sender {
-	
-	addButtonSelector = action;
-	addButtonTarget = sender;
-	
-	[addButton setHidden:(!action || !sender)];
-	[self setRightViewMode:(addButton.hidden ? UITextFieldViewModeNever : UITextFieldViewModeAlways)];
-}
-
-- (void)performButtonAction {
-	[addButtonTarget performSelector:addButtonSelector withObject:addButton];
-}
-
 #pragma mark Layout
 - (CGRect)textRectForBounds:(CGRect)bounds {
 	
 	if ([self.text isEqualToString:kTextHidden]) return CGRectMake(0, -20, 0, 0);
 	
-	CGRect frame = CGRectOffset(bounds, cursorLocation.x, cursorLocation.y + 3);
-	frame.size.width -= (cursorLocation.x + 8 + (addButton.hidden ? 0 : 28));
+	CGRect frame = CGRectOffset(bounds, tokenCaret.x, tokenCaret.y + 3);
+	frame.size.width -= (tokenCaret.x + self.rightViewWidth + 8);
 	
 	return frame;
 }
@@ -799,8 +760,26 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{bounds.size.width - addButton.bounds.size.width - 6, 
-		bounds.size.height - addButton.bounds.size.height - 6}, addButton.bounds.size});
+	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6, 
+		bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
+}
+
+- (CGFloat)leftViewWidth {
+	
+	if (self.leftViewMode == UITextFieldViewModeNever ||
+		(self.leftViewMode == UITextFieldViewModeUnlessEditing && self.editing) ||
+		(self.leftViewMode == UITextFieldViewModeWhileEditing && !self.editing)) return 0;
+	
+	return self.leftView.bounds.size.width;
+}
+
+- (CGFloat)rightViewWidth {
+	
+	if (self.rightViewMode == UITextFieldViewModeNever ||
+		(self.rightViewMode == UITextFieldViewModeUnlessEditing && self.editing) ||
+		(self.rightViewMode == UITextFieldViewModeWhileEditing && !self.editing)) return 0;
+	
+	return self.rightView.bounds.size.width;
 }
 
 #pragma mark Other
@@ -986,22 +965,23 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 - (void)setFont:(UIFont *)newFont {
 	
 	if (!newFont) newFont = [UIFont systemFontOfSize:14];
-	[newFont retain];
-	[font release];
-	font = newFont;
 	
-	[self sizeToFit];
+	if (font != newFont){
+		[font release];
+		font = [newFont retain];
+		[self sizeToFit];
+	}
 }
 
 - (void)setTintColor:(UIColor *)newTintColor {
 	
 	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
 	
-	[newTintColor retain];
-	[tintColor release];
-	tintColor = newTintColor;
-	
-	[self setNeedsDisplay];
+	if (tintColor != newTintColor){
+		[tintColor release];
+		tintColor = [newTintColor retain];
+		[self setNeedsDisplay];
+	}
 }
 
 - (void)setMaxWidth:(CGFloat)width {

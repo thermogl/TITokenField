@@ -27,8 +27,13 @@
 	
 	[tokenFieldView.tokenField setDelegate:self];
 	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
-	[tokenFieldView.tokenField setAddButtonAction:@selector(showContactsPicker:) target:self];
 	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
+	
+	UIButton * addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
+	[addButton addTarget:self action:@selector(showContactsPicker:) forControlEvents:UIControlEventTouchUpInside];
+	[tokenFieldView.tokenField setRightView:addButton];
+	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldChangedEditing:) forControlEvents:UIControlEventEditingDidBegin];
+	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldChangedEditing:) forControlEvents:UIControlEventEditingDidEnd];
 	
 	messageView = [[UITextView alloc] initWithFrame:tokenFieldView.contentView.bounds];
 	[messageView setScrollEnabled:NO];
@@ -93,6 +98,11 @@
 	}
 	
 	return YES;
+}
+
+- (void)tokenFieldChangedEditing:(TITokenField *)tokenField {
+	// There's some kind of annoying bug wherre UITextFieldViewModeWhile/UnlessEditing doesn't do anything.
+	[tokenField setRightViewMode:(tokenField.editing ? UITextFieldViewModeAlways : UITextFieldViewModeNever)];
 }
 
 - (void)tokenFieldFrameDidChange:(TITokenField *)tokenField {
