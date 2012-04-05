@@ -130,8 +130,6 @@ typedef enum {
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
 @property (nonatomic, readonly) int numberOfLines;
-@property (nonatomic, assign) id addButtonTarget;
-@property (nonatomic, assign) SEL addButtonSelector;
 @property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
 
 - (void)addToken:(TIToken *)title;
@@ -143,7 +141,7 @@ typedef enum {
 
 - (void)tokenizeText;
 
-- (CGFloat)layoutTokensAnimated:(BOOL)animated;
+- (void)layoutTokensAnimated:(BOOL)animated;
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
 
 // Pass nil to any argument in either method to hide the related button.

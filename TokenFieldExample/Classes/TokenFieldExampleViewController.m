@@ -67,7 +67,7 @@
 	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
 	[token setAccessoryType:TITokenAccessoryTypeDisclosureIndicator];
 	[token setTintColor:[UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1]];
-	[tokenFieldView.tokenField layoutTokensAnimated:NO];
+	[tokenFieldView.tokenField layoutTokensAnimated:YES];
 	
 	// You can access token titles with 'tokenFieldView.tokenTitles'.
 	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).

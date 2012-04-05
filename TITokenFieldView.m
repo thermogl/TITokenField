@@ -356,8 +356,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @end
 
 @interface TITokenField (Private)
-- (void)updateHeightAnimated:(BOOL)animated;
-- (void)performButtonAction;
+- (CGFloat)layoutTokensInternalAnimated:(BOOL)animated;
 @end
 
 @implementation TITokenField
@@ -367,8 +366,6 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 @synthesize resultsModeEnabled;
 @synthesize removesTokensOnEndEditing;
 @synthesize numberOfLines;
-@synthesize addButtonSelector;
-@synthesize addButtonTarget;
 @synthesize selectedToken;
 @synthesize tokenizingCharacters;
 
@@ -431,7 +428,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
 	[self.layer setShadowPath:[[UIBezierPath bezierPathWithRect:self.bounds] CGPath]];
-	[self updateHeightAnimated:NO];
+	[self layoutTokensAnimated:NO];
 }
 
 - (void)setText:(NSString *)text {
@@ -638,7 +635,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	if (editable) [self selectToken:token];
 }
 
-- (CGFloat)layoutTokensAnimated:(BOOL)animated {
+- (CGFloat)layoutTokensInternalAnimated:(BOOL)animated {
 	
 	// Adapted from Joe Hewitt's Three20 layout method.
 	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
@@ -698,9 +695,9 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 }
 
 #pragma mark View Handlers
-- (void)updateHeightAnimated:(BOOL)animated {
+- (void)layoutTokensAnimated:(BOOL)animated {
 	
-	CGFloat newHeight = [self layoutTokensAnimated:animated];
+	CGFloat newHeight = [self layoutTokensInternalAnimated:animated];
 	if (self.bounds.size.height != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
@@ -720,7 +717,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 
 - (void)setResultsModeEnabled:(BOOL)flag animated:(BOOL)animated {
 	
-	[self updateHeightAnimated:animated];
+	[self layoutTokensAnimated:animated];
 	
 	if (resultsModeEnabled != flag){
 		
@@ -762,13 +759,13 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		[self setLeftView:nil];
 	}
 	
-	[self updateHeightAnimated:YES];
+	[self layoutTokensAnimated:YES];
 }
 
 - (void)setAddButtonAction:(SEL)action target:(id)sender {
 	
-	[self setAddButtonSelector:action];
-	[self setAddButtonTarget:sender];
+	addButtonSelector = action;
+	addButtonTarget = sender;
 	
 	[addButton setHidden:(!action || !sender)];
 	[self setRightViewMode:(addButton.hidden ? UITextFieldViewModeNever : UITextFieldViewModeAlways)];
