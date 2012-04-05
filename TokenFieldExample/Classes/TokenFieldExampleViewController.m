@@ -21,14 +21,13 @@
 	[self.navigationItem setTitle:@"TITokenFieldView"];
 	
 	tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
-	[tokenFieldView setDelegate:self];
 	[tokenFieldView setSourceArray:[Names listOfNames]];
 	[self.view addSubview:tokenFieldView];
 	[tokenFieldView release];
 	
 	[tokenFieldView.tokenField setDelegate:self];
 	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
-	[tokenFieldView.tokenField setAddButtonAction:@selector(showContactsPicker) target:self];
+	[tokenFieldView.tokenField setAddButtonAction:@selector(showContactsPicker:) target:self];
 	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
 	
 	messageView = [[UITextView alloc] initWithFrame:tokenFieldView.contentView.bounds];
@@ -60,7 +59,7 @@
 	[self resizeViews];
 }
 
-- (void)showContactsPicker {
+- (void)showContactsPicker:(id)sender {
 	
 	// Show some kind of contacts picker in here.
 	// For now, it's a good chance to show how to add tokens.
@@ -68,18 +67,12 @@
 	[token setAccessoryType:TITokenAccessoryTypeDisclosureIndicator];
 	[token setTintColor:[UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1]];
 	[tokenFieldView.tokenField layoutTokensAnimated:YES];
-	
-	// You can access token titles with 'tokenFieldView.tokenTitles'.
-	// Or call the same on the field itself (tokenFieldView.tokenField.tokenTitles).
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification {
 	
 	CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-	
-	// Wouldn't it be fantastic if, when in landscape mode, width was actually width and not height?
 	keyboardHeight = keyboardRect.size.height > keyboardRect.size.width ? keyboardRect.size.width : keyboardRect.size.height;
-	
 	[self resizeViews];
 }
 
@@ -89,11 +82,7 @@
 }
 
 - (void)resizeViews {
-	
-	CGRect newFrame = tokenFieldView.frame;
-	newFrame.size.width = self.view.bounds.size.width;
-	newFrame.size.height = self.view.bounds.size.height - keyboardHeight;
-	[tokenFieldView setFrame:newFrame];
+	[tokenFieldView setFrame:((CGRect){tokenFieldView.frame.origin, {self.view.bounds.size.width, self.view.bounds.size.height - keyboardHeight}})];
 	[messageView setFrame:tokenFieldView.contentView.bounds];
 }
 
