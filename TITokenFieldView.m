@@ -1109,6 +1109,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 			arrowPoint.y += 0.5;
 			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, NULL);
 			CGContextAddPath(context, innerShadowPath);
+			CGPathRelease(innerShadowPath);
 			CGContextSetStrokeColor(context, (CGFloat[4]){0, 0, 0, 0.3});
 			CGContextStrokePath(context);
 			CGContextRestoreGState(context);
