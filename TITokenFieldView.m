@@ -893,7 +893,7 @@ CGFloat const kDisclosureThickness = 2.5;
 UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
 
 @interface TIToken (Private)
-CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath);
+CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath);
 CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat height, CGFloat thickness, CGFloat * width);
 - (BOOL)getTintColorRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha;
 @end
@@ -1011,7 +1011,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 	
 	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	[self setFrame:((CGRect){self.frame.origin, {floorf(titleSize.width + hTextPadding + accessoryWidth), floorf(titleSize.height + vTextPadding)}})];
+	CGFloat height = floorf(titleSize.height + vTextPadding);
+	
+	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
 	[self setNeedsDisplay];
 }
 
@@ -1019,18 +1021,16 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 - (void)drawRect:(CGRect)rect {
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();
-	CGFloat arcValue = ((self.bounds.size.height - (vTextPadding / 2)) / 2) + 1;
-	BOOL drawHighlighted = (self.selected || self.highlighted);
-	
-	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
-	CGPoint endPoint = CGPointMake(0, self.bounds.size.height);
 	
 	// Draw the outline.
 	CGContextSaveGState(context);
-	
-	CGPathRef outlinePath = CGPathCreateTokenPath(self.bounds.size.width, arcValue, NO);
+	CGPathRef outlinePath = CGPathCreateTokenPath(self.bounds.size, NO);
 	CGContextAddPath(context, outlinePath);
 	CGPathRelease(outlinePath);
+	
+	BOOL drawHighlighted = (self.selected || self.highlighted);
+	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+	CGPoint endPoint = CGPointMake(0, self.bounds.size.height);
 	
 	CGFloat red = 1;
 	CGFloat green = 1;
@@ -1054,7 +1054,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGContextRestoreGState(context);
 	
-	CGPathRef innerPath = CGPathCreateTokenPath(self.bounds.size.width, arcValue, YES);
+	CGPathRef innerPath = CGPathCreateTokenPath(self.bounds.size, YES);
     
     // Draw a white background so we can use alpha to lighten the inner gradient
     CGContextSaveGState(context);
@@ -1129,12 +1129,13 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
 }
 
-CGPathRef CGPathCreateTokenPath(CGFloat width, CGFloat arcValue, BOOL innerPath) {
+CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
 	
 	CGMutablePathRef path = CGPathCreateMutable();
+	CGFloat arcValue = (size.height / 2) - 1;
 	CGFloat radius = arcValue - (innerPath ? 0.5 : 0);
 	CGPathAddArc(path, NULL, arcValue, arcValue, radius, (M_PI / 2), (M_PI * 3 / 2), NO);
-	CGPathAddArc(path, NULL, width - arcValue, arcValue, radius, (M_PI  * 3 / 2), (M_PI / 2), NO);
+	CGPathAddArc(path, NULL, size.width - arcValue, arcValue, radius, (M_PI  * 3 / 2), (M_PI / 2), NO);
 	
 	return path;
 }
