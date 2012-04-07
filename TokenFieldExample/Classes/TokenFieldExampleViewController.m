@@ -67,11 +67,17 @@
 - (void)showContactsPicker:(id)sender {
 	
 	// Show some kind of contacts picker in here.
-	// For now, it's a good chance to show how to add tokens.
-	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:@"New Name"];
+	// For now, here's how to add and customize tokens.
+	
+	NSArray * names = [Names listOfNames];
+	
+	TIToken * token = [tokenFieldView.tokenField addTokenWithTitle:[names objectAtIndex:(arc4random() % names.count)]];
 	[token setAccessoryType:TITokenAccessoryTypeDisclosureIndicator];
-	[token setTintColor:[UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1]];
-	[tokenFieldView.tokenField layoutTokensAnimated:YES];
+	// If the size of the token might change, it's a good idea to layout again.
+	[tokenFieldView.tokenField layoutTokensAnimated:YES]; 
+	
+	NSUInteger tokenCount = tokenFieldView.tokenField.tokens.count;
+	[token setTintColor:((tokenCount % 3) == 0 ? [TIToken redTintColor] : ((tokenCount % 2) == 0 ? [TIToken greenTintColor] : [TIToken blueTintColor]))];
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification {
@@ -101,7 +107,7 @@
 }
 
 - (void)tokenFieldChangedEditing:(TITokenField *)tokenField {
-	// There's some kind of annoying bug wherre UITextFieldViewModeWhile/UnlessEditing doesn't do anything.
+	// There's some kind of annoying bug where UITextFieldViewModeWhile/UnlessEditing doesn't do anything.
 	[tokenField setRightViewMode:(tokenField.editing ? UITextFieldViewModeAlways : UITextFieldViewModeNever)];
 }
 

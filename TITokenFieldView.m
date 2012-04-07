@@ -563,7 +563,7 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 		}
 		
 		[self setResultsModeEnabled:NO];
-		[self setText:kTextEmpty];
+		[self deselectSelectedToken];
 	}
 }
 
@@ -924,11 +924,12 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		accessoryType = TITokenAccessoryTypeNone;
 		
 		font = [aFont retain];
-		tintColor = [[UIColor colorWithRed:0.216 green:0.373 blue:0.965 alpha:1] retain];
 		maxWidth = 200;
-		[self sizeToFit];
+		
+		tintColor = [[TIToken blueTintColor] retain];
 		
 		[self setBackgroundColor:[UIColor clearColor]];
+		[self sizeToFit];
 	}
 	
 	return self;
@@ -975,7 +976,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (void)setTintColor:(UIColor *)newTintColor {
 	
-	if (!newTintColor) newTintColor = [UIColor colorWithRed:0.867 green:0.906 blue:0.973 alpha:1];
+	if (!newTintColor) newTintColor = [TIToken blueTintColor];
 	
 	if (tintColor != newTintColor){
 		[tintColor release];
@@ -1000,7 +1001,21 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 }
 
-#pragma Layout
+#pragma Tint Color Convenience
+
++ (UIColor *)blueTintColor {
+	return [UIColor colorWithRed:0.216 green:0.373 blue:0.965 alpha:1];
+}
+
++ (UIColor *)redTintColor {
+	return [UIColor colorWithRed:1 green:0.15 blue:0.15 alpha:1];
+}
+
++ (UIColor *)greenTintColor {
+	return [UIColor colorWithRed:0.333 green:0.741 blue:0.235 alpha:1];
+}
+
+#pragma mark Layout
 - (void)sizeToFit {
 	
 	CGFloat accessoryWidth = 0;
@@ -1017,7 +1032,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	[self setNeedsDisplay];
 }
 
-#pragma Drawing
+#pragma mark Drawing
 - (void)drawRect:(CGRect)rect {
 	
 	CGContextRef context = UIGraphicsGetCurrentContext();

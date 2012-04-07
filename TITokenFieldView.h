@@ -149,7 +149,7 @@ typedef enum {
 #pragma mark - TIToken -
 //==========================================================
 typedef enum {
-	TITokenAccessoryTypeNone = 0,
+	TITokenAccessoryTypeNone = 0, // Default
 	TITokenAccessoryTypeDisclosureIndicator = 1,
 } TITokenAccessoryType;
 
@@ -176,5 +176,9 @@ typedef enum {
 - (id)initWithTitle:(NSString *)aTitle;
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont;
+
++ (UIColor *)blueTintColor;
++ (UIColor *)redTintColor;
++ (UIColor *)greenTintColor;
 
 @end
