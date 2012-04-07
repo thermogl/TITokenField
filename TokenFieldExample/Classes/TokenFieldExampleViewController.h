@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "TITokenFieldView.h"
+#import "TITokenField.h"
 
 @interface TokenFieldExampleViewController : UIViewController <TITokenFieldDelegate, UITextViewDelegate> {
 
