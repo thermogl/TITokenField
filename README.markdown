@@ -1,4 +1,4 @@
-# TITokenFieldView
+# TITokenField
 
 ### Kinda like an NSTokenField for iOS (see Messages / Mail apps).
 
