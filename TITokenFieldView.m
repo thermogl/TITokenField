@@ -214,7 +214,7 @@
 }
 
 - (void)tokenFieldDidEndEditing:(TITokenField *)field {
-	[self setSearchResultsVisible:NO];
+	[self tokenFieldDidBeginEditing:field];
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
