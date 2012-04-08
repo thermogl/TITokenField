@@ -18,7 +18,7 @@
 - (void)viewDidLoad {
 	
 	[self.view setBackgroundColor:[UIColor whiteColor]];
-	[self.navigationItem setTitle:@"TITokenFieldView"];
+	[self.navigationItem setTitle:@"Example"];
 	
 	tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
 	[tokenFieldView setSourceArray:[Names listOfNames]];

@@ -218,7 +218,7 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-	[self resultsForSubstring:field.text];
+	[self resultsForSubstring:[field.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -281,17 +281,14 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	NSString * strippedString = [[substring stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
-	
 	NSArray * sourceCopy = [sourceArray copy];
 	for (NSString * sourceObject in sourceCopy){
 		
-		NSString * query = [[self searchResultStringForRepresentedObject:sourceObject] lowercaseString];		
-		if ([query rangeOfString:strippedString].location != NSNotFound){
+		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
+		if ([query rangeOfString:substring options:NSCaseInsensitiveSearch].location != NSNotFound){
 			
-			BOOL shouldAdd = YES;
-			
-			if (!showAlreadyTokenized){
+			BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
+			if (shouldAdd && !showAlreadyTokenized){
 				
 				for (TIToken * token in tokenField.tokens){
 					
@@ -302,9 +299,7 @@
 				}
 			}
 			
-			if (shouldAdd && ![resultsArray containsObject:sourceObject]){
-				[resultsArray addObject:sourceObject];
-			}
+			if (shouldAdd) [resultsArray addObject:sourceObject];
 		}
 	}
 	
@@ -319,9 +314,8 @@
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
 	
     UITextPosition * position = [tokenField positionFromPosition:tokenField.beginningOfDocument offset:2];
-    CGRect caretRect = [tokenField caretRectForPosition:position];
 	
-	[popoverController presentPopoverFromRect:caretRect inView:tokenField 
+	[popoverController presentPopoverFromRect:[tokenField caretRectForPosition:position] inView:tokenField 
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
 
@@ -343,8 +337,8 @@
 //==========================================================
 #pragma mark - TITokenField -
 //==========================================================
-NSString * const kTextEmpty = @" "; // Just a space
-NSString * const kTextHidden = @"`"; // This character isn't available on iOS (yet) so it's safe.
+NSString * const kTextEmpty = @"\u200B"; // Zero-Width Space
+NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 @interface TITokenFieldInternalDelegate ()
 @property (nonatomic, assign) id <UITextFieldDelegate> delegate;
@@ -741,8 +735,8 @@ NSString * const kTextHidden = @"`"; // This character isn't available on iOS (y
 	
 	if ([self.text isEqualToString:kTextHidden]) return CGRectMake(0, -20, 0, 0);
 	
-	CGRect frame = CGRectOffset(bounds, tokenCaret.x, tokenCaret.y + 3);
-	frame.size.width -= (tokenCaret.x + self.rightViewWidth + 8);
+	CGRect frame = CGRectOffset(bounds, tokenCaret.x + 2, tokenCaret.y + 3);
+	frame.size.width -= (tokenCaret.x + self.rightViewWidth + 10);
 	
 	return frame;
 }
@@ -900,11 +894,11 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 @implementation TIToken
 @synthesize title;
+@synthesize representedObject;
 @synthesize font;
 @synthesize tintColor;
-@synthesize maxWidth;
 @synthesize accessoryType;
-@synthesize representedObject;
+@synthesize maxWidth;
 
 #pragma mark Init
 - (id)initWithTitle:(NSString *)aTitle {
@@ -921,12 +915,12 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		
 		title = [aTitle copy];
 		representedObject = [object retain];
-		accessoryType = TITokenAccessoryTypeNone;
 		
 		font = [aFont retain];
-		maxWidth = 200;
-		
 		tintColor = [[TIToken blueTintColor] retain];
+		
+		accessoryType = TITokenAccessoryTypeNone;
+		maxWidth = 200;
 		
 		[self setBackgroundColor:[UIColor clearColor]];
 		[self sizeToFit];
@@ -985,18 +979,18 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 }
 
-- (void)setMaxWidth:(CGFloat)width {
-	
-	if (maxWidth != width){
-		maxWidth = width;
-		[self sizeToFit];
-	}
-}
-
 - (void)setAccessoryType:(TITokenAccessoryType)type {
 	
 	if (accessoryType != type){
 		accessoryType = type;
+		[self sizeToFit];
+	}
+}
+
+- (void)setMaxWidth:(CGFloat)width {
+	
+	if (maxWidth != width){
+		maxWidth = width;
 		[self sizeToFit];
 	}
 }
@@ -1210,14 +1204,14 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 #pragma mark Other
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\">", self, title];
+	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\"; representedObject = \"%@\">", self, title, representedObject];
 }
 
 - (void)dealloc {
 	[title release];
+	[representedObject release];
 	[font release];
 	[tintColor release];
-	[representedObject release];
     [super dealloc];
 }
 

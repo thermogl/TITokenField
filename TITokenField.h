@@ -156,22 +156,21 @@ typedef enum {
 @interface TIToken : UIControl {
 	
 	NSString * title;
+	id representedObject;
 	
 	UIFont * font;
 	UIColor * tintColor;
 	
-	CGFloat maxWidth;
 	TITokenAccessoryType accessoryType;
-	
-	id representedObject;
+	CGFloat maxWidth;
 }
 
 @property (nonatomic, copy) NSString * title;
+@property (nonatomic, retain) id representedObject;
 @property (nonatomic, retain) UIFont * font;
 @property (nonatomic, retain) UIColor * tintColor UI_APPEARANCE_SELECTOR;
-@property (nonatomic, assign) CGFloat maxWidth;
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
-@property (nonatomic, retain) id representedObject;
+@property (nonatomic, assign) CGFloat maxWidth;
 
 - (id)initWithTitle:(NSString *)aTitle;
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
