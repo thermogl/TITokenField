@@ -33,21 +33,18 @@
 //==========================================================
 #pragma mark - Delegate Methods -
 //==========================================================
-@protocol TITokenFieldViewDelegate <UIScrollViewDelegate>
-@optional
-- (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
-- (NSString *)tokenField:(TITokenField *)tokenField displayStringForRepresentedObject:(id)object;
-- (NSString *)tokenField:(TITokenField *)tokenField searchResultStringForRepresentedObject:(id)object;
-- (UITableViewCell *)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView cellForRepresentedObject:(id)object;
-- (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
-@end
-
 @protocol TITokenFieldDelegate <UITextFieldDelegate>
 @optional
 - (BOOL)tokenField:(TITokenField *)tokenField willAddToken:(TIToken *)token;
 - (void)tokenField:(TITokenField *)tokenField didAddToken:(TIToken *)token;
 - (BOOL)tokenField:(TITokenField *)tokenField willRemoveToken:(TIToken *)token;
 - (void)tokenField:(TITokenField *)tokenField didRemoveToken:(TIToken *)token;
+
+- (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
+- (NSString *)tokenField:(TITokenField *)tokenField displayStringForRepresentedObject:(id)object;
+- (NSString *)tokenField:(TITokenField *)tokenField searchResultStringForRepresentedObject:(id)object;
+- (UITableViewCell *)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView cellForRepresentedObject:(id)object;
+- (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
@@ -64,7 +61,6 @@
 @interface TITokenFieldView : UIScrollView <UITableViewDelegate, UITableViewDataSource, TITokenFieldDelegate> {
 	
 	BOOL showAlreadyTokenized;
-	id <TITokenFieldViewDelegate> delegate;
 	
 	UIView * separator;
 	UITableView * resultsTable;
@@ -79,7 +75,6 @@
 }
 
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
-@property (nonatomic, assign) id <TITokenFieldViewDelegate> delegate;
 @property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, readonly) UIView * separator;
 @property (nonatomic, readonly) UITableView * resultsTable;

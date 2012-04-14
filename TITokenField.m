@@ -129,11 +129,6 @@
 	return tokenField.tokenTitles;
 }
 
-- (void)setDelegate:(id<TITokenFieldViewDelegate>)del {
-	delegate = del;
-	[super setDelegate:delegate];
-}
-
 #pragma mark Event Handling
 - (void)layoutSubviews {
 	
@@ -163,8 +158,8 @@
 #pragma mark TableView Methods
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:heightForRowAtIndexPath:)]){
-		return [delegate tokenField:tokenField resultsTableView:tableView heightForRowAtIndexPath:indexPath];
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:heightForRowAtIndexPath:)]){
+		return [tokenField.delegate tokenField:tokenField resultsTableView:tableView heightForRowAtIndexPath:indexPath];
 	}
 	
 	return 44;
@@ -172,11 +167,10 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 	
-	if ([delegate respondsToSelector:@selector(tokenField:didFinishSearch:)]){
-		[delegate tokenField:tokenField didFinishSearch:resultsArray];
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:didFinishSearch:)]){
+		[tokenField.delegate tokenField:tokenField didFinishSearch:resultsArray];
 	}
 	
-	[self setSearchResultsVisible:(resultsArray.count > 0)];
 	return resultsArray.count;
 }
 
@@ -184,8 +178,8 @@
 	
 	id representedObject = [resultsArray objectAtIndex:indexPath.row];
 	
-	if ([delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForRepresentedObject:)]){
-		return [delegate tokenField:tokenField resultsTableView:tableView cellForRepresentedObject:representedObject];
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForRepresentedObject:)]){
+		return [tokenField.delegate tokenField:tokenField resultsTableView:tableView cellForRepresentedObject:representedObject];
 	}
 	
     static NSString * CellIdentifier = @"ResultsCell";
@@ -236,8 +230,8 @@
 #pragma mark Results Methods
 - (NSString *)displayStringForRepresentedObject:(id)object {
 	
-	if ([delegate respondsToSelector:@selector(tokenField:displayStringForRepresentedObject:)]){
-		return [delegate tokenField:tokenField displayStringForRepresentedObject:object];
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:displayStringForRepresentedObject:)]){
+		return [tokenField.delegate tokenField:tokenField displayStringForRepresentedObject:object];
 	}
 	
 	if ([object isKindOfClass:[NSString class]]){
@@ -249,8 +243,8 @@
 
 - (NSString *)searchResultStringForRepresentedObject:(id)object {
 	
-	if ([delegate respondsToSelector:@selector(tokenField:searchResultStringForRepresentedObject:)]){
-		return [delegate tokenField:tokenField searchResultStringForRepresentedObject:object];
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultStringForRepresentedObject:)]){
+		return [tokenField.delegate tokenField:tokenField searchResultStringForRepresentedObject:object];
 	}
 	
 	return [self displayStringForRepresentedObject:object];
@@ -309,6 +303,7 @@
 		return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
 	}];
 	[resultsTable reloadData];
+	[self setSearchResultsVisible:(resultsArray.count > 0)];
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
