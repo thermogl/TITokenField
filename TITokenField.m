@@ -1064,7 +1064,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	{
 		CGContextClip(context);
 		CGFloat locations[2] = {0, 0.95};
-		CGFloat components[8] = {red + 0.2, green + 0.2, blue + 0.2, alpha, red, green, blue, alpha};
+		CGFloat components[8] = {red + 0.2, green + 0.2, blue + 0.2, alpha, red, green, blue, 0.8};
 		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, components, locations, 2);
 		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
 		CGGradientRelease(gradient);
@@ -1151,7 +1151,7 @@ CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
 	
 	CGMutablePathRef path = CGPathCreateMutable();
 	CGFloat arcValue = (size.height / 2) - 1;
-	CGFloat radius = arcValue - (innerPath ? 0.5 : 0);
+	CGFloat radius = arcValue - (innerPath ? (1 / [[UIScreen mainScreen] scale]) : 0);
 	CGPathAddArc(path, NULL, arcValue, arcValue, radius, (M_PI / 2), (M_PI * 3 / 2), NO);
 	CGPathAddArc(path, NULL, size.width - arcValue, arcValue, radius, (M_PI  * 3 / 2), (M_PI / 2), NO);
 	CGPathCloseSubpath(path);
