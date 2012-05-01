@@ -299,7 +299,6 @@
 			if (shouldAdd && !showAlreadyTokenized){
 				
 				for (TIToken * token in tokenField.tokens){
-					
 					if ([token.representedObject isEqual:sourceObject]){
 						shouldAdd = NO;
 						break;
@@ -1155,6 +1154,7 @@ CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
 	CGFloat radius = arcValue - (innerPath ? 0.5 : 0);
 	CGPathAddArc(path, NULL, arcValue, arcValue, radius, (M_PI / 2), (M_PI * 3 / 2), NO);
 	CGPathAddArc(path, NULL, size.width - arcValue, arcValue, radius, (M_PI  * 3 / 2), (M_PI / 2), NO);
+	CGPathCloseSubpath(path);
 	
 	return path;
 }
