@@ -1191,21 +1191,13 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(tintColor.CGColor));
 	const CGFloat * components = CGColorGetComponents(tintColor.CGColor);
 	
-	if (colorSpaceModel == kCGColorSpaceModelMonochrome){
+	if (colorSpaceModel == kCGColorSpaceModelMonochrome || colorSpaceModel == kCGColorSpaceModelRGB){
 		
 		if (red) *red = components[0];
-		if (green) *green = components[0];
-		if (blue) *blue = components[0];
-		if (alpha) *alpha = components[1];
-		return YES;
-	}
-	
-	if (colorSpaceModel == kCGColorSpaceModelRGB){
+		if (blue) *blue = (colorSpaceModel == kCGColorSpaceModelMonochrome ? components[0] : components[1]);
+		if (green) *green = (colorSpaceModel == kCGColorSpaceModelMonochrome ? components[0] : components[2]);
+		if (alpha) *alpha = (colorSpaceModel == kCGColorSpaceModelMonochrome ? components[1] : components[3]);
 		
-		if (red) *red = components[0];
-		if (green) *green = components[1];
-		if (blue) *blue = components[2];
-		if (alpha) *alpha = components[3];
 		return YES;
 	}
 	
