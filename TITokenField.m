@@ -18,7 +18,7 @@
 - (NSString *)displayStringForRepresentedObject:(id)object;
 - (NSString *)searchResultStringForRepresentedObject:(id)object;
 - (void)setSearchResultsVisible:(BOOL)visible;
-- (void)resultsForSubstring:(NSString *)substring;
+- (void)resultsForSearchString:(NSString *)searchString;
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated;
 @end
 
@@ -226,7 +226,7 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-	[self resultsForSubstring:[field.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+	[self resultsForSearchString:[field.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -278,7 +278,7 @@
 	}
 }
 
-- (void)resultsForSubstring:(NSString *)substring {
+- (void)resultsForSearchString:(NSString *)searchString {
 	
 	// The brute force searching method.
 	// Takes the input string and compares it against everything in the source array.
@@ -289,28 +289,25 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	NSArray * sourceCopy = [sourceArray copy];
-	for (NSString * sourceObject in sourceCopy){
+	[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 		
 		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-		if ([query rangeOfString:substring options:NSCaseInsensitiveSearch].location != NSNotFound){
+		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
 			
-			BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
+			__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
 			if (shouldAdd && !showAlreadyTokenized){
 				
-				for (TIToken * token in tokenField.tokens){
+				[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
 					if ([token.representedObject isEqual:sourceObject]){
 						shouldAdd = NO;
-						break;
+						*secondStop = YES;
 					}
-				}
+				}];
 			}
 			
 			if (shouldAdd) [resultsArray addObject:sourceObject];
 		}
-	}
-	
-	[sourceCopy release];
+	}];
 	
 	[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
 		return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
@@ -430,7 +427,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (void)setText:(NSString *)text {
-	[super setText:((text.length == 0 || [text isEqualToString:@""]) ? kTextEmpty : text)];
+	[super setText:(text.length == 0 ? kTextEmpty : text)];
 }
 
 - (void)setFont:(UIFont *)font {
@@ -453,14 +450,16 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (NSArray *)tokenTitles {
 	
 	NSMutableArray * titles = [[NSMutableArray alloc] init];
-	for (TIToken * token in tokens) [titles addObject:token.title];
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
 	return [titles autorelease];
 }
 
 - (NSArray *)tokenObjects {
 	
 	NSMutableArray * objects = [[NSMutableArray alloc] init];
-	for (TIToken * token in tokens) [objects addObject:(token.representedObject ? token.representedObject : token.title)];
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+		[objects addObject:(token.representedObject ? token.representedObject : token.title)];
+	}];
 	return [objects autorelease];
 }
 
@@ -474,7 +473,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (void)didBeginEditing {
-	for (TIToken * token in tokens) [self addToken:token];
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
 }
 
 - (void)didEndEditing {
@@ -486,14 +485,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if (removesTokensOnEndEditing){
 		
-		for (TIToken * token in tokens) [token removeFromSuperview];
+		[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[token removeFromSuperview];}];
 		
 		NSString * untokenized = kTextEmpty;
-		
 		if (tokens.count){
 			
 			NSMutableArray * titles = [[NSMutableArray alloc] init];
-			for (TIToken * token in tokens) [titles addObject:token.title];
+			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
 			
 			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
 			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
@@ -580,13 +578,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	if (shouldRemove){
-	
-		[token removeFromSuperview];
-		[tokens removeObject:token];
 		
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
 		}
+	
+		[token removeFromSuperview];
+		[tokens removeObject:token];
 		
 		[self setResultsModeEnabled:NO];
 	}
@@ -615,9 +613,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)tokenizeText {
 	
 	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
-		for (NSString * component in [self.text componentsSeparatedByCharactersInSet:tokenizingCharacters]){
+		[[self.text componentsSeparatedByCharactersInSet:tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
 			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
-		}
+		}];
 	}
 }
 
@@ -644,7 +642,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	numberOfLines = 1;
 	tokenCaret = (CGPoint){leftMargin, (topMargin - 1)};
 	
-	for (TIToken * token in tokens){
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		
 		[token setFont:self.font];
 		[token setMaxWidth:(self.bounds.size.width - rightMargin - (numberOfLines > 1 ? hPadding : leftMargin))];
@@ -666,7 +664,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 				tokenCaret.y += lineHeight;
 			}
 		}
-	}
+	}];
 	
 	return tokenCaret.y + lineHeight;
 }
