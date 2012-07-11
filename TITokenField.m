@@ -579,12 +579,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if (shouldRemove){
 		
+		[[token retain] autorelease];
+		
+		[token removeFromSuperview];
+		[tokens removeObject:token];
+		
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
 		}
-	
-		[token removeFromSuperview];
-		[tokens removeObject:token];
 		
 		[self setResultsModeEnabled:NO];
 	}
