@@ -683,7 +683,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
 			
 		} completion:^(BOOL complete){
-			[self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
+			if (complete) [self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
 		}];
 	}
 }
