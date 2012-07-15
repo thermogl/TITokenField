@@ -106,10 +106,6 @@
 	return YES;
 }
 
-- (void)tokenField:(TITokenField *)tokenField didRemoveToken:(TIToken *)token {
-	NSLog(@"Removed: %@", token);
-}
-
 - (void)tokenFieldChangedEditing:(TITokenField *)tokenField {
 	// There's some kind of annoying bug where UITextFieldViewModeWhile/UnlessEditing doesn't do anything.
 	[tokenField setRightViewMode:(tokenField.editing ? UITextFieldViewModeAlways : UITextFieldViewModeNever)];
