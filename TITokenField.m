@@ -212,6 +212,7 @@
 	[token setRepresentedObject:representedObject];
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	[self setSearchResultsVisible:NO];
 }
 
 #pragma mark TextField Methods
@@ -535,8 +536,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	if (title.length){
 		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
 		[self addToken:token];
-		[token release];
-		return token;
+		return [token autorelease];
 	}
 	
 	return nil;
