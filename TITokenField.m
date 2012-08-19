@@ -208,8 +208,10 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	
 	id representedObject = [resultsArray objectAtIndex:indexPath.row];
-	TIToken * token = [tokenField addTokenWithTitle:[self displayStringForRepresentedObject:representedObject]];
-	[token setRepresentedObject:representedObject];
+    
+    TIToken * token = [[TIToken alloc] initWithTitle:[self displayStringForRepresentedObject:representedObject] representedObject:representedObject];
+    
+    [tokenField addToken:token];
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	[self setSearchResultsVisible:NO];
@@ -590,6 +592,15 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		
 		[self setResultsModeEnabled:NO];
 	}
+}
+
+- (void)removeAllTokens
+{
+    for(int i = [tokens count]-1; i >= 0; i--)
+    {
+        TIToken * t = [tokens objectAtIndex:i];
+        [self removeToken:t];
+    }
 }
 
 - (void)selectToken:(TIToken *)token {
