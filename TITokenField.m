@@ -601,6 +601,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
         TIToken * t = [tokens objectAtIndex:i];
         [self removeToken:t];
     }
+
+    [self setText:@""];
 }
 
 - (void)selectToken:(TIToken *)token {
