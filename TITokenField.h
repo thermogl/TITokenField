@@ -43,6 +43,7 @@
 - (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
 - (NSString *)tokenField:(TITokenField *)tokenField displayStringForRepresentedObject:(id)object;
 - (NSString *)tokenField:(TITokenField *)tokenField searchResultStringForRepresentedObject:(id)object;
+- (NSString *)tokenField:(TITokenField *)tokenField searchResultSubtitleForRepresentedObject:(id)object;
 - (UITableViewCell *)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView cellForRepresentedObject:(id)object;
 - (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 @end

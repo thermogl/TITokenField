@@ -199,7 +199,18 @@
     static NSString * CellIdentifier = @"ResultsCell";
     
     UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    if (!cell) cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+    if (!cell) {
+        NSString *subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
+
+        if(subtitle) {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
+            cell.detailTextLabel.text = subtitle;
+        } else {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        }
+
+
+    }
 	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
 	
     return cell;
@@ -264,6 +275,15 @@
 	}
 	
 	return [self displayStringForRepresentedObject:object];
+}
+
+- (NSString *)searchResultSubtitleForRepresentedObject:(id)object {
+
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultSubtitleForRepresentedObject:)]){
+		return [tokenField.delegate tokenField:tokenField searchResultSubtitleForRepresentedObject:object];
+	}
+
+	return nil;
 }
 
 - (void)setSearchResultsVisible:(BOOL)visible {
