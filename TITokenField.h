@@ -126,6 +126,7 @@ typedef enum {
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
+- (TIToken *)addTokenWithTitle:(NSString *)title representedObject:(id)object;
 - (void)removeToken:(TIToken *)token;
 - (void)removeAllTokens;
 

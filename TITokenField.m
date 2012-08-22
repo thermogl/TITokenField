@@ -197,22 +197,13 @@
 	}
 	
     static NSString * CellIdentifier = @"ResultsCell";
-    
     UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-
-    NSString *subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
-
-    if (!cell) {
-
-        if(subtitle) {
-            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
-        } else {
-            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
-        }
-    }
-
-    cell.detailTextLabel.text = subtitle;
+    NSString * subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
+	
+	if (!cell) cell = [[[UITableViewCell alloc] initWithStyle:(subtitle ? UITableViewCellStyleSubtitle : UITableViewCellStyleDefault) reuseIdentifier:CellIdentifier] autorelease];
+	
 	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
+	[cell.detailTextLabel setText:subtitle];
 	
     return cell;
 }
@@ -316,7 +307,9 @@
 		
 		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
         NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound || (querySubtitle && [querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound)){
+		
+		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+			[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
 			
 			__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
 			if (shouldAdd && !showAlreadyTokenized){
@@ -555,9 +548,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 #pragma mark Token Handling
 - (TIToken *)addTokenWithTitle:(NSString *)title {
+	return [self addTokenWithTitle:title representedObject:nil];
+}
+
+- (TIToken *)addTokenWithTitle:(NSString *)title representedObject:(id)object {
 	
 	if (title.length){
-		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:nil font:self.font];
+		TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:object font:self.font];
 		[self addToken:token];
 		return [token autorelease];
 	}
