@@ -315,7 +315,8 @@
 	[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 		
 		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+        NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound || (querySubtitle && [querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound)){
 			
 			__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
 			if (shouldAdd && !showAlreadyTokenized){
