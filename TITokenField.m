@@ -199,7 +199,19 @@
     static NSString * CellIdentifier = @"ResultsCell";
     
     UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    if (!cell) cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+
+    NSString *subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
+
+    if (!cell) {
+
+        if(subtitle) {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
+        } else {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        }
+    }
+
+    cell.detailTextLabel.text = subtitle;
 	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
 	
     return cell;
@@ -266,6 +278,15 @@
 	return [self displayStringForRepresentedObject:object];
 }
 
+- (NSString *)searchResultSubtitleForRepresentedObject:(id)object {
+
+	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultSubtitleForRepresentedObject:)]){
+		return [tokenField.delegate tokenField:tokenField searchResultSubtitleForRepresentedObject:object];
+	}
+
+	return nil;
+}
+
 - (void)setSearchResultsVisible:(BOOL)visible {
 	
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
@@ -294,7 +315,8 @@
 	[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 		
 		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+        NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound || (querySubtitle && [querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound)){
 			
 			__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
 			if (shouldAdd && !showAlreadyTokenized){
