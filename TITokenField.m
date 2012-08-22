@@ -199,18 +199,19 @@
     static NSString * CellIdentifier = @"ResultsCell";
     
     UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+
+    NSString *subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
+
     if (!cell) {
-        NSString *subtitle = [self searchResultSubtitleForRepresentedObject:representedObject];
 
         if(subtitle) {
             cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
-            cell.detailTextLabel.text = subtitle;
         } else {
             cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
         }
-
-
     }
+
+    cell.detailTextLabel.text = subtitle;
 	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
 	
     return cell;
