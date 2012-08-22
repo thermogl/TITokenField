@@ -554,6 +554,17 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 #pragma mark Token Handling
+
+- (TIToken *)addTokenWithTitle:(NSString *)title respresentedObject:(id)object {
+
+    if (title.length){
+        TIToken * token = [[TIToken alloc] initWithTitle:title representedObject:object font:self.font];
+        [self addToken:token];
+         return [token autorelease];
+    }
+
+    return nil;
+}
 - (TIToken *)addTokenWithTitle:(NSString *)title {
 	
 	if (title.length){
@@ -938,11 +949,14 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @synthesize font;
 @synthesize tintColor;
 @synthesize accessoryType;
+@synthesize accessoryView;
 @synthesize maxWidth;
 
 #pragma mark Init
 - (id)initWithTitle:(NSString *)aTitle {
 	return [self initWithTitle:aTitle representedObject:nil];
+
+
 }
 
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object {
@@ -1008,6 +1022,18 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 }
 
+- (void)setAccessoryView:(UIView *)accessoryView1 {
+    if (accessoryView != accessoryView1) {
+        [accessoryView1 retain];
+        [accessoryView removeFromSuperview];
+        [accessoryView release];
+        accessoryView = accessoryView1;
+        [self addSubview:accessoryView];
+        [self sizeToFit];
+    }
+}
+
+
 - (void)setTintColor:(UIColor *)newTintColor {
 	
 	if (!newTintColor) newTintColor = [TIToken blueTintColor];
@@ -1058,11 +1084,27 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &accessoryWidth));
 		accessoryWidth += floorf(hTextPadding / 2);
 	}
-	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	CGFloat height = floorf(titleSize.height + vTextPadding);
-	
-	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
+
+    BOOL showAccessoryView = accessoryType == TITokenAccessoryTypeNone && accessoryView;
+    if(showAccessoryView) {
+        accessoryWidth += floorf(hTextPadding);
+    }
+
+
+    CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
+   	CGFloat height = floorf(titleSize.height + vTextPadding);
+   	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
+
+
+    if (showAccessoryView) {
+        //CGPoint arrowPoint = CGPointMake(self.bounds.size.width - floorf(hTextPadding / 2), (self.bounds.size.height / 2) - 1);
+        CGPoint arrowPoint = CGPointMake(self.bounds.size.width - floorf(hTextPadding / 2) - accessoryView.frame.size.width, (self.bounds.size.height / 2) - (accessoryView.frame.size.height / 2));
+
+        accessoryView.frame = CGRectMake(arrowPoint.x, arrowPoint.y, accessoryView.frame.size.width, accessoryView.frame.size.height);
+
+    }
+
+
 	[self setNeedsDisplay];
 }
 
@@ -1244,7 +1286,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	[title release];
 	[representedObject release];
 	[font release];
-	[tintColor release];
+    [tintColor release];
+    [accessoryView release];
     [super dealloc];
 }
 

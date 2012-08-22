@@ -126,6 +126,7 @@ typedef enum {
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
+- (TIToken *)addTokenWithTitle:(NSString *)title respresentedObject:(id)object;
 - (void)removeToken:(TIToken *)token;
 - (void)removeAllTokens;
 
@@ -157,9 +158,13 @@ typedef enum {
 	
 	UIFont * font;
 	UIColor * tintColor;
+
+    UIView *accessoryView;
 	
 	TITokenAccessoryType accessoryType;
 	CGFloat maxWidth;
+
+
 }
 
 @property (nonatomic, copy) NSString * title;
@@ -167,7 +172,9 @@ typedef enum {
 @property (nonatomic, retain) UIFont * font;
 @property (nonatomic, retain) UIColor * tintColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
+@property (nonatomic, retain) UIView * accessoryView;
 @property (nonatomic, assign) CGFloat maxWidth;
+
 
 - (id)initWithTitle:(NSString *)aTitle;
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
