@@ -77,7 +77,7 @@
 	[separator release];
 	
 	// This view is created for convenience, because it resizes and moves with the rest of the subviews.
-	contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 
+	contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width,
 														   self.bounds.size.height - tokenFieldBottom - 1)];
 	[contentView setBackgroundColor:[UIColor clearColor]];
 	[self addSubview:contentView];
@@ -270,11 +270,11 @@
 }
 
 - (NSString *)searchResultSubtitleForRepresentedObject:(id)object {
-
+	
 	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultSubtitleForRepresentedObject:)]){
 		return [tokenField.delegate tokenField:tokenField searchResultSubtitleForRepresentedObject:object];
 	}
-
+	
 	return nil;
 }
 
@@ -288,7 +288,7 @@
 	else
 	{
 		[resultsTable setHidden:!visible];
-		[tokenField setResultsModeEnabled:visible]; 
+		[tokenField setResultsModeEnabled:visible];
 	}
 }
 
@@ -303,33 +303,35 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
-	[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
-		
-		NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-        NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-		
-		if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-			[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+	if (searchString.length){
+		[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 			
-			__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
-			if (shouldAdd && !showAlreadyTokenized){
+			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
+			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+			
+			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
 				
-				[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
-					if ([token.representedObject isEqual:sourceObject]){
-						shouldAdd = NO;
-						*secondStop = YES;
-					}
-				}];
+				__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
+				if (shouldAdd && !showAlreadyTokenized){
+					
+					[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+						if ([token.representedObject isEqual:sourceObject]){
+							shouldAdd = NO;
+							*secondStop = YES;
+						}
+					}];
+				}
+				
+				if (shouldAdd) [resultsArray addObject:sourceObject];
 			}
-			
-			if (shouldAdd) [resultsArray addObject:sourceObject];
-		}
-	}];
-	
-	[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-		return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-	}];
-	[resultsTable reloadData];
+		}];
+		
+		[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+		}];
+		[resultsTable reloadData];
+	}
 	[self setSearchResultsVisible:(resultsArray.count > 0)];
 }
 
@@ -337,7 +339,7 @@
 	
     UITextPosition * position = [tokenField positionFromPosition:tokenField.beginningOfDocument offset:2];
 	
-	[popoverController presentPopoverFromRect:[tokenField caretRectForPosition:position] inView:tokenField 
+	[popoverController presentPopoverFromRect:[tokenField caretRectForPosition:position] inView:tokenField
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
 
@@ -536,7 +538,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	// Stop the cut, copy, select and selectAll appearing when the field is 'empty'.
 	if (action == @selector(cut:) || action == @selector(copy:) || action == @selector(select:) || action == @selector(selectAll:))
 		return ![self.text isEqualToString:kTextEmpty];
-	 
+	
 	return [super canPerformAction:action withSender:sender];
 }
 
@@ -570,13 +572,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	if (shouldAdd){
-	
+		
 		[self becomeFirstResponder];
-	
+		
 		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
 		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 		[self addSubview:token];
-	
+		
 		if (![tokens containsObject:token]) [tokens addObject:token];
 		
 		if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
@@ -617,7 +619,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[tokens enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop) {
 		[self removeToken:token];
 	}];
-
+	
     [self setText:@""];
 }
 
@@ -642,11 +644,16 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)tokenizeText {
 	
+	__block BOOL textChanged = NO;
+	
 	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
 		[[self.text componentsSeparatedByCharactersInSet:tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
 			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+			textChanged = YES;
 		}];
 	}
+	
+	if (textChanged) [self sendActionsForControlEvents:UIControlEventEditingChanged];
 }
 
 - (void)tokenTouchDown:(TIToken *)token {
@@ -791,7 +798,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6, 
+	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6,
 		bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
 }
 
@@ -831,7 +838,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 //==========================================================
 #pragma mark - TITokenFieldInternalDelegate -
 //==========================================================
-@implementation TITokenFieldInternalDelegate 
+@implementation TITokenFieldInternalDelegate
 @synthesize delegate;
 @synthesize tokenField;
 
