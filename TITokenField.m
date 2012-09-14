@@ -231,7 +231,7 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-	[self resultsForSearchString:[field.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+	[self resultsForSearchString:field.text];
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -303,11 +303,14 @@
 	[resultsArray removeAllObjects];
 	[resultsTable reloadData];
 	
+	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	
 	if (searchString.length){
 		[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 			
 			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
 			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+			if (!querySubtitle) querySubtitle = @"";
 			
 			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
