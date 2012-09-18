@@ -7,6 +7,7 @@
 //
 
 #import "TITokenTableViewController.h"
+#import "Names.h"
 
 
 
@@ -82,7 +83,7 @@
     }
     
     
-    
+     [self setSourceArray:[Names listOfNames]];
     
     showAlreadyTokenized = NO;
     resultsArray = [[NSMutableArray alloc] init];
