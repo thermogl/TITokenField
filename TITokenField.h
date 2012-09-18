@@ -50,8 +50,7 @@
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
 	
-	id <UITextFieldDelegate> delegate;
-	TITokenField * tokenField;
+
 }
 
 @end
@@ -97,7 +96,7 @@ typedef enum {
 
 @interface TITokenField : UITextField {
 	
-	id <TITokenFieldDelegate> delegate;
+	__weak id <TITokenFieldDelegate> delegate;
 	TITokenFieldInternalDelegate * internalDelegate;
 	
 	NSMutableArray * tokens;
@@ -113,7 +112,7 @@ typedef enum {
 	NSCharacterSet * tokenizingCharacters;
 }
 
-@property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
+@property (nonatomic, weak) id <TITokenFieldDelegate> delegate;
 @property (nonatomic, readonly) NSArray * tokens;
 @property (nonatomic, readonly) TIToken * selectedToken;
 @property (nonatomic, readonly) NSArray * tokenTitles;
@@ -123,6 +122,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
+@property (nonatomic, assign) NSString * promptText;
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;

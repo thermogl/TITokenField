@@ -8,6 +8,8 @@
 
 #import "TokenFieldExampleAppDelegate.h"
 #import "TokenFieldExampleViewController.h"
+#import "TITokenTableViewController.h"
+#import "TokenTableExampleViewController.h"
 
 @implementation TokenFieldExampleAppDelegate
 
@@ -15,21 +17,24 @@
 	
 	window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	
-	TokenFieldExampleViewController * viewController = [[TokenFieldExampleViewController alloc] init];
-	UINavigationController * navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
-	[viewController release];
+//	TokenFieldExampleViewController * viewController = [[TokenFieldExampleViewController alloc] init];
+//	UINavigationController * navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+
+
+
+    TokenTableExampleViewController * viewController = [[TokenTableExampleViewController alloc] init];
+
+
+    viewController.tokenDataSource = viewController;
+    viewController.delegate = viewController;
+
 	
-    [window setRootViewController:navigationController];
-	[navigationController release];
+    [window setRootViewController:viewController];
+
 	
     [window makeKeyAndVisible];
 
     return YES;
-}
-
-- (void)dealloc {
-    [window release];
-    [super dealloc];
 }
 
 @end
