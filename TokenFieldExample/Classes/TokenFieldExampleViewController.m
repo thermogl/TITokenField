@@ -93,7 +93,8 @@
 }
 
 - (void)resizeViews {
-	[tokenFieldView setFrame:((CGRect){tokenFieldView.frame.origin, {self.view.bounds.size.width, self.view.bounds.size.height - keyboardHeight}})];
+    int tabBarOffset = self.tabBarController == nil ?  0 : self.tabBarController.tabBar.frame.size.height;
+	[tokenFieldView setFrame:((CGRect){tokenFieldView.frame.origin, {self.view.bounds.size.width, self.view.bounds.size.height + tabBarOffset - keyboardHeight}})];
 	[messageView setFrame:tokenFieldView.contentView.bounds];
 }
 
