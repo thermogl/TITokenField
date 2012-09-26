@@ -11,19 +11,21 @@
 
 @implementation TokenFieldExampleAppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	
 	window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	
 	TokenFieldExampleViewController * viewController = [[TokenFieldExampleViewController alloc] init];
 	UINavigationController * navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    UITabBarController *tabBarController = [[UITabBarController alloc] init];
+    [tabBarController setViewControllers:@[navigationController]];
 	[viewController release];
 	
-    [window setRootViewController:navigationController];
+    [window setRootViewController:tabBarController];
 	[navigationController release];
 	
     [window makeKeyAndVisible];
-
+    
     return YES;
 }
 
