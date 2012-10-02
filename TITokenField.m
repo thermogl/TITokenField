@@ -533,7 +533,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (void)didChangeText {
-	if (self.text.length == 0) [self setText:kTextEmpty];
+	if (self.text.length == 0) {
+        [self setText:kTextEmpty];
+        [placeHolderLabel setHidden:NO];
+    }
+    else{
+        [placeHolderLabel setHidden:YES];
+    }
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -775,6 +781,30 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self layoutTokensAnimated:YES];
+}
+
+- (void)setPlaceholder:(NSString *)placeholder {
+	
+	if (placeholder){
+        
+        UILabel * label = placeHolderLabel;
+		if (!label || ![label isKindOfClass:[UILabel class]]){
+			label = [[UILabel alloc] initWithFrame:CGRectMake(tokenCaret.x, tokenCaret.y, self.rightView.bounds.size.width, self.rightView.bounds.size.height)];
+			[label setTextColor:[UIColor colorWithWhite:0.75 alpha:1]];
+			placeHolderLabel = label;
+            [self addSubview:placeHolderLabel];
+			[label release];
+		}
+		
+		[label setText:placeholder];
+		//[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
+		[label sizeToFit];
+	}
+	else
+	{
+	}
+    
+    [self layoutTokensAnimated:YES];
 }
 
 #pragma mark Layout

@@ -28,6 +28,8 @@
 	[tokenFieldView.tokenField setDelegate:self];
 	[tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
 	[tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
+    [tokenFieldView.tokenField setPromptText:@"To:"];
+    [tokenFieldView.tokenField setPlaceholder:@"Type a name"];
 	
 	UIButton * addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
 	[addButton addTarget:self action:@selector(showContactsPicker:) forControlEvents:UIControlEventTouchUpInside];
