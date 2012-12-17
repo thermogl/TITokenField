@@ -325,6 +325,7 @@
         else
         {
             self.autoCompleteString = nil;
+            [self setSearchResultsVisible:NO];
         }
     }
     else
