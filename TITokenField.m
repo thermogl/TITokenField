@@ -30,6 +30,8 @@
 @synthesize contentView;
 @synthesize separator;
 @synthesize sourceArray;
+@synthesize autoCompleteString;
+@synthesize autoCompleteDelegate;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -292,50 +294,84 @@
 	}
 }
 
+- (void)autocomplete
+{
+    NSString *sentAutocompleteString = self.autoCompleteString;
+    if ( sentAutocompleteString )
+    {
+        [self.autoCompleteDelegate autocompletionsForString:sentAutocompleteString completionBlock:^(NSArray *autocompletions) {
+            if ( [sentAutocompleteString isEqualToString:self.autoCompleteString] )
+            {
+                [resultsArray removeAllObjects];
+                [resultsArray addObjectsFromArray:autocompletions];
+                [resultsTable reloadData];
+                [self setSearchResultsVisible:(resultsArray.count > 0)];
+            }
+        }];
+    }
+}
+
 - (void)resultsForSearchString:(NSString *)searchString {
 	
-	// The brute force searching method.
-	// Takes the input string and compares it against everything in the source array.
-	// If the source is massive, this could take some time.
-	// You could always subclass and override this if needed or do it on a background thread.
-	// GCD would be great for that.
-	
-	[resultsArray removeAllObjects];
-	[resultsTable reloadData];
-	
-	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
-	if (searchString.length){
-		[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
-			
-			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-			if (!querySubtitle) querySubtitle = @"";
-			
-			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
-				
-				__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
-				if (shouldAdd && !showAlreadyTokenized){
-					
-					[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
-						if ([token.representedObject isEqual:sourceObject]){
-							shouldAdd = NO;
-							*secondStop = YES;
-						}
-					}];
-				}
-				
-				if (shouldAdd) [resultsArray addObject:sourceObject];
-			}
-		}];
-		
-		[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-		}];
-		[resultsTable reloadData];
-	}
-	[self setSearchResultsVisible:(resultsArray.count > 0)];
+    if ( autoCompleteDelegate )
+    {
+        searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autocomplete) object:nil];
+        if ( [searchString length] )
+        {
+            self.autoCompleteString = searchString;
+            [self performSelector:@selector(autocomplete) withObject:searchString afterDelay:.2f];
+        }
+        else
+        {
+            self.autoCompleteString = nil;
+        }
+    }
+    else
+    {
+        // The brute force searching method.
+        // Takes the input string and compares it against everything in the source array.
+        // If the source is massive, this could take some time.
+        // You could always subclass and override this if needed or do it on a background thread.
+        // GCD would be great for that.
+        
+        [resultsArray removeAllObjects];
+        [resultsTable reloadData];
+        
+        searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
+        if (searchString.length){
+            [sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
+                
+                NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
+                NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+                if (!querySubtitle) querySubtitle = @"";
+                
+                if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+                    [querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+                    
+                    __block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
+                    if (shouldAdd && !showAlreadyTokenized){
+                        
+                        [tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+                            if ([token.representedObject isEqual:sourceObject]){
+                                shouldAdd = NO;
+                                *secondStop = YES;
+                            }
+                        }];
+                    }
+                    
+                    if (shouldAdd) [resultsArray addObject:sourceObject];
+                }
+            }];
+            
+            [resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+            }];
+            [resultsTable reloadData];
+        }
+        [self setSearchResultsVisible:(resultsArray.count > 0)];
+    }
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
@@ -356,6 +392,7 @@
 	[resultsArray release];
 	[sourceArray release];
 	[popoverController release];
+    [autoCompleteString release];
 	[super dealloc];
 }
 

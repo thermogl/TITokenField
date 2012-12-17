@@ -33,6 +33,10 @@
 //==========================================================
 #pragma mark - Delegate Methods -
 //==========================================================
+
+@protocol TITokenFieldAutocompleteDelegate <UITextFieldDelegate>
+- (void)autocompletionsForString:(NSString *)string completionBlock:(void(^)(NSArray *autocompletions))completion;
+@end
 @protocol TITokenFieldDelegate <UITextFieldDelegate>
 @optional
 - (BOOL)tokenField:(TITokenField *)tokenField willAddToken:(TIToken *)token;
@@ -49,7 +53,6 @@
 @end
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
-	
 	id <UITextFieldDelegate> delegate;
 	TITokenField * tokenField;
 }
@@ -68,11 +71,15 @@
 	UIView * contentView;
 	
 	NSArray * sourceArray;
+   
 	NSMutableArray * resultsArray;
 	
 	TITokenField * tokenField;
 	
 	UIPopoverController * popoverController;
+    
+    NSString * autoCompleteString;
+    id <TITokenFieldAutocompleteDelegate> autoCompleteDelegate;
 }
 
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
@@ -82,6 +89,8 @@
 @property (nonatomic, readonly) UIView * contentView;
 @property (nonatomic, copy) NSArray * sourceArray;
 @property (nonatomic, readonly) NSArray * tokenTitles;
+@property (nonatomic, copy) NSString *autoCompleteString;
+@property (nonatomic, assign) id <TITokenFieldAutocompleteDelegate> autoCompleteDelegate;
 
 - (void)updateContentSize;
 
@@ -98,6 +107,7 @@ typedef enum {
 @interface TITokenField : UITextField {
 	
 	id <TITokenFieldDelegate> delegate;
+
 	TITokenFieldInternalDelegate * internalDelegate;
 	
 	NSMutableArray * tokens;
