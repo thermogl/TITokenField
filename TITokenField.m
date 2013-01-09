@@ -782,7 +782,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[scrollView setScrollEnabled:!flag];
 		
 		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
-		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
+		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset - self.scrollView.contentInset.top) animated:animated];
 	}
 	
 	resultsModeEnabled = flag;
