@@ -462,9 +462,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
 	
-	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
-	[self.layer setShadowOpacity:0.6];
-	[self.layer setShadowRadius:12];
+//	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
+//	[self.layer setShadowOpacity:0.6];
+//	[self.layer setShadowRadius:12];
 	
 	[self setPromptText:@"To:"];
 	[self setText:kTextEmpty];
@@ -524,7 +524,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (UIScrollView *)scrollView {
-	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
+	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : ([self.superview.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview.superview : nil));
 }
 
 #pragma mark Event Handling
@@ -772,18 +772,18 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	[self layoutTokensAnimated:animated];
 	
-	if (resultsModeEnabled != flag){
-		
-		//Hide / show the shadow
-		[self.layer setMasksToBounds:!flag];
-		
-		UIScrollView * scrollView = self.scrollView;
-		[scrollView setScrollsToTop:!flag];
-		[scrollView setScrollEnabled:!flag];
-		
-		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
-		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset - self.scrollView.contentInset.top) animated:animated];
-	}
+//	if (resultsModeEnabled != flag){
+//		
+//		//Hide / show the shadow
+//		[self.layer setMasksToBounds:!flag];
+//		
+//		UIScrollView * scrollView = self.scrollView;
+//		[scrollView setScrollsToTop:!flag];
+//		[scrollView setScrollEnabled:!flag];
+//		CGPoint caret = [self.scrollView convertPoint:tokenCaret fromView:self];
+//		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : caret.y - floor(self.font.lineHeight * 4 / 7) + 1);
+//		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset - self.scrollView.contentInset.top) animated:animated];
+//	}
 	
 	resultsModeEnabled = flag;
 }
