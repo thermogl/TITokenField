@@ -582,10 +582,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 		[self addSubview:token];
 		
-		if (![tokens containsObject:token]) [tokens addObject:token];
+		if (![tokens containsObject:token]) {
+			[tokens addObject:token];
 		
-		if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
-			[delegate tokenField:self didAddToken:token];
+			if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
+				[delegate tokenField:self didAddToken:token];
+			}
 		}
 		
 		[self setResultsModeEnabled:NO];
