@@ -121,6 +121,10 @@ typedef enum {
 	int numberOfLines;
 	
 	NSCharacterSet * tokenizingCharacters;
+    
+    UIColor * _promptTextColor;
+    BOOL _promptFontSizeShouldBeEnlarged;
+
 }
 
 @property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
@@ -149,7 +153,9 @@ typedef enum {
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
 
 // Pass nil to hide label
-- (void)setPromptText:(NSString *)aText;
+- (void)setPromptText:(NSString *)text;
+- (void)setPromptTextColor:(UIColor *)textColor;
+//- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged; // Not currently supported. The way things are laid out in this Class are more complicated than you might think.
 
 @end
 
@@ -171,6 +177,7 @@ typedef enum {
 	
 	TITokenAccessoryType accessoryType;
 	CGFloat maxWidth;
+        
 }
 
 @property (nonatomic, copy) NSString * title;

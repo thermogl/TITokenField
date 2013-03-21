@@ -414,6 +414,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @property (nonatomic, readonly) CGFloat leftViewWidth;
 @property (nonatomic, readonly) CGFloat rightViewWidth;
 @property (nonatomic, readonly) UIScrollView * scrollView;
+@property (nonatomic, retain) UIColor * promptTextColor;
+//@property (nonatomic) BOOL promptFontSizeShouldBeEnlarged;
 @end
 
 @interface TITokenField (Private)
@@ -430,6 +432,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize numberOfLines;
 @synthesize selectedToken;
 @synthesize tokenizingCharacters;
+@synthesize promptTextColor=_promptTextColor;
+//@synthesize promptFontSizeShouldBeEnlarged=_promptFontSizeShouldBeEnlarged;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -466,6 +470,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 //	[self.layer setShadowOpacity:0.6];
 //	[self.layer setShadowRadius:12];
 	
+    _promptTextColor = [[UIColor colorWithWhite:0.5 alpha:1.0] retain];
+//    _promptFontSizeShouldBeEnlarged = YES;
 	[self setPromptText:NSLocalizedString(@"To:", @"To:")];
 	[self setText:kTextEmpty];
 	
@@ -790,13 +796,15 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 #pragma mark Left / Right view stuff
 - (void)setPromptText:(NSString *)text {
-	
+    PLFLogInfo(@"%@ %@", NSStringFromSelector(_cmd), text);
+
 	if (text){
 		
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
+            label.textColor = self.promptTextColor;
+            PLFLogInfo(@"label.textColor = %@", label.textColor);
 			[self setLeftView:label];
 			[label release];
 			
@@ -804,7 +812,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		}
 		
 		[label setText:text];
-		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
+		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + /*(self.promptFontSizeShouldBeEnlarged ? */1/* : 0)*/)]];
 		[label sizeToFit];
 	}
 	else
@@ -814,6 +822,30 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	[self layoutTokensAnimated:YES];
 }
+
+- (void)setPromptTextColor:(UIColor *)textColor {
+    PLFLogInfo(@"%@ %@", NSStringFromSelector(_cmd), textColor);
+    if (_promptTextColor != textColor) {
+        [_promptTextColor release];
+        _promptTextColor = [textColor retain];
+		UILabel * label = (UILabel *)self.leftView;
+        if (label && [label isKindOfClass:[UILabel class]]) {
+            label.textColor = self.promptTextColor;
+        }
+    }
+}
+
+//- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged {
+//    if (_promptFontSizeShouldBeEnlarged != shouldBeEnlarged) {
+//        _promptFontSizeShouldBeEnlarged = shouldBeEnlarged;
+//		UILabel * label = (UILabel *)self.leftView;
+//        if (label && [label isKindOfClass:[UILabel class]]) {
+//            [label setFont:[UIFont systemFontOfSize:(self.font.pointSize + (self.promptFontSizeShouldBeEnlarged ? 1 : 0))]];
+//            [label sizeToFit];
+//            [self layoutTokensAnimated:YES];
+//        }
+//    }
+//}
 
 #pragma mark Layout
 - (CGRect)textRectForBounds:(CGRect)bounds {
