@@ -123,7 +123,8 @@ typedef enum {
 	NSCharacterSet * tokenizingCharacters;
     
     UIColor * _promptTextColor;
-    BOOL _promptFontSizeShouldBeEnlarged;
+//    BOOL _promptFontSizeShouldBeEnlarged;
+    BOOL _animationsEnabledByDefault;
 
 }
 
@@ -156,6 +157,8 @@ typedef enum {
 - (void)setPromptText:(NSString *)text;
 - (void)setPromptTextColor:(UIColor *)textColor;
 //- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged; // Not currently supported. The way things are laid out in this Class are more complicated than you might think.
+
+@property (nonatomic) BOOL animationsEnabledByDefault;
 
 @end
 

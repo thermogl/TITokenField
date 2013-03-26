@@ -434,6 +434,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize tokenizingCharacters;
 @synthesize promptTextColor=_promptTextColor;
 //@synthesize promptFontSizeShouldBeEnlarged=_promptFontSizeShouldBeEnlarged;
+@synthesize animationsEnabledByDefault=_animationsEnabledByDefault;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -470,6 +471,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 //	[self.layer setShadowOpacity:0.6];
 //	[self.layer setShadowRadius:12];
 	
+    _animationsEnabledByDefault = YES;
     _promptTextColor = [[UIColor colorWithWhite:0.5 alpha:1.0] retain];
 //    _promptFontSizeShouldBeEnlarged = YES;
 	[self setPromptText:NSLocalizedString(@"To:", @"To:")];
@@ -758,20 +760,29 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	CGFloat newHeight = [self layoutTokensInternal];
 	if (self.bounds.size.height != newHeight){
-		
-		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
-		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
-			[self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
+        
+        void(^frameChanges)(void) = ^{
+            [self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
+        };
+        
+        if (animated) {
+            [UIView animateWithDuration:0.3 animations:^{
+                frameChanges();
+                [self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
+            } completion:^(BOOL finished) {
+                if (finished) [self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
+            }];
+        } else {
+            frameChanges();
 			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
-			
-		} completion:^(BOOL complete){
-			if (complete) [self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
-		}];
+			[self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
+        }
+		
 	}
 }
 
 - (void)setResultsModeEnabled:(BOOL)flag {
-	[self setResultsModeEnabled:flag animated:YES];
+	[self setResultsModeEnabled:flag animated:self.animationsEnabledByDefault];
 }
 
 - (void)setResultsModeEnabled:(BOOL)flag animated:(BOOL)animated {
@@ -820,7 +831,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[self setLeftView:nil];
 	}
 	
-	[self layoutTokensAnimated:YES];
+	[self layoutTokensAnimated:self.animationsEnabledByDefault];
 }
 
 - (void)setPromptTextColor:(UIColor *)textColor {
