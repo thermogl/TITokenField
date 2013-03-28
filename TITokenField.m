@@ -511,6 +511,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[internalDelegate setDelegate:delegate];
 }
 
+- (NSString *)textWithoutWhitespaceOrNewlines {
+    return [self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 - (NSArray *)tokens {
 	return [[tokens copy] autorelease];
 }

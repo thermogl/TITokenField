@@ -159,6 +159,7 @@ typedef enum {
 //- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged; // Not currently supported. The way things are laid out in this Class are more complicated than you might think.
 
 @property (nonatomic) BOOL animationsEnabledByDefault;
+@property (nonatomic, readonly) NSString * textWithoutWhitespaceOrNewlines;
 
 @end
 
