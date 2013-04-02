@@ -65,8 +65,8 @@
 	[tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
 	[tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
 	[tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
+	[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
+	[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
 	[tokenField setDelegate:self];
 	[self addSubview:tokenField];
 	[tokenField release];
@@ -777,14 +777,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
         if (animated) {
             [UIView animateWithDuration:0.3 animations:^{
                 frameChanges();
-                [self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
+                [self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
             } completion:^(BOOL finished) {
-                if (finished) [self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
+                if (finished) [self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
             }];
         } else {
             frameChanges();
-			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
-			[self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
+			[self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
+			[self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
         }
 		
 	}
