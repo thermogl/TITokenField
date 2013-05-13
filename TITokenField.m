@@ -458,7 +458,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)setup {
 	
 	[self setBorderStyle:UITextBorderStyleNone];
-	[self setFont:[UIFont systemFontOfSize:14]];
+	[self setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 	[self setBackgroundColor:[UIColor whiteColor]];
 	[self setAutocorrectionType:UITextAutocorrectionTypeNo];
 	[self setAutocapitalizationType:UITextAutocapitalizationTypeNone];
@@ -571,7 +571,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
                     [titles addObject:token.title];}];
 			
 			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
-			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
+			CGSize untokSize = [untokenized sizeWithFont:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
 			if (tokens.count > 1 && untokSize.width > availableWidth){
@@ -832,7 +832,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		}
 		
 		[label setText:text];
-		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + /*(self.promptFontSizeShouldBeEnlarged ? */1/* : 0)*/)]];
+		[label setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:(self.font.pointSize + /*(self.promptFontSizeShouldBeEnlarged ? */1/* : 0)*/)]];
 		[label sizeToFit];
 	}
 	else
@@ -860,7 +860,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 //        _promptFontSizeShouldBeEnlarged = shouldBeEnlarged;
 //		UILabel * label = (UILabel *)self.leftView;
 //        if (label && [label isKindOfClass:[UILabel class]]) {
-//            [label setFont:[UIFont systemFontOfSize:(self.font.pointSize + (self.promptFontSizeShouldBeEnlarged ? 1 : 0))]];
+//            [label setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:(self.font.pointSize + (self.promptFontSizeShouldBeEnlarged ? 1 : 0))]];
 //            [label sizeToFit];
 //            [self layoutTokensAnimated:YES];
 //        }
@@ -1043,7 +1043,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 }
 
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object {
-	return [self initWithTitle:aTitle representedObject:object font:[UIFont systemFontOfSize:14]];
+	return [self initWithTitle:aTitle representedObject:object font:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 }
 
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont {
@@ -1096,7 +1096,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (void)setFont:(UIFont *)newFont {
 	
-	if (!newFont) newFont = [UIFont systemFontOfSize:14];
+	if (!newFont) newFont = [UIFont fontWithName:@"ProximaNova-Regular" size:14];
 	
 	if (font != newFont){
 		[font release];
