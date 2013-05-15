@@ -4,7 +4,7 @@
 //
 //  Created by Tom Irving on 16/02/2010.
 //  Copyright 2012 Tom Irving. All rights reserved.
-//
+//  
 
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
@@ -30,6 +30,8 @@
 @synthesize contentView;
 @synthesize separator;
 @synthesize sourceArray;
+@synthesize autoCompleteString;
+@synthesize autoCompleteDelegate;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -63,8 +65,8 @@
 	[tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
 	[tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
 	[tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
+	[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
+	[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
 	[tokenField setDelegate:self];
 	[self addSubview:tokenField];
 	[tokenField release];
@@ -292,50 +294,85 @@
 	}
 }
 
+- (void)autocomplete
+{
+    NSString *sentAutocompleteString = self.autoCompleteString;
+    if ( sentAutocompleteString )
+    {
+        [self.autoCompleteDelegate autocompletionsForString:sentAutocompleteString completionBlock:^(NSArray *autocompletions) {
+            if ( [sentAutocompleteString isEqualToString:self.autoCompleteString] )
+            {
+                [resultsArray removeAllObjects];
+                [resultsArray addObjectsFromArray:autocompletions];
+                [resultsTable reloadData];
+                [self setSearchResultsVisible:(resultsArray.count > 0)];
+            }
+        }];
+    }
+}
+
 - (void)resultsForSearchString:(NSString *)searchString {
 	
-	// The brute force searching method.
-	// Takes the input string and compares it against everything in the source array.
-	// If the source is massive, this could take some time.
-	// You could always subclass and override this if needed or do it on a background thread.
-	// GCD would be great for that.
-	
-	[resultsArray removeAllObjects];
-	[resultsTable reloadData];
-	
-	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
-	if (searchString.length){
-		[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
-			
-			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-			if (!querySubtitle) querySubtitle = @"";
-			
-			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
-				
-				__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
-				if (shouldAdd && !showAlreadyTokenized){
-					
-					[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
-						if ([token.representedObject isEqual:sourceObject]){
-							shouldAdd = NO;
-							*secondStop = YES;
-						}
-					}];
-				}
-				
-				if (shouldAdd) [resultsArray addObject:sourceObject];
-			}
-		}];
-		
-		[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-		}];
-		[resultsTable reloadData];
-	}
-	[self setSearchResultsVisible:(resultsArray.count > 0)];
+    if ( autoCompleteDelegate )
+    {
+        searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autocomplete) object:nil];
+        if ( [searchString length] )
+        {
+            self.autoCompleteString = searchString;
+            [self performSelector:@selector(autocomplete) withObject:searchString afterDelay:.2f];
+        }
+        else
+        {
+            self.autoCompleteString = nil;
+            [self setSearchResultsVisible:NO];
+        }
+    }
+    else
+    {
+        // The brute force searching method.
+        // Takes the input string and compares it against everything in the source array.
+        // If the source is massive, this could take some time.
+        // You could always subclass and override this if needed or do it on a background thread.
+        // GCD would be great for that.
+        
+        [resultsArray removeAllObjects];
+        [resultsTable reloadData];
+        
+        searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
+        if (searchString.length){
+            [sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
+                
+                NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
+                NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+                if (!querySubtitle) querySubtitle = @"";
+                
+                if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+                    [querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+                    
+                    __block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
+                    if (shouldAdd && !showAlreadyTokenized){
+                        
+                        [tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+                            if ([token.representedObject isEqual:sourceObject]){
+                                shouldAdd = NO;
+                                *secondStop = YES;
+                            }
+                        }];
+                    }
+                    
+                    if (shouldAdd) [resultsArray addObject:sourceObject];
+                }
+            }];
+            
+            [resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+            }];
+            [resultsTable reloadData];
+        }
+        [self setSearchResultsVisible:(resultsArray.count > 0)];
+    }
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
@@ -356,6 +393,7 @@
 	[resultsArray release];
 	[sourceArray release];
 	[popoverController release];
+    [autoCompleteString release];
 	[super dealloc];
 }
 
@@ -376,6 +414,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @property (nonatomic, readonly) CGFloat leftViewWidth;
 @property (nonatomic, readonly) CGFloat rightViewWidth;
 @property (nonatomic, readonly) UIScrollView * scrollView;
+@property (nonatomic, retain) UIColor * promptTextColor;
+//@property (nonatomic) BOOL promptFontSizeShouldBeEnlarged;
 @end
 
 @interface TITokenField (Private)
@@ -392,6 +432,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize numberOfLines;
 @synthesize selectedToken;
 @synthesize tokenizingCharacters;
+@synthesize promptTextColor=_promptTextColor;
+//@synthesize promptFontSizeShouldBeEnlarged=_promptFontSizeShouldBeEnlarged;
+@synthesize animationsEnabledByDefault=_animationsEnabledByDefault;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -415,7 +458,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)setup {
 	
 	[self setBorderStyle:UITextBorderStyleNone];
-	[self setFont:[UIFont systemFontOfSize:14]];
+	[self setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 	[self setBackgroundColor:[UIColor whiteColor]];
 	[self setAutocorrectionType:UITextAutocorrectionTypeNo];
 	[self setAutocapitalizationType:UITextAutocapitalizationTypeNone];
@@ -424,11 +467,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
 	
-	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
-	[self.layer setShadowOpacity:0.6];
-	[self.layer setShadowRadius:12];
+//	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
+//	[self.layer setShadowOpacity:0.6];
+//	[self.layer setShadowRadius:12];
 	
-	[self setPromptText:@"To:"];
+    _animationsEnabledByDefault = YES;
+    _promptTextColor = [[UIColor colorWithWhite:0.5 alpha:1.0] retain];
+//    _promptFontSizeShouldBeEnlarged = YES;
+	[self setPromptText:NSLocalizedString(@"To:", @"To:")];
 	[self setText:kTextEmpty];
 	
 	internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
@@ -465,6 +511,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[internalDelegate setDelegate:delegate];
 }
 
+- (NSString *)textWithoutWhitespaceOrNewlines {
+    return [self.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 - (NSArray *)tokens {
 	return [[tokens copy] autorelease];
 }
@@ -472,7 +522,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (NSArray *)tokenTitles {
 	
 	NSMutableArray * titles = [[NSMutableArray alloc] init];
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+        if ( token.title )
+            [titles addObject:token.title];
+    }];
 	return [titles autorelease];
 }
 
@@ -486,7 +539,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (UIScrollView *)scrollView {
-	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
+	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : ([self.superview.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview.superview : nil));
 }
 
 #pragma mark Event Handling
@@ -513,10 +566,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		if (tokens.count){
 			
 			NSMutableArray * titles = [[NSMutableArray alloc] init];
-			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
+			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+                if ( token.title )
+                    [titles addObject:token.title];}];
 			
 			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
-			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
+			CGSize untokSize = [untokenized sizeWithFont:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
 			if (tokens.count > 1 && untokSize.width > availableWidth){
@@ -716,51 +771,62 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	CGFloat newHeight = [self layoutTokensInternal];
 	if (self.bounds.size.height != newHeight){
+        
+        void(^frameChanges)(void) = ^{
+            [self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
+        };
+        
+        if (animated) {
+            [UIView animateWithDuration:0.3 animations:^{
+                frameChanges();
+                [self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
+            } completion:^(BOOL finished) {
+                if (finished) [self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
+            }];
+        } else {
+            frameChanges();
+			[self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
+			[self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
+        }
 		
-		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
-		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
-			[self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
-			[self sendActionsForControlEvents:TITokenFieldControlEventFrameWillChange];
-			
-		} completion:^(BOOL complete){
-			if (complete) [self sendActionsForControlEvents:TITokenFieldControlEventFrameDidChange];
-		}];
 	}
 }
 
 - (void)setResultsModeEnabled:(BOOL)flag {
-	[self setResultsModeEnabled:flag animated:YES];
+	[self setResultsModeEnabled:flag animated:self.animationsEnabledByDefault];
 }
 
 - (void)setResultsModeEnabled:(BOOL)flag animated:(BOOL)animated {
 	
 	[self layoutTokensAnimated:animated];
 	
-	if (resultsModeEnabled != flag){
-		
-		//Hide / show the shadow
-		[self.layer setMasksToBounds:!flag];
-		
-		UIScrollView * scrollView = self.scrollView;
-		[scrollView setScrollsToTop:!flag];
-		[scrollView setScrollEnabled:!flag];
-		
-		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
-		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
-	}
+//	if (resultsModeEnabled != flag){
+//		
+//		//Hide / show the shadow
+//		[self.layer setMasksToBounds:!flag];
+//		
+//		UIScrollView * scrollView = self.scrollView;
+//		[scrollView setScrollsToTop:!flag];
+//		[scrollView setScrollEnabled:!flag];
+//		CGPoint caret = [self.scrollView convertPoint:tokenCaret fromView:self];
+//		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : caret.y - floor(self.font.lineHeight * 4 / 7) + 1);
+//		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset - self.scrollView.contentInset.top) animated:animated];
+//	}
 	
 	resultsModeEnabled = flag;
 }
 
 #pragma mark Left / Right view stuff
 - (void)setPromptText:(NSString *)text {
-	
+    PLFLogInfo(@"%@ %@", NSStringFromSelector(_cmd), text);
+
 	if (text){
 		
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
+            label.textColor = self.promptTextColor;
+            PLFLogInfo(@"label.textColor = %@", label.textColor);
 			[self setLeftView:label];
 			[label release];
 			
@@ -768,7 +834,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		}
 		
 		[label setText:text];
-		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
+		[label setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:(self.font.pointSize + /*(self.promptFontSizeShouldBeEnlarged ? */1/* : 0)*/)]];
 		[label sizeToFit];
 	}
 	else
@@ -776,8 +842,32 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[self setLeftView:nil];
 	}
 	
-	[self layoutTokensAnimated:YES];
+	[self layoutTokensAnimated:self.animationsEnabledByDefault];
 }
+
+- (void)setPromptTextColor:(UIColor *)textColor {
+    PLFLogInfo(@"%@ %@", NSStringFromSelector(_cmd), textColor);
+    if (_promptTextColor != textColor) {
+        [_promptTextColor release];
+        _promptTextColor = [textColor retain];
+		UILabel * label = (UILabel *)self.leftView;
+        if (label && [label isKindOfClass:[UILabel class]]) {
+            label.textColor = self.promptTextColor;
+        }
+    }
+}
+
+//- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged {
+//    if (_promptFontSizeShouldBeEnlarged != shouldBeEnlarged) {
+//        _promptFontSizeShouldBeEnlarged = shouldBeEnlarged;
+//		UILabel * label = (UILabel *)self.leftView;
+//        if (label && [label isKindOfClass:[UILabel class]]) {
+//            [label setFont:[UIFont fontWithName:@"ProximaNova-Regular" size:(self.font.pointSize + (self.promptFontSizeShouldBeEnlarged ? 1 : 0))]];
+//            [label sizeToFit];
+//            [self layoutTokensAnimated:YES];
+//        }
+//    }
+//}
 
 #pragma mark Layout
 - (CGRect)textRectForBounds:(CGRect)bounds {
@@ -955,7 +1045,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 }
 
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object {
-	return [self initWithTitle:aTitle representedObject:object font:[UIFont systemFontOfSize:14]];
+	return [self initWithTitle:aTitle representedObject:object font:[UIFont fontWithName:@"ProximaNova-Regular" size:14]];
 }
 
 - (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont {
@@ -1008,7 +1098,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (void)setFont:(UIFont *)newFont {
 	
-	if (!newFont) newFont = [UIFont systemFontOfSize:14];
+	if (!newFont) newFont = [UIFont fontWithName:@"ProximaNova-Regular" size:14];
 	
 	if (font != newFont){
 		[font release];

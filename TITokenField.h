@@ -24,7 +24,7 @@
 //	ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 //	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+//  
 
 #import <UIKit/UIKit.h>
 
@@ -33,6 +33,10 @@
 //==========================================================
 #pragma mark - Delegate Methods -
 //==========================================================
+
+@protocol TITokenFieldAutocompleteDelegate <UITextFieldDelegate>
+- (void)autocompletionsForString:(NSString *)string completionBlock:(void(^)(NSArray *autocompletions))completion;
+@end
 @protocol TITokenFieldDelegate <UITextFieldDelegate>
 @optional
 - (BOOL)tokenField:(TITokenField *)tokenField willAddToken:(TIToken *)token;
@@ -49,7 +53,6 @@
 @end
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
-	
 	id <UITextFieldDelegate> delegate;
 	TITokenField * tokenField;
 }
@@ -68,11 +71,15 @@
 	UIView * contentView;
 	
 	NSArray * sourceArray;
+   
 	NSMutableArray * resultsArray;
 	
 	TITokenField * tokenField;
 	
 	UIPopoverController * popoverController;
+    
+    NSString * autoCompleteString;
+    id <TITokenFieldAutocompleteDelegate> autoCompleteDelegate;
 }
 
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
@@ -82,6 +89,8 @@
 @property (nonatomic, readonly) UIView * contentView;
 @property (nonatomic, copy) NSArray * sourceArray;
 @property (nonatomic, readonly) NSArray * tokenTitles;
+@property (nonatomic, copy) NSString *autoCompleteString;
+@property (nonatomic, assign) id <TITokenFieldAutocompleteDelegate> autoCompleteDelegate;
 
 - (void)updateContentSize;
 
@@ -98,6 +107,7 @@ typedef enum {
 @interface TITokenField : UITextField {
 	
 	id <TITokenFieldDelegate> delegate;
+
 	TITokenFieldInternalDelegate * internalDelegate;
 	
 	NSMutableArray * tokens;
@@ -111,6 +121,11 @@ typedef enum {
 	int numberOfLines;
 	
 	NSCharacterSet * tokenizingCharacters;
+    
+    UIColor * _promptTextColor;
+//    BOOL _promptFontSizeShouldBeEnlarged;
+    BOOL _animationsEnabledByDefault;
+
 }
 
 @property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
@@ -139,7 +154,12 @@ typedef enum {
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
 
 // Pass nil to hide label
-- (void)setPromptText:(NSString *)aText;
+- (void)setPromptText:(NSString *)text;
+- (void)setPromptTextColor:(UIColor *)textColor;
+//- (void)setPromptFontSizeShouldBeEnlarged:(BOOL)shouldBeEnlarged; // Not currently supported. The way things are laid out in this Class are more complicated than you might think.
+
+@property (nonatomic) BOOL animationsEnabledByDefault;
+@property (nonatomic, readonly) NSString * textWithoutWhitespaceOrNewlines;
 
 @end
 
@@ -161,6 +181,7 @@ typedef enum {
 	
 	TITokenAccessoryType accessoryType;
 	CGFloat maxWidth;
+        
 }
 
 @property (nonatomic, copy) NSString * title;
