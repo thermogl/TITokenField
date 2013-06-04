@@ -111,6 +111,8 @@ typedef enum {
 	int numberOfLines;
 	
 	NSCharacterSet * tokenizingCharacters;
+    
+    UILabel *placeHolderLabel;
 }
 
 @property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
