@@ -472,7 +472,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (NSArray *)tokenTitles {
 	
 	NSMutableArray * titles = [[NSMutableArray alloc] init];
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
+	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+		if (token.title) [titles addObject:token.title];
+	}];
 	return [titles autorelease];
 }
 
@@ -480,7 +482,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	NSMutableArray * objects = [[NSMutableArray alloc] init];
 	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
-		[objects addObject:(token.representedObject ? token.representedObject : token.title)];
+		if (token.representedObject) [objects addObject:token.representedObject];
+		else if (token.title) [objects addObject:token.title];
 	}];
 	return [objects autorelease];
 }
@@ -513,7 +516,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		if (tokens.count){
 			
 			NSMutableArray * titles = [[NSMutableArray alloc] init];
-			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[titles addObject:token.title];}];
+			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+				if (token.title) [titles addObject:token.title];
+			}];
 			
 			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
 			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
