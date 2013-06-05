@@ -22,14 +22,18 @@
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated;
 @end
 
-@implementation TITokenFieldView
+@implementation TITokenFieldView {
+	UIView * _contentView;
+	NSMutableArray * _resultsArray;
+	UIPopoverController * _popoverController;
+}
 @dynamic delegate;
-@synthesize showAlreadyTokenized;
-@synthesize tokenField;
-@synthesize resultsTable;
-@synthesize contentView;
-@synthesize separator;
-@synthesize sourceArray;
+@synthesize showAlreadyTokenized = _showAlreadyTokenized;
+@synthesize tokenField = _tokenField;
+@synthesize resultsTable = _resultsTable;
+@synthesize contentView = _contentView;
+@synthesize separator = _separator;
+@synthesize sourceArray = _sourceArray;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -56,32 +60,32 @@
 	[self setDelaysContentTouches:YES];
 	[self setMultipleTouchEnabled:NO];
 	
-	showAlreadyTokenized = NO;
-	resultsArray = [[NSMutableArray alloc] init];
+	_showAlreadyTokenized = NO;
+	_resultsArray = [[NSMutableArray alloc] init];
 	
-	tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
-	[tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
-	[tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
-	[tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
-	[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
-	[tokenField setDelegate:self];
-	[self addSubview:tokenField];
-	[tokenField release];
+	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
+	[_tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
+	[_tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
+	[_tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
+	[_tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
+	[_tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
+	[_tokenField setDelegate:self];
+	[self addSubview:_tokenField];
+	[_tokenField release];
 	
-	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
+	CGFloat tokenFieldBottom = CGRectGetMaxY(_tokenField.frame);
 	
-	separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
-	[separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
-	[self addSubview:separator];
-	[separator release];
+	_separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
+	[_separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
+	[self addSubview:_separator];
+	[_separator release];
 	
 	// This view is created for convenience, because it resizes and moves with the rest of the subviews.
-	contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width,
+	_contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width,
 														   self.bounds.size.height - tokenFieldBottom - 1)];
-	[contentView setBackgroundColor:[UIColor clearColor]];
-	[self addSubview:contentView];
-	[contentView release];
+	[_contentView setBackgroundColor:[UIColor clearColor]];
+	[self addSubview:_contentView];
+	[_contentView release];
 	
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
 		
@@ -90,27 +94,27 @@
 		[tableViewController.tableView setDataSource:self];
 		[tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
 		
-		resultsTable = tableViewController.tableView;
+		_resultsTable = tableViewController.tableView;
 		
-		popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
+		_popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
 		[tableViewController release];
 	}
 	else
 	{
-		resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 10)];
-		[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
-		[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
-		[resultsTable setDelegate:self];
-		[resultsTable setDataSource:self];
-		[resultsTable setHidden:YES];
-		[self addSubview:resultsTable];
-		[resultsTable release];
+		_resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 10)];
+		[_resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
+		[_resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
+		[_resultsTable setDelegate:self];
+		[_resultsTable setDataSource:self];
+		[_resultsTable setHidden:YES];
+		[self addSubview:_resultsTable];
+		[_resultsTable release];
 		
-		popoverController = nil;
+		_popoverController = nil;
 	}
 	
-	[self bringSubviewToFront:separator];
-	[self bringSubviewToFront:tokenField];
+	[self bringSubviewToFront:_separator];
+	[self bringSubviewToFront:_tokenField];
 	[self updateContentSize];
 }
 
@@ -120,13 +124,13 @@
 	[super setFrame:frame];
 	
 	CGFloat width = frame.size.width;
-	[separator setFrame:((CGRect){separator.frame.origin, {width, separator.bounds.size.height}})];
-	[resultsTable setFrame:((CGRect){resultsTable.frame.origin, {width, resultsTable.bounds.size.height}})];
-	[contentView setFrame:((CGRect){contentView.frame.origin, {width, (frame.size.height - CGRectGetMaxY(tokenField.frame))}})];
-	[tokenField setFrame:((CGRect){tokenField.frame.origin, {width, tokenField.bounds.size.height}})];
+	[_separator setFrame:((CGRect){_separator.frame.origin, {width, _separator.bounds.size.height}})];
+	[_resultsTable setFrame:((CGRect){_resultsTable.frame.origin, {width, _resultsTable.bounds.size.height}})];
+	[_contentView setFrame:((CGRect){_contentView.frame.origin, {width, (frame.size.height - CGRectGetMaxY(_tokenField.frame))}})];
+	[_tokenField setFrame:((CGRect){_tokenField.frame.origin, {width, _tokenField.bounds.size.height}})];
 	
-	if (popoverController.popoverVisible){
-		[popoverController dismissPopoverAnimated:NO];
+	if (_popoverController.popoverVisible){
+		[_popoverController dismissPopoverAnimated:NO];
 		[self presentpopoverAtTokenFieldCaretAnimated:NO];
 	}
 	
@@ -140,7 +144,7 @@
 }
 
 - (NSArray *)tokenTitles {
-	return tokenField.tokenTitles;
+	return _tokenField.tokenTitles;
 }
 
 #pragma mark Event Handling
@@ -148,13 +152,13 @@
 	
 	[super layoutSubviews];
 	
-	CGFloat relativeFieldHeight = CGRectGetMaxY(tokenField.frame) - self.contentOffset.y;
+	CGFloat relativeFieldHeight = CGRectGetMaxY(_tokenField.frame) - self.contentOffset.y;
 	CGFloat newHeight = self.bounds.size.height - relativeFieldHeight;
-	if (newHeight > -1) [resultsTable setFrame:((CGRect){resultsTable.frame.origin, {resultsTable.bounds.size.width, newHeight}})];
+	if (newHeight > -1) [_resultsTable setFrame:((CGRect){_resultsTable.frame.origin, {_resultsTable.bounds.size.width, newHeight}})];
 }
 
 - (void)updateContentSize {
-	[self setContentSize:CGSizeMake(self.bounds.size.width, CGRectGetMaxY(contentView.frame) + 1)];
+	[self setContentSize:CGSizeMake(self.bounds.size.width, CGRectGetMaxY(_contentView.frame) + 1)];
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -162,18 +166,18 @@
 }
 
 - (BOOL)becomeFirstResponder {
-	return [tokenField becomeFirstResponder];
+	return [_tokenField becomeFirstResponder];
 }
 
 - (BOOL)resignFirstResponder {
-	return [tokenField resignFirstResponder];
+	return [_tokenField resignFirstResponder];
 }
 
 #pragma mark TableView Methods
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:heightForRowAtIndexPath:)]){
-		return [tokenField.delegate tokenField:tokenField resultsTableView:tableView heightForRowAtIndexPath:indexPath];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:heightForRowAtIndexPath:)]){
+		return [_tokenField.delegate tokenField:_tokenField resultsTableView:tableView heightForRowAtIndexPath:indexPath];
 	}
 	
 	return 44;
@@ -181,19 +185,19 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:didFinishSearch:)]){
-		[tokenField.delegate tokenField:tokenField didFinishSearch:resultsArray];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:didFinishSearch:)]){
+		[_tokenField.delegate tokenField:_tokenField didFinishSearch:_resultsArray];
 	}
 	
-	return resultsArray.count;
+	return _resultsArray.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	id representedObject = [resultsArray objectAtIndex:indexPath.row];
+	id representedObject = [_resultsArray objectAtIndex:indexPath.row];
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForRepresentedObject:)]){
-		return [tokenField.delegate tokenField:tokenField resultsTableView:tableView cellForRepresentedObject:representedObject];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:resultsTableView:cellForRepresentedObject:)]){
+		return [_tokenField.delegate tokenField:_tokenField resultsTableView:tableView cellForRepresentedObject:representedObject];
 	}
 	
     static NSString * CellIdentifier = @"ResultsCell";
@@ -210,9 +214,9 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	
-	id representedObject = [resultsArray objectAtIndex:indexPath.row];
+	id representedObject = [_resultsArray objectAtIndex:indexPath.row];
     TIToken * token = [[TIToken alloc] initWithTitle:[self displayStringForRepresentedObject:representedObject] representedObject:representedObject];
-    [tokenField addToken:token];
+    [_tokenField addToken:token];
 	[token release];
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -222,8 +226,8 @@
 #pragma mark TextField Methods
 
 - (void)tokenFieldDidBeginEditing:(TITokenField *)field {
-	[resultsArray removeAllObjects];
-	[resultsTable reloadData];
+	[_resultsArray removeAllObjects];
+	[_resultsTable reloadData];
 }
 
 - (void)tokenFieldDidEndEditing:(TITokenField *)field {
@@ -236,10 +240,10 @@
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
 	
-	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
-	[separator setFrame:((CGRect){{separator.frame.origin.x, tokenFieldBottom}, separator.bounds.size})];
-	[resultsTable setFrame:((CGRect){{resultsTable.frame.origin.x, (tokenFieldBottom + 1)}, resultsTable.bounds.size})];
-	[contentView setFrame:((CGRect){{contentView.frame.origin.x, (tokenFieldBottom + 1)}, contentView.bounds.size})];
+	CGFloat tokenFieldBottom = CGRectGetMaxY(_tokenField.frame);
+	[_separator setFrame:((CGRect){{_separator.frame.origin.x, tokenFieldBottom}, _separator.bounds.size})];
+	[_resultsTable setFrame:((CGRect){{_resultsTable.frame.origin.x, (tokenFieldBottom + 1)}, _resultsTable.bounds.size})];
+	[_contentView setFrame:((CGRect){{_contentView.frame.origin.x, (tokenFieldBottom + 1)}, _contentView.bounds.size})];
 }
 
 - (void)tokenFieldFrameDidChange:(TITokenField *)field {
@@ -249,8 +253,8 @@
 #pragma mark Results Methods
 - (NSString *)displayStringForRepresentedObject:(id)object {
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:displayStringForRepresentedObject:)]){
-		return [tokenField.delegate tokenField:tokenField displayStringForRepresentedObject:object];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:displayStringForRepresentedObject:)]){
+		return [_tokenField.delegate tokenField:_tokenField displayStringForRepresentedObject:object];
 	}
 	
 	if ([object isKindOfClass:[NSString class]]){
@@ -262,8 +266,8 @@
 
 - (NSString *)searchResultStringForRepresentedObject:(id)object {
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultStringForRepresentedObject:)]){
-		return [tokenField.delegate tokenField:tokenField searchResultStringForRepresentedObject:object];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:searchResultStringForRepresentedObject:)]){
+		return [_tokenField.delegate tokenField:_tokenField searchResultStringForRepresentedObject:object];
 	}
 	
 	return [self displayStringForRepresentedObject:object];
@@ -271,8 +275,8 @@
 
 - (NSString *)searchResultSubtitleForRepresentedObject:(id)object {
 	
-	if ([tokenField.delegate respondsToSelector:@selector(tokenField:searchResultSubtitleForRepresentedObject:)]){
-		return [tokenField.delegate tokenField:tokenField searchResultSubtitleForRepresentedObject:object];
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:searchResultSubtitleForRepresentedObject:)]){
+		return [_tokenField.delegate tokenField:_tokenField searchResultSubtitleForRepresentedObject:object];
 	}
 	
 	return nil;
@@ -283,12 +287,12 @@
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
 		
 		if (visible) [self presentpopoverAtTokenFieldCaretAnimated:YES];
-		else [popoverController dismissPopoverAnimated:YES];
+		else [_popoverController dismissPopoverAnimated:YES];
 	}
 	else
 	{
-		[resultsTable setHidden:!visible];
-		[tokenField setResultsModeEnabled:visible];
+		[_resultsTable setHidden:!visible];
+		[_tokenField setResultsModeEnabled:visible];
 	}
 }
 
@@ -300,13 +304,13 @@
 	// You could always subclass and override this if needed or do it on a background thread.
 	// GCD would be great for that.
 	
-	[resultsArray removeAllObjects];
-	[resultsTable reloadData];
+	[_resultsArray removeAllObjects];
+	[_resultsTable reloadData];
 	
 	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
 	if (searchString.length){
-		[sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
+		[_sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 			
 			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
 			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
@@ -315,10 +319,10 @@
 			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
 				
-				__block BOOL shouldAdd = ![resultsArray containsObject:sourceObject];
-				if (shouldAdd && !showAlreadyTokenized){
+				__block BOOL shouldAdd = ![_resultsArray containsObject:sourceObject];
+				if (shouldAdd && !_showAlreadyTokenized){
 					
-					[tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+					[_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
 						if ([token.representedObject isEqual:sourceObject]){
 							shouldAdd = NO;
 							*secondStop = YES;
@@ -326,23 +330,23 @@
 					}];
 				}
 				
-				if (shouldAdd) [resultsArray addObject:sourceObject];
+				if (shouldAdd) [_resultsArray addObject:sourceObject];
 			}
 		}];
 		
-		[resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+		[_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
 			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
 		}];
-		[resultsTable reloadData];
+		[_resultsTable reloadData];
 	}
-	[self setSearchResultsVisible:(resultsArray.count > 0)];
+	[self setSearchResultsVisible:(_resultsArray.count > 0)];
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
 	
-    UITextPosition * position = [tokenField positionFromPosition:tokenField.beginningOfDocument offset:2];
+    UITextPosition * position = [_tokenField positionFromPosition:_tokenField.beginningOfDocument offset:2];
 	
-	[popoverController presentPopoverFromRect:[tokenField caretRectForPosition:position] inView:tokenField
+	[_popoverController presentPopoverFromRect:[_tokenField caretRectForPosition:position] inView:_tokenField
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
 
@@ -353,9 +357,9 @@
 
 - (void)dealloc {
 	[self setDelegate:nil];
-	[resultsArray release];
-	[sourceArray release];
-	[popoverController release];
+	[_resultsArray release];
+	[_sourceArray release];
+	[_popoverController release];
 	[super dealloc];
 }
 
@@ -383,15 +387,20 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (CGFloat)layoutTokensInternal;
 @end
 
-@implementation TITokenField
-@synthesize delegate;
-@synthesize tokens;
-@synthesize editable;
-@synthesize resultsModeEnabled;
-@synthesize removesTokensOnEndEditing;
-@synthesize numberOfLines;
-@synthesize selectedToken;
-@synthesize tokenizingCharacters;
+@implementation TITokenField {
+	id delegate;
+	TITokenFieldInternalDelegate * _internalDelegate;
+	NSMutableArray * _tokens;
+	CGPoint _tokenCaret;
+    UILabel * _placeHolderLabel;
+}
+@synthesize delegate = delegate;
+@synthesize editable = _editable;
+@synthesize resultsModeEnabled = _resultsModeEnabled;
+@synthesize removesTokensOnEndEditing = _removesTokensOnEndEditing;
+@synthesize numberOfLines = _numberOfLines;
+@synthesize selectedToken = _selectedToken;
+@synthesize tokenizingCharacters = _tokenizingCharacters;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -431,14 +440,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self setPromptText:@"To:"];
 	[self setText:kTextEmpty];
 	
-	internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
-	[internalDelegate setTokenField:self];
-	[super setDelegate:internalDelegate];
+	_internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
+	[_internalDelegate setTokenField:self];
+	[super setDelegate:_internalDelegate];
 	
-	tokens = [[NSMutableArray alloc] init];
-	editable = YES;
-	removesTokensOnEndEditing = YES;
-	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
+	_tokens = [[NSMutableArray alloc] init];
+	_editable = YES;
+	_removesTokensOnEndEditing = YES;
+	_tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
 }
 
 #pragma mark Property Overrides
@@ -462,17 +471,17 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)setDelegate:(id<TITokenFieldDelegate>)del {
 	delegate = del;
-	[internalDelegate setDelegate:delegate];
+	[_internalDelegate setDelegate:delegate];
 }
 
 - (NSArray *)tokens {
-	return [[tokens copy] autorelease];
+	return [[_tokens copy] autorelease];
 }
 
 - (NSArray *)tokenTitles {
 	
 	NSMutableArray * titles = [[NSMutableArray alloc] init];
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		if (token.title) [titles addObject:token.title];
 	}];
 	return [titles autorelease];
@@ -481,7 +490,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (NSArray *)tokenObjects {
 	
 	NSMutableArray * objects = [[NSMutableArray alloc] init];
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		if (token.representedObject) [objects addObject:token.representedObject];
 		else if (token.title) [objects addObject:token.title];
 	}];
@@ -494,29 +503,29 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 #pragma mark Event Handling
 - (BOOL)becomeFirstResponder {
-	return (editable ? [super becomeFirstResponder] : NO);
+	return (_editable ? [super becomeFirstResponder] : NO);
 }
 
 - (void)didBeginEditing {
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
+	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
 }
 
 - (void)didEndEditing {
 	
-	[selectedToken setSelected:NO];
-	selectedToken = nil;
+	[_selectedToken setSelected:NO];
+	_selectedToken = nil;
 	
 	[self tokenizeText];
 	
-	if (removesTokensOnEndEditing){
+	if (_removesTokensOnEndEditing){
 		
-		[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[token removeFromSuperview];}];
+		[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[token removeFromSuperview];}];
 		
 		NSString * untokenized = kTextEmpty;
-		if (tokens.count){
+		if (_tokens.count){
 			
 			NSMutableArray * titles = [[NSMutableArray alloc] init];
-			[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+			[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 				if (token.title) [titles addObject:token.title];
 			}];
 			
@@ -524,7 +533,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
-			if (tokens.count > 1 && untokSize.width > availableWidth){
+			if (_tokens.count > 1 && untokSize.width > availableWidth){
 				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
 			}
 			
@@ -540,10 +549,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)didChangeText {
 	if (self.text.length == 0) {
         [self setText:kTextEmpty];
-        [placeHolderLabel setHidden:NO];
+        [ _placeHolderLabel setHidden:NO];
     }
     else{
-        [placeHolderLabel setHidden:YES];
+        [ _placeHolderLabel setHidden:YES];
     }
 }
 
@@ -558,7 +567,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
 	
-	if (selectedToken && touch.view == self) [self deselectSelectedToken];
+	if (_selectedToken && touch.view == self) [self deselectSelectedToken];
 	return [super beginTrackingWithTouch:touch withEvent:event];
 }
 
@@ -593,8 +602,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 		[self addSubview:token];
 		
-		if (![tokens containsObject:token]) {
-			[tokens addObject:token];
+		if (![_tokens containsObject:token]) {
+			[_tokens addObject:token];
 		
 			if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
 				[delegate tokenField:self didAddToken:token];
@@ -608,7 +617,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)removeToken:(TIToken *)token {
 	
-	if (token == selectedToken) [self deselectSelectedToken];
+	if (token == _selectedToken) [self deselectSelectedToken];
 	
 	BOOL shouldRemove = YES;
 	if ([delegate respondsToSelector:@selector(tokenField:willRemoveToken:)]){
@@ -620,7 +629,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[[token retain] autorelease];
 		
 		[token removeFromSuperview];
-		[tokens removeObject:token];
+		[_tokens removeObject:token];
 		
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
@@ -632,7 +641,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)removeAllTokens {
 	
-	[tokens enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop) {
+	[_tokens enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop) {
 		[self removeToken:token];
 	}];
 	
@@ -643,8 +652,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	[self deselectSelectedToken];
 	
-	selectedToken = token;
-	[selectedToken setSelected:YES];
+	_selectedToken = token;
+	[_selectedToken setSelected:YES];
 	
 	[self becomeFirstResponder];
 	[self setText:kTextHidden];
@@ -652,8 +661,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)deselectSelectedToken {
 	
-	[selectedToken setSelected:NO];
-	selectedToken = nil;
+	[_selectedToken setSelected:NO];
+	_selectedToken = nil;
 	
 	[self setText:kTextEmpty];
 }
@@ -663,7 +672,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	__block BOOL textChanged = NO;
 	
 	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
-		[[self.text componentsSeparatedByCharactersInSet:tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
+		[[self.text componentsSeparatedByCharactersInSet:_tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
 			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 			textChanged = YES;
 		}];
@@ -674,14 +683,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)tokenTouchDown:(TIToken *)token {
 	
-	if (selectedToken != token){
-		[selectedToken setSelected:NO];
-		selectedToken = nil;
+	if (_selectedToken != token){
+		[_selectedToken setSelected:NO];
+		_selectedToken = nil;
 	}
 }
 
 - (void)tokenTouchUpInside:(TIToken *)token {
-	if (editable) [self selectToken:token];
+	if (_editable) [self selectToken:token];
 }
 
 - (CGFloat)layoutTokensInternal {
@@ -692,34 +701,34 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	CGFloat rightMargin = self.rightViewWidth + hPadding;
 	CGFloat lineHeight = self.font.lineHeight + topMargin + 5;
 	
-	numberOfLines = 1;
-	tokenCaret = (CGPoint){leftMargin, (topMargin - 1)};
+	_numberOfLines = 1;
+	_tokenCaret = (CGPoint){leftMargin, (topMargin - 1)};
 	
-	[tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
+	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		
 		[token setFont:self.font];
-		[token setMaxWidth:(self.bounds.size.width - rightMargin - (numberOfLines > 1 ? hPadding : leftMargin))];
+		[token setMaxWidth:(self.bounds.size.width - rightMargin - (_numberOfLines > 1 ? hPadding : leftMargin))];
 		
 		if (token.superview){
 			
-			if (tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
-				numberOfLines++;
-				tokenCaret.x = (numberOfLines > 1 ? hPadding : leftMargin);
-				tokenCaret.y += lineHeight;
+			if (_tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
+				_numberOfLines++;
+				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
+				_tokenCaret.y += lineHeight;
 			}
 			
-			[token setFrame:(CGRect){tokenCaret, token.bounds.size}];
-			tokenCaret.x += token.bounds.size.width + 4;
+			[token setFrame:(CGRect){_tokenCaret, token.bounds.size}];
+			_tokenCaret.x += token.bounds.size.width + 4;
 			
-			if (self.bounds.size.width - tokenCaret.x - rightMargin < 50){
-				numberOfLines++;
-				tokenCaret.x = (numberOfLines > 1 ? hPadding : leftMargin);
-				tokenCaret.y += lineHeight;
+			if (self.bounds.size.width - _tokenCaret.x - rightMargin < 50){
+				_numberOfLines++;
+				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
+				_tokenCaret.y += lineHeight;
 			}
 		}
 	}];
 	
-	return tokenCaret.y + lineHeight;
+	return _tokenCaret.y + lineHeight;
 }
 
 #pragma mark View Handlers
@@ -747,7 +756,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	[self layoutTokensAnimated:animated];
 	
-	if (resultsModeEnabled != flag){
+	if (_resultsModeEnabled != flag){
 		
 		//Hide / show the shadow
 		[self.layer setMasksToBounds:!flag];
@@ -756,11 +765,11 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[scrollView setScrollsToTop:!flag];
 		[scrollView setScrollEnabled:!flag];
 		
-		CGFloat offset = ((numberOfLines == 1 || !flag) ? 0 : tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
+		CGFloat offset = ((_numberOfLines == 1 || !flag) ? 0 : _tokenCaret.y - floor(self.font.lineHeight * 4 / 7) + 1);
 		[scrollView setContentOffset:CGPointMake(0, self.frame.origin.y + offset) animated:animated];
 	}
 	
-	resultsModeEnabled = flag;
+	_resultsModeEnabled = flag;
 }
 
 #pragma mark Left / Right view stuff
@@ -794,21 +803,23 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if (placeholder){
         
-        UILabel * label = placeHolderLabel;
+        UILabel * label =  _placeHolderLabel;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
-			label = [[UILabel alloc] initWithFrame:CGRectMake(tokenCaret.x, tokenCaret.y, self.rightView.bounds.size.width, self.rightView.bounds.size.height)];
+			label = [[UILabel alloc] initWithFrame:CGRectMake(_tokenCaret.x, _tokenCaret.y + 2, self.rightView.bounds.size.width, self.rightView.bounds.size.height)];
 			[label setTextColor:[UIColor colorWithWhite:0.75 alpha:1]];
-			placeHolderLabel = label;
-            [self addSubview:placeHolderLabel];
+			 _placeHolderLabel = label;
+            [self addSubview: _placeHolderLabel];
 			[label release];
 		}
 		
 		[label setText:placeholder];
-		//[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
+		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
 		[label sizeToFit];
 	}
 	else
 	{
+		[_placeHolderLabel removeFromSuperview];
+		_placeHolderLabel = nil;
 	}
     
     [self layoutTokensAnimated:YES];
@@ -819,8 +830,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if ([self.text isEqualToString:kTextHidden]) return CGRectMake(0, -20, 0, 0);
 	
-	CGRect frame = CGRectOffset(bounds, tokenCaret.x + 2, tokenCaret.y + 3);
-	frame.size.width -= (tokenCaret.x + self.rightViewWidth + 10);
+	CGRect frame = CGRectOffset(bounds, _tokenCaret.x + 2, _tokenCaret.y + 3);
+	frame.size.width -= (_tokenCaret.x + self.rightViewWidth + 10);
 	
 	return frame;
 }
@@ -867,9 +878,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)dealloc {
 	[self setDelegate:nil];
-	[internalDelegate release];
-	[tokens release];
-	[tokenizingCharacters release];
+	[_internalDelegate release];
+	[_tokens release];
+	[_tokenizingCharacters release];
     [super dealloc];
 }
 
@@ -879,13 +890,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 #pragma mark - TITokenFieldInternalDelegate -
 //==========================================================
 @implementation TITokenFieldInternalDelegate
-@synthesize delegate;
-@synthesize tokenField;
+@synthesize delegate = _delegate;
+@synthesize tokenField = _tokenField;
 
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
 	
-	if ([delegate respondsToSelector:@selector(textFieldShouldBeginEditing:)]){
-		return [delegate textFieldShouldBeginEditing:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldShouldBeginEditing:)]){
+		return [_delegate textFieldShouldBeginEditing:textField];
 	}
 	
 	return YES;
@@ -893,15 +904,15 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
 	
-	if ([delegate respondsToSelector:@selector(textFieldDidBeginEditing:)]){
-		[delegate textFieldDidBeginEditing:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldDidBeginEditing:)]){
+		[_delegate textFieldDidBeginEditing:textField];
 	}
 }
 
 - (BOOL)textFieldShouldEndEditing:(UITextField *)textField {
 	
-	if ([delegate respondsToSelector:@selector(textFieldShouldEndEditing:)]){
-		return [delegate textFieldShouldEndEditing:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldShouldEndEditing:)]){
+		return [_delegate textFieldShouldEndEditing:textField];
 	}
 	
 	return YES;
@@ -909,30 +920,30 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
 	
-	if ([delegate respondsToSelector:@selector(textFieldDidEndEditing:)]){
-		[delegate textFieldDidEndEditing:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldDidEndEditing:)]){
+		[_delegate textFieldDidEndEditing:textField];
 	}
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
 	
-	if (tokenField.tokens.count && [string isEqualToString:@""] && [tokenField.text isEqualToString:kTextEmpty]){
-		[tokenField selectToken:[tokenField.tokens lastObject]];
+	if (_tokenField.tokens.count && [string isEqualToString:@""] && [_tokenField.text isEqualToString:kTextEmpty]){
+		[_tokenField selectToken:[_tokenField.tokens lastObject]];
 		return NO;
 	}
 	
 	if ([textField.text isEqualToString:kTextHidden]){
-		[tokenField removeToken:tokenField.selectedToken];
+		[_tokenField removeToken:_tokenField.selectedToken];
 		return (![string isEqualToString:@""]);
 	}
 	
-	if ([string rangeOfCharacterFromSet:tokenField.tokenizingCharacters].location != NSNotFound){
-		[tokenField tokenizeText];
+	if ([string rangeOfCharacterFromSet:_tokenField.tokenizingCharacters].location != NSNotFound){
+		[_tokenField tokenizeText];
 		return NO;
 	}
 	
-	if ([delegate respondsToSelector:@selector(textField:shouldChangeCharactersInRange:replacementString:)]){
-		return [delegate textField:textField shouldChangeCharactersInRange:range replacementString:string];
+	if ([_delegate respondsToSelector:@selector(textField:shouldChangeCharactersInRange:replacementString:)]){
+		return [_delegate textField:textField shouldChangeCharactersInRange:range replacementString:string];
 	}
 	
 	return YES;
@@ -940,10 +951,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 	
-	[tokenField tokenizeText];
+	[_tokenField tokenizeText];
 	
-	if ([delegate respondsToSelector:@selector(textFieldShouldReturn:)]){
-		return [delegate textFieldShouldReturn:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldShouldReturn:)]){
+		return [_delegate textFieldShouldReturn:textField];
 	}
 	
 	return YES;
@@ -951,8 +962,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (BOOL)textFieldShouldClear:(UITextField *)textField {
 	
-	if ([delegate respondsToSelector:@selector(textFieldShouldClear:)]){
-		return [delegate textFieldShouldClear:textField];
+	if ([_delegate respondsToSelector:@selector(textFieldShouldClear:)]){
+		return [_delegate textFieldShouldClear:textField];
 	}
 	
 	return YES;
@@ -977,12 +988,12 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @end
 
 @implementation TIToken
-@synthesize title;
-@synthesize representedObject;
-@synthesize font;
-@synthesize tintColor;
-@synthesize accessoryType;
-@synthesize maxWidth;
+@synthesize title = _title;
+@synthesize representedObject = _representedObject;
+@synthesize font = _font;
+@synthesize tintColor = _tintColor;
+@synthesize accessoryType = _accessoryType;
+@synthesize maxWidth = _maxWidth;
 
 #pragma mark Init
 - (id)initWithTitle:(NSString *)aTitle {
@@ -997,14 +1008,14 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if ((self = [super init])){
 		
-		title = [aTitle copy];
-		representedObject = [object retain];
+		_title = [aTitle copy];
+		_representedObject = [object retain];
 		
-		font = [aFont retain];
-		tintColor = [[TIToken blueTintColor] retain];
+		_font = [aFont retain];
+		_tintColor = [[TIToken blueTintColor] retain];
 		
-		accessoryType = TITokenAccessoryTypeNone;
-		maxWidth = 200;
+		_accessoryType = TITokenAccessoryTypeNone;
+		_maxWidth = 200;
 		
 		[self setBackgroundColor:[UIColor clearColor]];
 		[self sizeToFit];
@@ -1034,8 +1045,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if (newTitle){
 		NSString * copy = [newTitle copy];
-		[title release];
-		title = copy;
+		[_title release];
+		_title = copy;
 		
 		[self sizeToFit];
 	}
@@ -1045,9 +1056,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if (!newFont) newFont = [UIFont systemFontOfSize:14];
 	
-	if (font != newFont){
-		[font release];
-		font = [newFont retain];
+	if (_font != newFont){
+		[_font release];
+		_font = [newFont retain];
 		[self sizeToFit];
 	}
 }
@@ -1056,25 +1067,25 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	if (!newTintColor) newTintColor = [TIToken blueTintColor];
 	
-	if (tintColor != newTintColor){
-		[tintColor release];
-		tintColor = [newTintColor retain];
+	if (_tintColor != newTintColor){
+		[_tintColor release];
+		_tintColor = [newTintColor retain];
 		[self setNeedsDisplay];
 	}
 }
 
 - (void)setAccessoryType:(TITokenAccessoryType)type {
 	
-	if (accessoryType != type){
-		accessoryType = type;
+	if (_accessoryType != type){
+		_accessoryType = type;
 		[self sizeToFit];
 	}
 }
 
 - (void)setMaxWidth:(CGFloat)width {
 	
-	if (maxWidth != width){
-		maxWidth = width;
+	if (_maxWidth != width){
+		_maxWidth = width;
 		[self sizeToFit];
 	}
 }
@@ -1098,12 +1109,12 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGFloat accessoryWidth = 0;
 	
-	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
-		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, font.pointSize, kDisclosureThickness, &accessoryWidth));
+	if (_accessoryType == TITokenAccessoryTypeDisclosureIndicator){
+		CGPathRelease(CGPathCreateDisclosureIndicatorPath(CGPointZero, _font.pointSize, kDisclosureThickness, &accessoryWidth));
 		accessoryWidth += floorf(hTextPadding / 2);
 	}
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
+	CGSize titleSize = [_title sizeWithFont:_font forWidth:(_maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
 	CGFloat height = floorf(titleSize.height + vTextPadding);
 	
 	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
@@ -1173,9 +1184,9 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGFloat accessoryWidth = 0;
 	
-	if (accessoryType == TITokenAccessoryTypeDisclosureIndicator){
+	if (_accessoryType == TITokenAccessoryTypeDisclosureIndicator){
 		CGPoint arrowPoint = CGPointMake(self.bounds.size.width - floorf(hTextPadding / 2), (self.bounds.size.height / 2) - 1);
-		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, &accessoryWidth);
+		CGPathRef disclosurePath = CGPathCreateDisclosureIndicatorPath(arrowPoint, _font.pointSize, kDisclosureThickness, &accessoryWidth);
 		accessoryWidth += floorf(hTextPadding / 2);
 		
 		CGContextAddPath(context, disclosurePath);
@@ -1200,7 +1211,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 			CGGradientRelease(disclosureGradient);
 			
 			arrowPoint.y += 0.5;
-			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, font.pointSize, kDisclosureThickness, NULL);
+			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, _font.pointSize, kDisclosureThickness, NULL);
 			CGContextAddPath(context, innerShadowPath);
 			CGPathRelease(innerShadowPath);
 			CGContextSetStrokeColor(context, (CGFloat[4]){0, 0, 0, 0.3});
@@ -1213,13 +1224,13 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGColorSpaceRelease(colorspace);
 	
-	CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
+	CGSize titleSize = [_title sizeWithFont:_font forWidth:(_maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
 	CGFloat vPadding = floor((self.bounds.size.height - titleSize.height) / 2);
 	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding - accessoryWidth);
 	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
 	
 	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
-	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
+	[_title drawInRect:textBounds withFont:_font lineBreakMode:kLineBreakMode];
 }
 
 CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
@@ -1263,8 +1274,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 - (BOOL)getTintColorRed:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
 	
-	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(tintColor.CGColor));
-	const CGFloat * components = CGColorGetComponents(tintColor.CGColor);
+	CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(_tintColor.CGColor));
+	const CGFloat * components = CGColorGetComponents(_tintColor.CGColor);
 	
 	if (colorSpaceModel == kCGColorSpaceModelMonochrome || colorSpaceModel == kCGColorSpaceModelRGB){
 		
@@ -1281,14 +1292,14 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 
 #pragma mark Other
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\"; representedObject = \"%@\">", self, title, representedObject];
+	return [NSString stringWithFormat:@"<TIToken %p; title = \"%@\"; representedObject = \"%@\">", self, _title, _representedObject];
 }
 
 - (void)dealloc {
-	[title release];
-	[representedObject release];
-	[font release];
-	[tintColor release];
+	[_title release];
+	[_representedObject release];
+	[_font release];
+	[_tintColor release];
     [super dealloc];
 }
 

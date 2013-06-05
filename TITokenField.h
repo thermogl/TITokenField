@@ -48,33 +48,13 @@
 - (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
-@interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate> {
-	
-	id <UITextFieldDelegate> delegate;
-	TITokenField * tokenField;
-}
-
+@interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate>
 @end
 
 //==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
-@interface TITokenFieldView : UIScrollView <UITableViewDelegate, UITableViewDataSource, TITokenFieldDelegate> {
-	
-	BOOL showAlreadyTokenized;
-	
-	UIView * separator;
-	UITableView * resultsTable;
-	UIView * contentView;
-	
-	NSArray * sourceArray;
-	NSMutableArray * resultsArray;
-	
-	TITokenField * tokenField;
-	
-	UIPopoverController * popoverController;
-}
-
+@interface TITokenFieldView : UIScrollView <UITableViewDelegate, UITableViewDataSource, TITokenFieldDelegate>
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
 @property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, readonly) UIView * separator;
@@ -95,26 +75,7 @@ typedef enum {
 	TITokenFieldControlEventFrameDidChange = 1 << 25,
 } TITokenFieldControlEvents;
 
-@interface TITokenField : UITextField {
-	
-	id <TITokenFieldDelegate> delegate;
-	TITokenFieldInternalDelegate * internalDelegate;
-	
-	NSMutableArray * tokens;
-	TIToken * selectedToken;
-	
-	BOOL editable;
-	BOOL resultsModeEnabled;
-	BOOL removesTokensOnEndEditing;
-	
-	CGPoint tokenCaret;
-	int numberOfLines;
-	
-	NSCharacterSet * tokenizingCharacters;
-    
-    UILabel *placeHolderLabel;
-}
-
+@interface TITokenField : UITextField
 @property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
 @property (nonatomic, readonly) NSArray * tokens;
 @property (nonatomic, readonly) TIToken * selectedToken;
@@ -153,18 +114,7 @@ typedef enum {
 	TITokenAccessoryTypeDisclosureIndicator = 1,
 } TITokenAccessoryType;
 
-@interface TIToken : UIControl {
-	
-	NSString * title;
-	id representedObject;
-	
-	UIFont * font;
-	UIColor * tintColor;
-	
-	TITokenAccessoryType accessoryType;
-	CGFloat maxWidth;
-}
-
+@interface TIToken : UIControl
 @property (nonatomic, copy) NSString * title;
 @property (nonatomic, retain) id representedObject;
 @property (nonatomic, retain) UIFont * font;

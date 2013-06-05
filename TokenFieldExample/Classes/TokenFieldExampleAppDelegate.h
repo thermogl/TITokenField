@@ -8,10 +8,5 @@
 
 #import <UIKit/UIKit.h>
 
-@interface TokenFieldExampleAppDelegate : NSObject <UIApplicationDelegate> {
-	
-    UIWindow * window;
-}
-
+@interface TokenFieldExampleAppDelegate : NSObject <UIApplicationDelegate>
 @end
-

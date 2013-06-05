@@ -9,13 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "TITokenField.h"
 
-@interface TokenFieldExampleViewController : UIViewController <TITokenFieldDelegate, UITextViewDelegate> {
-
-	TITokenFieldView * tokenFieldView;
-	UITextView * messageView;
-	
-	CGFloat keyboardHeight;
-}
-
+@interface TokenFieldExampleViewController : UIViewController <TITokenFieldDelegate, UITextViewDelegate>
 @end
 
