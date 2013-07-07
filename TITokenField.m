@@ -29,6 +29,7 @@
 }
 @dynamic delegate;
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
+@synthesize searchSubtitles = _searchSubtitles;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -61,6 +62,7 @@
 	[self setMultipleTouchEnabled:NO];
 	
 	_showAlreadyTokenized = NO;
+    _searchSubtitles = YES;
 	_resultsArray = [[NSMutableArray alloc] init];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -314,7 +316,7 @@
 			
 			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
 			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-			if (!querySubtitle) querySubtitle = @"";
+			if (!querySubtitle || !_searchSubtitles) querySubtitle = @"";
 			
 			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
