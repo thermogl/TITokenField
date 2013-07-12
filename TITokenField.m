@@ -9,6 +9,10 @@
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
 
+@interface TITokenField ()
+@property (nonatomic, assign) BOOL forcePickSearchResult;
+@end
+
 //==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
@@ -30,6 +34,7 @@
 @dynamic delegate;
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
 @synthesize searchSubtitles = _searchSubtitles;
+@synthesize forcePickSearchResult = _forcePickSearchResult;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -63,6 +68,7 @@
 	
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
+    _forcePickSearchResult = NO;
 	_resultsArray = [[NSMutableArray alloc] init];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -147,6 +153,12 @@
 
 - (NSArray *)tokenTitles {
 	return _tokenField.tokenTitles;
+}
+
+- (void)setForcePickSearchResult:(BOOL)forcePickSearchResult
+{
+    _tokenField.forcePickSearchResult = forcePickSearchResult;
+    _forcePickSearchResult = forcePickSearchResult;
 }
 
 #pragma mark Event Handling
@@ -341,7 +353,11 @@
 		}];
 		[_resultsTable reloadData];
 	}
-	[self setSearchResultsVisible:(_resultsArray.count > 0)];
+    if (_forcePickSearchResult) {
+        [self setSearchResultsVisible:YES];
+    } else {
+        [self setSearchResultsVisible:(_resultsArray.count > 0)];
+    }
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
@@ -403,6 +419,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize numberOfLines = _numberOfLines;
 @synthesize selectedToken = _selectedToken;
 @synthesize tokenizingCharacters = _tokenizingCharacters;
+@synthesize forcePickSearchResult = _forcePickSearchResult;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -506,6 +523,14 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 #pragma mark Event Handling
 - (BOOL)becomeFirstResponder {
 	return (_editable ? [super becomeFirstResponder] : NO);
+}
+
+- (BOOL)resignFirstResponder
+{
+    if (_tokens.count < 1 && self.forcePickSearchResult) {
+        return NO;
+    }
+    return [super resignFirstResponder];
 }
 
 - (void)didBeginEditing {
