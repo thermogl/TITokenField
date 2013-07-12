@@ -525,14 +525,6 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	return (_editable ? [super becomeFirstResponder] : NO);
 }
 
-- (BOOL)resignFirstResponder
-{
-    if (_tokens.count < 1 && self.forcePickSearchResult) {
-        return NO;
-    }
-    return [super resignFirstResponder];
-}
-
 - (void)didBeginEditing {
 	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
 }
@@ -571,6 +563,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self setResultsModeEnabled:NO];
+    if (_tokens.count < 1 && self.forcePickSearchResult) {
+        [self becomeFirstResponder];
+    }
 }
 
 - (void)didChangeText {
@@ -698,7 +693,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	__block BOOL textChanged = NO;
 	
-	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
+	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && !_forcePickSearchResult){
 		[[self.text componentsSeparatedByCharactersInSet:_tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
 			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 			textChanged = YES;
@@ -964,7 +959,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		return (![string isEqualToString:@""]);
 	}
 	
-	if ([string rangeOfCharacterFromSet:_tokenField.tokenizingCharacters].location != NSNotFound){
+	if ([string rangeOfCharacterFromSet:_tokenField.tokenizingCharacters].location != NSNotFound && !_tokenField.forcePickSearchResult){
 		[_tokenField tokenizeText];
 		return NO;
 	}
