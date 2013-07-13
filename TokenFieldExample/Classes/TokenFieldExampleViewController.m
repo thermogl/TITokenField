@@ -28,7 +28,6 @@
 	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
 	[_tokenFieldView setSourceArray:[Names listOfNames]];
 	[self.view addSubview:_tokenFieldView];
-	[_tokenFieldView release];
 	
 	[_tokenFieldView.tokenField setDelegate:self];
 	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
@@ -49,7 +48,6 @@
 	[_messageView setFont:[UIFont systemFontOfSize:15]];
 	[_messageView setText:@"Some message. The whole view resizes as you type, not just the text view."];
 	[_tokenFieldView.contentView addSubview:_messageView];
-	[_messageView release];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];

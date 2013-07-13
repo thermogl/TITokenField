@@ -63,7 +63,7 @@
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
 @property (nonatomic, copy) NSArray * sourceArray;
-@property (nonatomic, readonly) NSArray * tokenTitles;
+@property (weak, nonatomic, readonly) NSArray * tokenTitles;
 
 - (void)updateContentSize;
 
@@ -78,16 +78,16 @@ typedef enum {
 } TITokenFieldControlEvents;
 
 @interface TITokenField : UITextField
-@property (nonatomic, assign) id <TITokenFieldDelegate> delegate;
-@property (nonatomic, readonly) NSArray * tokens;
-@property (nonatomic, readonly) TIToken * selectedToken;
-@property (nonatomic, readonly) NSArray * tokenTitles;
-@property (nonatomic, readonly) NSArray * tokenObjects;
+@property (nonatomic, weak) id <TITokenFieldDelegate> delegate;
+@property (weak, nonatomic, readonly) NSArray * tokens;
+@property (weak, nonatomic, readonly) TIToken * selectedToken;
+@property (weak, nonatomic, readonly) NSArray * tokenTitles;
+@property (weak, nonatomic, readonly) NSArray * tokenObjects;
 @property (nonatomic, assign) BOOL editable;
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
 @property (nonatomic, readonly) int numberOfLines;
-@property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
+@property (nonatomic, strong) NSCharacterSet * tokenizingCharacters;
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
@@ -118,9 +118,9 @@ typedef enum {
 
 @interface TIToken : UIControl
 @property (nonatomic, copy) NSString * title;
-@property (nonatomic, retain) id representedObject;
-@property (nonatomic, retain) UIFont * font;
-@property (nonatomic, retain) UIColor * tintColor UI_APPEARANCE_SELECTOR;
+@property (nonatomic, strong) id representedObject;
+@property (nonatomic, strong) UIFont * font;
+@property (nonatomic, strong) UIColor * tintColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
 @property (nonatomic, assign) CGFloat maxWidth;
 

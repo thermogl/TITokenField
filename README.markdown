@@ -7,7 +7,7 @@ See the "TokenFieldExample" app for details on usage. It's limited at the moment
 
 ## ARC?
 
-Nah.
+Yup
 
 ## License
 
