@@ -328,7 +328,7 @@
 	
 	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
-	if (searchString.length){
+	if (searchString.length || _forcePickSearchResult){
 		[_sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
 			
 			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
@@ -336,7 +336,8 @@
 			if (!querySubtitle || !_searchSubtitles) querySubtitle = @"";
 			
 			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound){
+				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+                (_forcePickSearchResult && searchString.length == 0)){
 				
 				__block BOOL shouldAdd = ![_resultsArray containsObject:sourceObject];
 				if (shouldAdd && !_showAlreadyTokenized){
@@ -352,9 +353,7 @@
 				if (shouldAdd) [_resultsArray addObject:sourceObject];
 			}
 		}];
-	} else if (_forcePickSearchResult) {
-        [_resultsArray addObjectsFromArray:_sourceArray];
-    }
+	}
     
     if (_resultsArray.count > 0) {
         [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
