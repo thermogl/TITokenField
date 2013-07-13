@@ -9,6 +9,10 @@
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
 
+@interface TITokenField ()
+@property (nonatomic, assign) BOOL forcePickSearchResult;
+@end
+
 //==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
@@ -30,6 +34,7 @@
 @dynamic delegate;
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
 @synthesize searchSubtitles = _searchSubtitles;
+@synthesize forcePickSearchResult = _forcePickSearchResult;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -63,6 +68,7 @@
 	
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
+    _forcePickSearchResult = NO;
 	_resultsArray = [[NSMutableArray alloc] init];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -147,6 +153,12 @@
 
 - (NSArray *)tokenTitles {
 	return _tokenField.tokenTitles;
+}
+
+- (void)setForcePickSearchResult:(BOOL)forcePickSearchResult
+{
+    _tokenField.forcePickSearchResult = forcePickSearchResult;
+    _forcePickSearchResult = forcePickSearchResult;
 }
 
 #pragma mark Event Handling
@@ -237,7 +249,13 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-	[self resultsForSearchString:field.text];
+    [self resultsForSearchString:_tokenField.text];
+    
+    if (_forcePickSearchResult) {
+        [self setSearchResultsVisible:YES];
+    } else {
+        [self setSearchResultsVisible:(_resultsArray.count > 0)];
+    }
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -285,7 +303,6 @@
 }
 
 - (void)setSearchResultsVisible:(BOOL)visible {
-	
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
 		
 		if (visible) [self presentpopoverAtTokenFieldCaretAnimated:YES];
@@ -335,13 +352,16 @@
 				if (shouldAdd) [_resultsArray addObject:sourceObject];
 			}
 		}];
-		
-		[_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-		}];
-		[_resultsTable reloadData];
-	}
-	[self setSearchResultsVisible:(_resultsArray.count > 0)];
+	} else if (_forcePickSearchResult) {
+        [_resultsArray addObjectsFromArray:_sourceArray];
+    }
+    
+    if (_resultsArray.count > 0) {
+        [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+        }];
+        [_resultsTable reloadData];
+    }
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
@@ -403,6 +423,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize numberOfLines = _numberOfLines;
 @synthesize selectedToken = _selectedToken;
 @synthesize tokenizingCharacters = _tokenizingCharacters;
+@synthesize forcePickSearchResult = _forcePickSearchResult;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -546,6 +567,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self setResultsModeEnabled:NO];
+    if (_tokens.count < 1 && self.forcePickSearchResult) {
+        [self becomeFirstResponder];
+    }
 }
 
 - (void)didChangeText {
@@ -638,8 +662,11 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
 		}
-		
-		[self setResultsModeEnabled:NO];
+		if (_forcePickSearchResult) {
+            [self setResultsModeEnabled:YES];
+        } else {
+            [self setResultsModeEnabled:NO];
+        }
 	}
 }
 
@@ -675,7 +702,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	__block BOOL textChanged = NO;
 	
-	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden]){
+	if (![self.text isEqualToString:kTextEmpty] && ![self.text isEqualToString:kTextHidden] && !_forcePickSearchResult){
 		[[self.text componentsSeparatedByCharactersInSet:_tokenizingCharacters] enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL *stop){
 			[self addTokenWithTitle:[component stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 			textChanged = YES;
@@ -941,7 +968,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		return (![string isEqualToString:@""]);
 	}
 	
-	if ([string rangeOfCharacterFromSet:_tokenField.tokenizingCharacters].location != NSNotFound){
+	if ([string rangeOfCharacterFromSet:_tokenField.tokenizingCharacters].location != NSNotFound && !_tokenField.forcePickSearchResult){
 		[_tokenField tokenizeText];
 		return NO;
 	}

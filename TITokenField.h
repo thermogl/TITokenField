@@ -57,6 +57,7 @@
 @interface TITokenFieldView : UIScrollView <UITableViewDelegate, UITableViewDataSource, TITokenFieldDelegate>
 @property (nonatomic, assign) BOOL showAlreadyTokenized;
 @property (nonatomic, assign) BOOL searchSubtitles;
+@property (nonatomic, assign) BOOL forcePickSearchResult;
 @property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, readonly) UIView * separator;
 @property (nonatomic, readonly) UITableView * resultsTable;
