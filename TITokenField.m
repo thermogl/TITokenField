@@ -551,10 +551,10 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)didChangeText {
 	if (self.text.length == 0) {
         [self setText:kTextEmpty];
-        [ _placeHolderLabel setHidden:NO];
+        [_placeHolderLabel setHidden:NO];
     }
     else{
-        [ _placeHolderLabel setHidden:YES];
+        [_placeHolderLabel setHidden:YES];
     }
 }
 
@@ -610,6 +610,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
 				[delegate tokenField:self didAddToken:token];
 			}
+            
+            [_placeHolderLabel setHidden:YES];
 		}
 		
 		[self setResultsModeEnabled:NO];
