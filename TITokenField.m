@@ -249,7 +249,13 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-	[self resultsForSearchString:field.text];
+    [self resultsForSearchString:_tokenField.text];
+    
+    if (_forcePickSearchResult) {
+        [self setSearchResultsVisible:YES];
+    } else {
+        [self setSearchResultsVisible:(_resultsArray.count > 0)];
+    }
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -297,7 +303,6 @@
 }
 
 - (void)setSearchResultsVisible:(BOOL)visible {
-	
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
 		
 		if (visible) [self presentpopoverAtTokenFieldCaretAnimated:YES];
@@ -347,16 +352,15 @@
 				if (shouldAdd) [_resultsArray addObject:sourceObject];
 			}
 		}];
-		
-		[_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-			return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-		}];
-		[_resultsTable reloadData];
-	}
-    if (_forcePickSearchResult) {
-        [self setSearchResultsVisible:YES];
-    } else {
-        [self setSearchResultsVisible:(_resultsArray.count > 0)];
+	} else if (_forcePickSearchResult) {
+        [_resultsArray addObjectsFromArray:_sourceArray];
+    }
+    
+    if (_resultsArray.count > 0) {
+        [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+        }];
+        [_resultsTable reloadData];
     }
 }
 
