@@ -662,8 +662,11 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
 		}
-		
-		[self setResultsModeEnabled:NO];
+		if (_forcePickSearchResult) {
+            [self setResultsModeEnabled:YES];
+        } else {
+            [self setResultsModeEnabled:NO];
+        }
 	}
 }
 
