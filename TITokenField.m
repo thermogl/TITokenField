@@ -138,12 +138,12 @@
 	}
 	
 	[self updateContentSize];
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (void)setContentOffset:(CGPoint)offset {
 	[super setContentOffset:offset];
-	[self layoutSubviews];
+	[self setNeedsLayout];
 }
 
 - (NSArray *)tokenTitles {
