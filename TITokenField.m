@@ -1051,6 +1051,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	if (newTitle){
 		_title = [newTitle copy];
 		[self sizeToFit];
+        [self setNeedsDisplay];
 	}
 }
 
@@ -1061,6 +1062,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	if (_font != newFont){
 		_font = newFont;
 		[self sizeToFit];
+        [self setNeedsDisplay];
 	}
 }
 
@@ -1079,6 +1081,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	if (_accessoryType != type){
 		_accessoryType = type;
 		[self sizeToFit];
+        [self setNeedsDisplay];
 	}
 }
 
@@ -1087,6 +1090,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	if (_maxWidth != width){
 		_maxWidth = width;
 		[self sizeToFit];
+        [self setNeedsDisplay];
 	}
 }
 
@@ -1105,7 +1109,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 }
 
 #pragma mark Layout
-- (void)sizeToFit {
+- (CGSize)sizeThatFits:(CGSize)size {
 	
 	CGFloat accessoryWidth = 0;
 	
@@ -1117,8 +1121,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGSize titleSize = [_title sizeWithFont:_font forWidth:(_maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
 	CGFloat height = floorf(titleSize.height + vTextPadding);
 	
-	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
-	[self setNeedsDisplay];
+    return (CGSize){MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height};
 }
 
 #pragma mark Drawing
