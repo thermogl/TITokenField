@@ -997,6 +997,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @synthesize representedObject = _representedObject;
 @synthesize font = _font;
 @synthesize tintColor = _tintColor;
+@synthesize textColor = _textColor;
+@synthesize highlightedTextColor = _highlightedTextColor;
 @synthesize accessoryType = _accessoryType;
 @synthesize maxWidth = _maxWidth;
 
@@ -1018,6 +1020,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		
 		_font = aFont;
 		_tintColor = [TIToken blueTintColor];
+		_textColor = [UIColor blackColor];
+		_highlightedTextColor = [UIColor whiteColor];
 		
 		_accessoryType = TITokenAccessoryTypeNone;
 		_maxWidth = 200;
@@ -1229,7 +1233,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding - accessoryWidth);
 	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
 	
-	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
+	CGContextSetFillColorWithColor(context, (drawHighlighted ? _highlightedTextColor : _textColor).CGColor);
 	[_title drawInRect:textBounds withFont:_font lineBreakMode:kLineBreakMode];
 }
 
