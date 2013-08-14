@@ -42,7 +42,7 @@
 @synthesize sourceArray = _sourceArray;
 
 #pragma mark Init
-- (id)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame {
 	
     if ((self = [super initWithFrame:frame])){
 		[self setup];
@@ -51,7 +51,7 @@
     return self;
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder {
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
 	
 	if ((self = [super initWithCoder:aDecoder])){
 		[self setup];
@@ -415,7 +415,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize forcePickSearchResult = _forcePickSearchResult;
 
 #pragma mark Init
-- (id)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame {
 	
     if ((self = [super initWithFrame:frame])){
 		[self setup];
@@ -424,7 +424,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
     return self;
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder {
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
 	
 	if ((self = [super initWithCoder:aDecoder])){
 		[self setup];
@@ -1003,15 +1003,15 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 @synthesize maxWidth = _maxWidth;
 
 #pragma mark Init
-- (id)initWithTitle:(NSString *)aTitle {
+- (instancetype)initWithTitle:(NSString *)aTitle {
 	return [self initWithTitle:aTitle representedObject:nil];
 }
 
-- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object {
+- (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object {
 	return [self initWithTitle:aTitle representedObject:object font:[UIFont systemFontOfSize:14]];
 }
 
-- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont {
+- (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont {
 	
 	if ((self = [super init])){
 		

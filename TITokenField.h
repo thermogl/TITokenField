@@ -126,9 +126,9 @@ typedef enum {
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
 @property (nonatomic, assign) CGFloat maxWidth;
 
-- (id)initWithTitle:(NSString *)aTitle;
-- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object;
-- (id)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont;
+- (instancetype)initWithTitle:(NSString *)aTitle;
+- (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object;
+- (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object font:(UIFont *)aFont;
 
 + (UIColor *)blueTintColor;
 + (UIColor *)redTintColor;
