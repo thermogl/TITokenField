@@ -440,6 +440,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self setBackgroundColor:[UIColor whiteColor]];
 	[self setAutocorrectionType:UITextAutocorrectionTypeNo];
 	[self setAutocapitalizationType:UITextAutocapitalizationTypeNone];
+	[self setContentVerticalAlignment:UIControlContentVerticalAlignmentTop];
 	
 	[self addTarget:self action:@selector(didBeginEditing) forControlEvents:UIControlEventEditingDidBegin];
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
