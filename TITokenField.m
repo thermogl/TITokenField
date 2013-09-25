@@ -537,12 +537,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		NSString * untokenized = kTextEmpty;
 		if (_tokens.count){
 			
-			NSMutableArray * titles = [NSMutableArray array];
-			[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
-				if (token.title) [titles addObject:token.title];
-			}];
+			NSArray * titles = self.tokenTitles;
+			untokenized = [titles componentsJoinedByString:@", "];
 			
-			untokenized = [self.tokenTitles componentsJoinedByString:@", "];
 			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
@@ -556,9 +553,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self setResultsModeEnabled:NO];
-    if (_tokens.count < 1 && self.forcePickSearchResult) {
-        [self becomeFirstResponder];
-    }
+	if (_tokens.count < 1 && self.forcePickSearchResult) {
+		[self becomeFirstResponder];
+	}
 }
 
 - (void)didChangeText {
