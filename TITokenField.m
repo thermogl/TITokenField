@@ -560,9 +560,18 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)didChangeText {
 	if (!self.text.length) {
-        [self setText:kTextEmpty];
-        [_placeHolderLabel setHidden:NO];
-    } else [_placeHolderLabel setHidden:YES];
+    [self setText:kTextEmpty];
+  }
+
+  [self showOrHidePlaceHolderLabel];
+}
+
+- (void) showOrHidePlaceHolderLabel {
+  if (([self.text isEqualToString:kTextEmpty]) && ([_tokens count] == 0)) {
+    [_placeHolderLabel setHidden:NO];
+  } else {
+    [_placeHolderLabel setHidden:YES];
+  }  
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -618,7 +627,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 				[delegate tokenField:self didAddToken:token];
 			}
             
-            [_placeHolderLabel setHidden:YES];
+      [self showOrHidePlaceHolderLabel];
 		}
 		
 		[self setResultsModeEnabled:NO];
@@ -644,6 +653,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			[delegate tokenField:self didRemoveToken:token];
 		}
 		
+    [self showOrHidePlaceHolderLabel];
+
 		[self setResultsModeEnabled:_forcePickSearchResult];
 	}
 }
