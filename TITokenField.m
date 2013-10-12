@@ -245,11 +245,8 @@
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
     [self resultsForSearchString:_tokenField.text];
     
-    if (_forcePickSearchResult) {
-        [self setSearchResultsVisible:YES];
-    } else {
-        [self setSearchResultsVisible:(_resultsArray.count > 0)];
-    }
+    if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
+	else [self setSearchResultsVisible:(_resultsArray.count > 0)];
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -559,19 +556,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (void)didChangeText {
-	if (!self.text.length) {
-    [self setText:kTextEmpty];
-  }
-
-  [self showOrHidePlaceHolderLabel];
+	if (!self.text.length)[self setText:kTextEmpty];
+	[self showOrHidePlaceHolderLabel];
 }
 
 - (void) showOrHidePlaceHolderLabel {
-  if (([self.text isEqualToString:kTextEmpty]) && ([_tokens count] == 0)) {
-    [_placeHolderLabel setHidden:NO];
-  } else {
-    [_placeHolderLabel setHidden:YES];
-  }  
+	[_placeHolderLabel setHidden:!(([self.text isEqualToString:kTextEmpty]) && !_tokens.count)];
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -627,7 +617,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 				[delegate tokenField:self didAddToken:token];
 			}
             
-      [self showOrHidePlaceHolderLabel];
+			[self showOrHidePlaceHolderLabel];
 		}
 		
 		[self setResultsModeEnabled:NO];
@@ -653,8 +643,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			[delegate tokenField:self didRemoveToken:token];
 		}
 		
-    [self showOrHidePlaceHolderLabel];
-
+		[self showOrHidePlaceHolderLabel];
 		[self setResultsModeEnabled:_forcePickSearchResult];
 	}
 }
