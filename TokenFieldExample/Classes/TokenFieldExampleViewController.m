@@ -33,6 +33,8 @@
 	[self.view addSubview:_tokenFieldView];
 	
 	[_tokenFieldView.tokenField setDelegate:self];
+	[_tokenFieldView setShouldSearchInBackground:NO];
+	[_tokenFieldView setShouldSortResults:NO];
 	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
 	[_tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
     [_tokenFieldView.tokenField setPromptText:@"To:"];
