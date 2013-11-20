@@ -35,6 +35,7 @@
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
 @synthesize searchSubtitles = _searchSubtitles;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
+@synthesize shouldSortResults = _shouldSortResults;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -69,6 +70,7 @@
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
     _forcePickSearchResult = NO;
+  _shouldSortResults = YES;
 	_resultsArray = [NSMutableArray array];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -346,7 +348,7 @@
 		}];
 	}
     
-    if (_resultsArray.count > 0) {
+    if (_resultsArray.count > 0 && _shouldSortResults) {
         [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
         }];
