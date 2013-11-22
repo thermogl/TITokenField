@@ -35,6 +35,8 @@
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
 @synthesize searchSubtitles = _searchSubtitles;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
+@synthesize shouldSortResults = _shouldSortResults;
+@synthesize shouldSearchInBackground = _shouldSearchInBackground;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -69,6 +71,8 @@
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
     _forcePickSearchResult = NO;
+  _shouldSortResults = YES;
+  _shouldSearchInBackground = NO;
 	_resultsArray = [NSMutableArray array];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -320,38 +324,55 @@
 	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
 	if (searchString.length || _forcePickSearchResult){
-		[_sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
-			
-			NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
-			NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-			if (!querySubtitle || !_searchSubtitles) querySubtitle = @"";
-			
-			if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-                (_forcePickSearchResult && searchString.length == 0)){
-				
-				__block BOOL shouldAdd = ![_resultsArray containsObject:sourceObject];
-				if (shouldAdd && !_showAlreadyTokenized){
-					
-					[_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
-						if ([token.representedObject isEqual:sourceObject]){
-							shouldAdd = NO;
-							*secondStop = YES;
-						}
-					}];
-				}
-				
-				if (shouldAdd) [_resultsArray addObject:sourceObject];
-			}
-		}];
-	}
-    
-    if (_resultsArray.count > 0) {
-        [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-        }];
-        [_resultsTable reloadData];
+    if (_shouldSearchInBackground) {
+      [self performSelectorInBackground:@selector(performSearch:) withObject:searchString];
+    } else {
+      [self performSearch:searchString];
     }
+	}
+}
+
+- (void) performSearch:(NSString *)searchString {
+  NSMutableArray * resultsToAdd = [[NSMutableArray alloc] init];
+  [_sourceArray enumerateObjectsUsingBlock:^(id sourceObject, NSUInteger idx, BOOL *stop){
+
+    NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
+    NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
+    if (!querySubtitle || !_searchSubtitles) querySubtitle = @"";
+    
+    if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
+        (_forcePickSearchResult && searchString.length == 0)){
+
+      __block BOOL shouldAdd = ![resultsToAdd containsObject:sourceObject];
+      if (shouldAdd && !_showAlreadyTokenized){
+
+        [_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+          if ([token.representedObject isEqual:sourceObject]){
+            shouldAdd = NO;
+            *secondStop = YES;
+          }
+        }];
+      }
+
+      if (shouldAdd) [resultsToAdd addObject:sourceObject];
+    }
+  }];
+
+  [_resultsArray addObjectsFromArray:resultsToAdd];
+  if (_resultsArray.count > 0) {
+    if (_shouldSortResults) {
+      [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+      }];
+    }
+    [self performSelectorOnMainThread:@selector(reloadResultsTable) withObject:nil waitUntilDone:YES];
+  }
+}
+
+-(void) reloadResultsTable {
+  [_resultsTable setHidden:NO];
+  [_resultsTable reloadData];
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
