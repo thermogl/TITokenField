@@ -21,14 +21,15 @@
 }
 
 - (void)viewDidLoad {
-	
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 70000
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
+#endif
 
 	[self.view setBackgroundColor:[UIColor whiteColor]];
 	[self.navigationItem setTitle:@"Example"];
 	
-	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
+	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds withFieldHeight:25];
 	[_tokenFieldView setSourceArray:[Names listOfNames]];
 	[self.view addSubview:_tokenFieldView];
 	

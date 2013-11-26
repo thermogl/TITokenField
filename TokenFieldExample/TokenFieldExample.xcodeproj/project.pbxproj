@@ -11,6 +11,7 @@
 		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
+		265E2A861844837B0018F47F /* NSString+truncateToSize.m in Sources */ = {isa = PBXBuildFile; fileRef = 265E2A851844837B0018F47F /* NSString+truncateToSize.m */; };
 		288765A50DF7441C002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765A40DF7441C002DB57D /* CoreGraphics.framework */; };
 		28D7ACF80DDB3853001CB0EB /* TokenFieldExampleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 28D7ACF70DDB3853001CB0EB /* TokenFieldExampleViewController.m */; };
 		E20C35C6160286F500DFF810 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E20C35C5160286F500DFF810 /* Default-568h@2x.png */; };
@@ -25,6 +26,8 @@
 		1D3623250D0F684500981E51 /* TokenFieldExampleAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenFieldExampleAppDelegate.m; sourceTree = "<group>"; };
 		1D6058910D05DD3D006BFB54 /* TokenFieldExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TokenFieldExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		265E2A841844837B0018F47F /* NSString+truncateToSize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+truncateToSize.h"; sourceTree = "<group>"; };
+		265E2A851844837B0018F47F /* NSString+truncateToSize.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+truncateToSize.m"; sourceTree = "<group>"; };
 		288765A40DF7441C002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		28D7ACF60DDB3853001CB0EB /* TokenFieldExampleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TokenFieldExampleViewController.h; sourceTree = "<group>"; };
 		28D7ACF70DDB3853001CB0EB /* TokenFieldExampleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenFieldExampleViewController.m; sourceTree = "<group>"; };
@@ -120,6 +123,8 @@
 			children = (
 				E259CED71530FBE6002D0609 /* TITokenField.h */,
 				E259CED81530FBE6002D0609 /* TITokenField.m */,
+				265E2A841844837B0018F47F /* NSString+truncateToSize.h */,
+				265E2A851844837B0018F47F /* NSString+truncateToSize.m */,
 				E2EC195C12F4AA7A00BB0A8B /* Names.h */,
 				E2EC195D12F4AA7A00BB0A8B /* Names.m */,
 			);
@@ -194,6 +199,7 @@
 				28D7ACF80DDB3853001CB0EB /* TokenFieldExampleViewController.m in Sources */,
 				E2EC196012F4AA7A00BB0A8B /* Names.m in Sources */,
 				E259CED91530FBE6002D0609 /* TITokenField.m in Sources */,
+				265E2A861844837B0018F47F /* NSString+truncateToSize.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
