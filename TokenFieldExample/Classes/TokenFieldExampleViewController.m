@@ -26,13 +26,14 @@
         self.edgesForExtendedLayout = UIRectEdgeNone;
 #endif
 
-	[self.view setBackgroundColor:[UIColor whiteColor]];
+	[self.view setBackgroundColor:[UIColor lightGrayColor]];
 	[self.navigationItem setTitle:@"Example"];
 	
 	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds withFieldHeight:25];
 	[_tokenFieldView setSourceArray:[Names listOfNames]];
 	[self.view addSubview:_tokenFieldView];
 	[_tokenFieldView setStopAutoSearch:YES];
+    [_tokenFieldView transparentizeBackground];
     
 	[_tokenFieldView.tokenField setDelegate:self];
 	[_tokenFieldView setShouldSearchInBackground:NO];
@@ -57,7 +58,7 @@
     [searchButton addTarget:self action:@selector(searchUsers:) forControlEvents:UIControlEventTouchUpInside];
     [rightView addSubview:searchButton];
     [rightView addSubview:addButton];
-    searchButton.frame=CGRectMake(0, 0, 24, 26);
+    searchButton.frame=CGRectMake(0, 0, 26, 26);
     addButton.frame=CGRectMake(48, 0, 26, 26);
 	
 	_messageView = [[UITextView alloc] initWithFrame:_tokenFieldView.contentView.bounds];

@@ -9,6 +9,7 @@
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
 #import "NSString+truncateToSize.h"
+#import <objc/runtime.h>
 
 @interface TITokenField ()
 @property (nonatomic, assign) BOOL forcePickSearchResult;
@@ -400,6 +401,16 @@
         [self resultsForSearchString:searchString];
         [self setSearchResultsVisible:YES];
     }
+}
+-(void)transparentizeBackground{
+    self.backgroundColor=[UIColor clearColor];
+    self.tokenField.backgroundColor=[UIColor clearColor];
+    self.tokenField.leftView.backgroundColor=[UIColor clearColor];
+    
+    [self.tokenField.layer setShadowColor:[[UIColor clearColor] CGColor]];
+	[self.tokenField.layer setShadowOpacity:1];
+	[self.tokenField.layer setShadowRadius:0];
+
 }
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
@@ -876,6 +887,7 @@ static float _height;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectMake(_tokenCaret.x + 3, _tokenCaret.y + 2, self.rightView.bounds.size.width, self.rightView.bounds.size.height)];
 			[label setTextColor:[UIColor colorWithWhite:0.75 alpha:1]];
+            label.backgroundColor=[UIColor clearColor];
 			 _placeHolderLabel = label;
             [self addSubview: _placeHolderLabel];
 		}

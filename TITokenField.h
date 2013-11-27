@@ -72,6 +72,7 @@
 - (void)updateContentSize;
 -(id)initWithFrame:(CGRect)frame withFieldHeight:(float)_height;
 -(void)manualSearch:(NSString*)searchString;
+-(void)transparentizeBackground;
 @end
 
 //==========================================================
