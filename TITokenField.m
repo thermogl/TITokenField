@@ -255,10 +255,13 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-    [self resultsForSearchString:_tokenField.text];
-    
-    if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
-	else [self setSearchResultsVisible:(_resultsArray.count > 0)];
+    if (!_stopAutoSearch) {
+        [self resultsForSearchString:_tokenField.text];
+        
+        if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
+        else [self setSearchResultsVisible:(_resultsArray.count > 0)];
+
+    }
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -392,6 +395,12 @@
 }
 
 #pragma mark Other
+-(void)manualSearch:(NSString*)searchString{
+    if (_stopAutoSearch) {
+        [self resultsForSearchString:searchString];
+        [self setSearchResultsVisible:YES];
+    }
+}
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
 }

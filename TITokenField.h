@@ -60,6 +60,7 @@
 @property (nonatomic, assign) BOOL forcePickSearchResult;
 @property (nonatomic, assign) BOOL shouldSortResults;
 @property (nonatomic, assign) BOOL shouldSearchInBackground;
+@property (nonatomic, assign) BOOL stopAutoSearch;
 @property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, assign)float tokenFieldHeight;
 @property (nonatomic, readonly) UIView * separator;
@@ -70,7 +71,7 @@
 
 - (void)updateContentSize;
 -(id)initWithFrame:(CGRect)frame withFieldHeight:(float)_height;
-
+-(void)manualSearch:(NSString*)searchString;
 @end
 
 //==========================================================
