@@ -391,6 +391,7 @@
 	
     UITextPosition * position = [_tokenField positionFromPosition:_tokenField.beginningOfDocument offset:2];
 	
+    position=position?position:_tokenField.beginningOfDocument;
 	[_popoverController presentPopoverFromRect:[_tokenField caretRectForPosition:position] inView:_tokenField
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
