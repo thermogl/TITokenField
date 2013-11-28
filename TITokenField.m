@@ -679,7 +679,12 @@ static float _height;
 		//[self becomeFirstResponder];
 		
 		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
-		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+		if ([delegate respondsToSelector:@selector(tokenTouchUpInside:)]) {
+            [token addTarget:delegate action:@selector(tokenTouchUpInside:)
+            forControlEvents:UIControlEventTouchUpInside];
+        }else{
+            [token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+        }
 		[self addSubview:token];
 		
 		if (![_tokens containsObject:token]) {

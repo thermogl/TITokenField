@@ -91,7 +91,9 @@
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
 	[self resizeViews];
 }
-
+- (void)tokenTouchUpInside:(TIToken *)token{
+	NSLog(@"Touches token:%@,%@",token.title,token.representedObject);
+}
 - (void)showContactsPicker:(id)sender {
 	
 	// Show some kind of contacts picker in here.
