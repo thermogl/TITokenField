@@ -40,12 +40,17 @@
 - (BOOL)tokenField:(TITokenField *)tokenField willRemoveToken:(TIToken *)token;
 - (void)tokenField:(TITokenField *)tokenField didRemoveToken:(TIToken *)token;
 
+- (void)tokenField:(TITokenField *)tokenField didChangeText:(NSString *)text;
 - (void)tokenField:(TITokenField *)tokenField didFinishSearch:(NSArray *)matches;
 - (NSString *)tokenField:(TITokenField *)tokenField displayStringForRepresentedObject:(id)object;
 - (NSString *)tokenField:(TITokenField *)tokenField searchResultStringForRepresentedObject:(id)object;
 - (NSString *)tokenField:(TITokenField *)tokenField searchResultSubtitleForRepresentedObject:(id)object;
 - (UITableViewCell *)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView cellForRepresentedObject:(id)object;
 - (CGFloat)tokenField:(TITokenField *)tokenField resultsTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
+@end
+
+@protocol TITokenFieldDataSource <NSObject>
+- (NSArray *)tokenFieldSearchResults:(TITokenField *)tokenField;
 @end
 
 @interface TITokenFieldInternalDelegate : NSObject <UITextFieldDelegate>
@@ -66,6 +71,7 @@
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
 
 - (void)updateContentSize;
+- (void)reloadSearchResults;
 
 @end
 
@@ -79,6 +85,7 @@ typedef enum {
 
 @interface TITokenField : UITextField
 @property (nonatomic, weak) id <TITokenFieldDelegate> delegate;
+@property (nonatomic, weak) id <TITokenFieldDataSource> dataSource;
 @property (weak, nonatomic, readonly) NSArray * tokens;
 @property (weak, nonatomic, readonly) TIToken * selectedToken;
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
