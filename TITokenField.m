@@ -247,8 +247,16 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-    [self resultsForSearchString:_tokenField.text];
-    
+	if ([_tokenField.delegate respondsToSelector:@selector(tokenField:didChangeText:)]) {
+		[_tokenField.delegate tokenField:_tokenField didChangeText:_tokenField.text];
+	}
+
+	if (_tokenField.dataSource != nil) {
+		[self reloadSearchResults];
+		return;
+	}
+
+	[self resultsForSearchString:_tokenField.text];
     if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
 	else [self setSearchResultsVisible:(_resultsArray.count > 0)];
 }
@@ -317,12 +325,12 @@
 	// If the source is massive, this could take some time.
 	// You could always subclass and override this if needed or do it on a background thread.
 	// GCD would be great for that.
-	
+
+	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
 	[_resultsArray removeAllObjects];
 	[_resultsTable reloadData];
-	
-	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
+
 	if (searchString.length || _forcePickSearchResult){
     if (_shouldSearchInBackground) {
       [self performSelectorInBackground:@selector(performSearch:) withObject:searchString];
@@ -373,6 +381,19 @@
 -(void) reloadResultsTable {
   [_resultsTable setHidden:NO];
   [_resultsTable reloadData];
+}
+
+- (void)reloadSearchResults {
+	if (_tokenField.dataSource != nil) {
+		NSArray *searchResults = [_tokenField.dataSource tokenFieldSearchResults:_tokenField];
+		_resultsArray = [NSMutableArray arrayWithArray:searchResults];
+	}
+	if (_forcePickSearchResult) {
+		[self setSearchResultsVisible:YES];
+	} else {
+		[self setSearchResultsVisible:(_resultsArray.count > 0)];
+	}
+	[_resultsTable reloadData];
 }
 
 - (void)presentpopoverAtTokenFieldCaretAnimated:(BOOL)animated {
