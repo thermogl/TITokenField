@@ -622,9 +622,9 @@ static float _height;
 	}
 	
 	[self setResultsModeEnabled:NO];
-	if (_tokens.count < 1 && self.forcePickSearchResult) {
-		[self becomeFirstResponder];
-	}
+//	if (_tokens.count < 1 && self.forcePickSearchResult) {
+//		[self becomeFirstResponder];
+//	}
 }
 
 - (void)didChangeText {
