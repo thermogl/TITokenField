@@ -148,4 +148,41 @@
 	[_tokenFieldView updateContentSize];
 }
 
+
+#pragma mark - Custom Search
+
+- (BOOL)tokenField:(TITokenField *)field shouldUseCustomSearchForSearchString:(NSString *)searchString
+{
+    return ([searchString isEqualToString:@"contributors"]);
+}
+
+- (void)tokenField:(TITokenField *)field performCustomSearchForSearchString:(NSString *)searchString withCompletionHandler:(void (^)(NSArray *))completionHandler
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        //Send a Github API request to retrieve the Contributors of this project.
+        //Using a syncrhonous request in a Background Thread to not over-complexify the demo project
+        NSURLRequest * urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://api.github.com/repos/thermogl/TITokenField/contributors"]];
+        NSURLResponse * response = nil;
+        NSError * error = nil;
+        NSData * data = [NSURLConnection sendSynchronousRequest:urlRequest returningResponse:&response error:&error];
+
+        NSMutableArray *results = [[NSMutableArray alloc] init];
+
+        if (error == nil) {
+            NSError *errorJSON;
+            NSArray *contributors = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&errorJSON];
+
+            for (NSDictionary *user in contributors) {
+                [results addObject:[user objectForKey:@"login"]];
+            }
+        }
+
+
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+            //Finally call the completionHandler with the results array!
+            completionHandler(results);
+        });
+    });
+}
+
 @end

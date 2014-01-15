@@ -311,24 +311,33 @@
 }
 
 - (void)resultsForSearchString:(NSString *)searchString {
-	
+
 	// The brute force searching method.
 	// Takes the input string and compares it against everything in the source array.
 	// If the source is massive, this could take some time.
 	// You could always subclass and override this if needed or do it on a background thread.
 	// GCD would be great for that.
-	
+
 	[_resultsArray removeAllObjects];
 	[_resultsTable reloadData];
-	
+
 	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
+
 	if (searchString.length || _forcePickSearchResult){
-    if (_shouldSearchInBackground) {
-      [self performSelectorInBackground:@selector(performSearch:) withObject:searchString];
-    } else {
-      [self performSearch:searchString];
-    }
+
+        if ([_tokenField.delegate respondsToSelector:@selector(tokenField:shouldUseCustomSearchForSearchString:)] && [_tokenField.delegate tokenField:_tokenField shouldUseCustomSearchForSearchString:searchString]) {
+            if ([_tokenField.delegate respondsToSelector:@selector(tokenField:performCustomSearchForSearchString:withCompletionHandler:)]) {
+                [_tokenField.delegate tokenField:_tokenField performCustomSearchForSearchString:searchString withCompletionHandler:^(NSArray *results) {
+                    [self searchDidFinish:results];
+                }];
+            }
+        } else {
+            if (_shouldSearchInBackground) {
+                [self performSelectorInBackground:@selector(performSearch:) withObject:searchString];
+            } else {
+                [self performSearch:searchString];
+            }
+        }
 	}
 }
 
@@ -359,16 +368,22 @@
     }
   }];
 
-  [_resultsArray addObjectsFromArray:resultsToAdd];
-  if (_resultsArray.count > 0) {
-    if (_shouldSortResults) {
-      [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
-      }];
-    }
-    [self performSelectorOnMainThread:@selector(reloadResultsTable) withObject:nil waitUntilDone:YES];
-  }
+    [self searchDidFinish:resultsToAdd];
 }
+
+- (void)searchDidFinish:(NSArray *)results
+{
+    [_resultsArray addObjectsFromArray:results];
+    if (_resultsArray.count > 0) {
+        if (_shouldSortResults) {
+            [_resultsArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                return [[self searchResultStringForRepresentedObject:obj1] localizedCaseInsensitiveCompare:[self searchResultStringForRepresentedObject:obj2]];
+            }];
+        }
+        [self performSelectorOnMainThread:@selector(reloadResultsTable) withObject:nil waitUntilDone:YES];
+    }
+}
+
 
 -(void) reloadResultsTable {
   [_resultsTable setHidden:NO];
