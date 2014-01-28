@@ -92,11 +92,15 @@ typedef enum {
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
 @property (nonatomic, readonly) int numberOfLines;
+@property (nonatomic) int tokenLimit;
 @property (nonatomic, strong) NSCharacterSet * tokenizingCharacters;
+@property (nonatomic, copy) NSString *initialTokenList;
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title representedObject:(id)object;
+- (void)addTokensWithTitleList:(NSString *)titleList;
+- (void)addTokensWithTitleArray:(NSArray *)titleArray;
 - (void)removeToken:(TIToken *)token;
 - (void)removeAllTokens;
 
