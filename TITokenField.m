@@ -71,8 +71,8 @@
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
     _forcePickSearchResult = NO;
-    _shouldSortResults = YES;
-    _shouldSearchInBackground = NO;
+    	_shouldSortResults = YES;
+    	_shouldSearchInBackground = NO;
 	_resultsArray = [NSMutableArray array];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
