@@ -484,7 +484,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self.layer setShadowRadius:12];
 	
 	[self setPromptText:@"To:"];
-    [self setText:kTextEmpty];
+    	[self setText:kTextEmpty];
 	
 	_internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
 	[_internalDelegate setTokenField:self];
