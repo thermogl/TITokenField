@@ -760,7 +760,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	CGFloat leftMargin = self.leftViewWidth + 12;
 	CGFloat hPadding = 8;
 	CGFloat rightMargin = self.rightViewWidth + hPadding;
-	CGFloat lineHeight = self.font.lineHeight + topMargin + 5;
+	CGFloat lineHeight = ceilf(self.font.lineHeight) + topMargin + 5;
 	
 	_numberOfLines = 1;
 	_tokenCaret = (CGPoint){leftMargin, (topMargin - 1)};
@@ -789,7 +789,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		}
 	}];
 	
-	return _tokenCaret.y + lineHeight;
+	return ceilf(_tokenCaret.y + lineHeight);
 }
 
 #pragma mark View Handlers
