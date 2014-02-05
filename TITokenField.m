@@ -8,6 +8,8 @@
 
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
+#import "NSString+truncateToSize.h"
+#import <objc/runtime.h>
 
 @interface TITokenField ()
 @property (nonatomic, assign) BOOL forcePickSearchResult;
@@ -30,6 +32,7 @@
 	UIView * _contentView;
 	NSMutableArray * _resultsArray;
 	UIPopoverController * _popoverController;
+    float _tokenFieldHeight;
 }
 @dynamic delegate;
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
@@ -44,7 +47,7 @@
 @synthesize sourceArray = _sourceArray;
 
 #pragma mark Init
-- (instancetype)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame{
 	
     if ((self = [super initWithFrame:frame])){
 		[self setup];
@@ -52,7 +55,13 @@
 	
     return self;
 }
-
+-(id)initWithFrame:(CGRect)frame withFieldHeight:(float)_height{
+    if ((self=[super initWithFrame:frame])) {
+        _tokenFieldHeight=_height;
+        [self setup];
+    }
+    return self;
+}
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
 	
 	if ((self = [super initWithCoder:aDecoder])){
@@ -75,7 +84,7 @@
     	_shouldSearchInBackground = NO;
 	_resultsArray = [NSMutableArray array];
 	
-	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
+	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, _tokenFieldHeight?_tokenFieldHeight:42)];
 	[_tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
 	[_tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
 	[_tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
@@ -247,10 +256,13 @@
 }
 
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
-    [self resultsForSearchString:_tokenField.text];
-    
-    if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
-	else [self setSearchResultsVisible:(_resultsArray.count > 0)];
+    if (!_stopAutoSearch) {
+        [self resultsForSearchString:_tokenField.text];
+        
+        if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
+        else [self setSearchResultsVisible:(_resultsArray.count > 0)];
+
+    }
 }
 
 - (void)tokenFieldFrameWillChange:(TITokenField *)field {
@@ -394,11 +406,28 @@
 	
     UITextPosition * position = [_tokenField positionFromPosition:_tokenField.beginningOfDocument offset:2];
 	
+    position=position?position:_tokenField.beginningOfDocument;
 	[_popoverController presentPopoverFromRect:[_tokenField caretRectForPosition:position] inView:_tokenField
 					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
 }
 
 #pragma mark Other
+-(void)manualSearch:(NSString*)searchString{
+    if (_stopAutoSearch) {
+        [self resultsForSearchString:searchString];
+        [self setSearchResultsVisible:YES];
+    }
+}
+-(void)transparentizeBackground{
+    self.backgroundColor=[UIColor clearColor];
+    self.tokenField.backgroundColor=[UIColor clearColor];
+    self.tokenField.leftView.backgroundColor=[UIColor clearColor];
+    
+    [self.tokenField.layer setShadowColor:[[UIColor clearColor] CGColor]];
+	[self.tokenField.layer setShadowOpacity:1];
+	[self.tokenField.layer setShadowRadius:0];
+
+}
 - (NSString *)description {
 	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
 }
@@ -446,11 +475,13 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize selectedToken = _selectedToken;
 @synthesize tokenizingCharacters = _tokenizingCharacters;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
-
+@synthesize abbr=_abbr;
+static float _height;
 #pragma mark Init
 - (instancetype)initWithFrame:(CGRect)frame {
-	
+	_height=frame.size.height;
     if ((self = [super initWithFrame:frame])){
+        _height=frame.size.height;
 		[self setup];
     }
 	
@@ -547,7 +578,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (UIScrollView *)scrollView {
 	return ([self.superview isKindOfClass:[UIScrollView class]] ? (UIScrollView *)self.superview : nil);
 }
-
+-(NSString*)abbr{
+    if (_abbr) {
+        return _abbr;
+    }else
+        return @"联系人";
+}
 #pragma mark Event Handling
 - (BOOL)becomeFirstResponder {
 	return (_editable ? [super becomeFirstResponder] : NO);
@@ -580,7 +616,22 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
 			if (_tokens.count > 1 && untokSize.width > availableWidth){
-				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+//				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+                NSString* endString= [NSString stringWithFormat:@"... %d %@", titles.count,self.abbr];
+                CGSize endSize=[endString sizeWithFont:[UIFont systemFontOfSize:14]];
+                
+                availableWidth-=endSize.width;
+                
+                NSString* truncatedString=[untokenized truncateToSize:CGSizeMake(availableWidth, 0)
+                                                             withFont:[UIFont systemFontOfSize:14]
+                                                        lineBreakMode:UILineBreakModeTailTruncation];
+                truncatedString=[untokenized truncateWordsToFit:CGSizeMake(availableWidth, 20)
+                                                      withInset:0.0
+                                                      usingFont:[UIFont systemFontOfSize:14]
+                                                   wordSplitter:@","];
+                
+                untokenized=[NSString stringWithFormat:@"%@%@",truncatedString,endString];
+
 			}
 			
 		}
@@ -589,9 +640,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self setResultsModeEnabled:NO];
-	if (_tokens.count < 1 && self.forcePickSearchResult) {
-		[self becomeFirstResponder];
-	}
+//	if (_tokens.count < 1 && self.forcePickSearchResult) {
+//		[self becomeFirstResponder];
+//	}
 }
 
 - (void)didChangeText {
@@ -659,7 +710,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		//[self becomeFirstResponder];
 		
 		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
-		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+		if ([delegate respondsToSelector:@selector(tokenTouchUpInside:)]) {
+            [token addTarget:delegate action:@selector(tokenTouchUpInside:)
+            forControlEvents:UIControlEventTouchUpInside];
+        }else{
+            [token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+        }
 		[self addSubview:token];
 		
 		if (![_tokens containsObject:token]) {
@@ -756,7 +812,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (CGFloat)layoutTokensInternal {
 	
-	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
+//	CGFloat topMargin = floor(self.font.lineHeight * 4 / 7);
+    CGFloat topMargin = floor(_height-self.font.lineHeight)/2;
 	CGFloat leftMargin = self.leftViewWidth + 12;
 	CGFloat hPadding = 8;
 	CGFloat rightMargin = self.rightViewWidth + hPadding;
@@ -867,6 +924,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectMake(_tokenCaret.x + 3, _tokenCaret.y + 2, self.rightView.bounds.size.width, self.rightView.bounds.size.height)];
 			[label setTextColor:[UIColor colorWithWhite:0.75 alpha:1]];
+            label.backgroundColor=[UIColor clearColor];
 			 _placeHolderLabel = label;
             [self addSubview: _placeHolderLabel];
 		}
@@ -904,12 +962,17 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{8, ceilf(self.font.lineHeight * 4 / 7)}, self.leftView.bounds.size});
+//	return ((CGRect){{8, ceilf(self.font.lineHeight * 4 / 7)}, self.leftView.bounds.size});
+    return ((CGRect){{10,floor((_height-self.font.lineHeight)/2)},self.leftView.bounds.size});
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6,
-		bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
+//	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6,
+//		bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
+    float bottomLineY=bounds.size.height-_height;
+    return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6,
+		bottomLineY+(_height - self.rightView.bounds.size.height )/2}, self.rightView.bounds.size});
+
 }
 
 - (CGFloat)leftViewWidth {

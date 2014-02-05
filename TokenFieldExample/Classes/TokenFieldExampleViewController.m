@@ -21,17 +21,20 @@
 }
 
 - (void)viewDidLoad {
-	
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 70000
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
+#endif
 
-	[self.view setBackgroundColor:[UIColor whiteColor]];
+	[self.view setBackgroundColor:[UIColor lightGrayColor]];
 	[self.navigationItem setTitle:@"Example"];
 	
-	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds];
+	_tokenFieldView = [[TITokenFieldView alloc] initWithFrame:self.view.bounds withFieldHeight:25];
 	[_tokenFieldView setSourceArray:[Names listOfNames]];
 	[self.view addSubview:_tokenFieldView];
-	
+	[_tokenFieldView setStopAutoSearch:YES];
+    [_tokenFieldView transparentizeBackground];
+    
 	[_tokenFieldView.tokenField setDelegate:self];
 	[_tokenFieldView setShouldSearchInBackground:NO];
 	[_tokenFieldView setShouldSortResults:NO];
@@ -40,11 +43,23 @@
     [_tokenFieldView.tokenField setPromptText:@"To:"];
 	[_tokenFieldView.tokenField setPlaceholder:@"Type a name"];
 	
+    // ***** UIView contains : Search Button + Add Button
+    UIView* rightView=[[UIView alloc]initWithFrame:CGRectMake(0, 0, 100, 26)];
+    
 	UIButton * addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
 	[addButton addTarget:self action:@selector(showContactsPicker:) forControlEvents:UIControlEventTouchUpInside];
-	[_tokenFieldView.tokenField setRightView:addButton];
+	[_tokenFieldView.tokenField setRightView:rightView];
 	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldChangedEditing:) forControlEvents:UIControlEventEditingDidBegin];
 	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldChangedEditing:) forControlEvents:UIControlEventEditingDidEnd];
+    
+    
+    // ***** Search button
+    UIButton *searchButton=[UIButton buttonWithType:UIButtonTypeDetailDisclosure];
+    [searchButton addTarget:self action:@selector(searchUsers:) forControlEvents:UIControlEventTouchUpInside];
+    [rightView addSubview:searchButton];
+    [rightView addSubview:addButton];
+    searchButton.frame=CGRectMake(0, 0, 26, 26);
+    addButton.frame=CGRectMake(48, 0, 26, 26);
 	
 	_messageView = [[UITextView alloc] initWithFrame:_tokenFieldView.contentView.bounds];
 	[_messageView setScrollEnabled:NO];
@@ -61,7 +76,10 @@
 	// They both do the same thing.
 	[_tokenFieldView becomeFirstResponder];
 }
-
+-(void)searchUsers:(UIButton*)sender{
+    NSString *string=_tokenFieldView.tokenField.text;
+    [_tokenFieldView manualSearch:string];
+}
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
 	return (toInterfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
@@ -73,7 +91,9 @@
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
 	[self resizeViews];
 }
-
+- (void)tokenTouchUpInside:(TIToken *)token{
+	NSLog(@"Touches token:%@,%@",token.title,token.representedObject);
+}
 - (void)showContactsPicker:(id)sender {
 	
 	// Show some kind of contacts picker in here.

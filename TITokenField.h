@@ -63,7 +63,9 @@
 @property (nonatomic, assign) BOOL forcePickSearchResult;
 @property (nonatomic, assign) BOOL shouldSortResults;
 @property (nonatomic, assign) BOOL shouldSearchInBackground;
+@property (nonatomic, assign) BOOL stopAutoSearch;
 @property (nonatomic, readonly) TITokenField * tokenField;
+@property (nonatomic, assign)float tokenFieldHeight;
 @property (nonatomic, readonly) UIView * separator;
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
@@ -71,7 +73,9 @@
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
 
 - (void)updateContentSize;
-
+-(id)initWithFrame:(CGRect)frame withFieldHeight:(float)_height;
+-(void)manualSearch:(NSString*)searchString;
+-(void)transparentizeBackground;
 @end
 
 //==========================================================
@@ -94,6 +98,7 @@ typedef enum {
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic) int tokenLimit;
 @property (nonatomic, strong) NSCharacterSet * tokenizingCharacters;
+@property (nonatomic, strong) NSString* abbr;
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
