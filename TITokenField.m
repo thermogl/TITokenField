@@ -37,6 +37,7 @@
 @synthesize forcePickSearchResult = _forcePickSearchResult;
 @synthesize shouldSortResults = _shouldSortResults;
 @synthesize shouldSearchInBackground = _shouldSearchInBackground;
+@synthesize permittedArrowDirections = _permittedArrowDirections;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
@@ -71,8 +72,9 @@
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
     _forcePickSearchResult = NO;
-    	_shouldSortResults = YES;
-    	_shouldSearchInBackground = NO;
+    _shouldSortResults = YES;
+    _shouldSearchInBackground = NO;
+    _permittedArrowDirections = UIPopoverArrowDirectionUp;
 	_resultsArray = [NSMutableArray array];
 	
 	_tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
@@ -394,8 +396,10 @@
 	
     UITextPosition * position = [_tokenField positionFromPosition:_tokenField.beginningOfDocument offset:2];
 	
-	[_popoverController presentPopoverFromRect:[_tokenField caretRectForPosition:position] inView:_tokenField
-					 permittedArrowDirections:UIPopoverArrowDirectionUp animated:animated];
+	[_popoverController presentPopoverFromRect:[_tokenField caretRectForPosition:position]
+                                        inView:_tokenField
+					 permittedArrowDirections:[self permittedArrowDirections]
+                                      animated:animated];
 }
 
 #pragma mark Other
