@@ -221,6 +221,7 @@
 	
 	if (!cell) cell = [[UITableViewCell alloc] initWithStyle:(subtitle ? UITableViewCellStyleSubtitle : UITableViewCellStyleDefault) reuseIdentifier:CellIdentifier];
 	
+    [cell.imageView setImage:[self searchResultImageForRepresentedObject:representedObject]];
 	[cell.textLabel setText:[self searchResultStringForRepresentedObject:representedObject]];
 	[cell.detailTextLabel setText:subtitle];
 	
@@ -298,6 +299,15 @@
 	
 	return nil;
 }
+
+- (UIImage *)searchResultImageForRepresentedObject:(id)object {
+    if ([_tokenField.delegate respondsToSelector:@selector(tokenField:searchResultImageForRepresentedObject:)]) {
+        return [_tokenField.delegate tokenField:_tokenField searchResultImageForRepresentedObject:object];
+    }
+    
+    return nil;
+}
+
 
 - (void)setSearchResultsVisible:(BOOL)visible {
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
