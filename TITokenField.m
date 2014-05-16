@@ -66,7 +66,7 @@
 - (void)setup {
 	
 	[self setBackgroundColor:[UIColor clearColor]];
-	[self setDelaysContentTouches:YES];
+	[self setDelaysContentTouches:NO];
 	[self setMultipleTouchEnabled:NO];
 	
 	_showAlreadyTokenized = NO;
