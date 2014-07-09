@@ -135,6 +135,7 @@ typedef enum {
 @property (nonatomic, strong) UIColor * tintColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
 @property (nonatomic, assign) CGFloat maxWidth;
+@property (nonatomic, assign) BOOL flatDesign;
 
 - (instancetype)initWithTitle:(NSString *)aTitle;
 - (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object;
