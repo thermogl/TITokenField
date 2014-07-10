@@ -764,10 +764,16 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[_selectedToken setSelected:NO];
 		_selectedToken = nil;
 	}
+	
+	if (_highlightedToken != token) {
+		_highlightedToken = nil;
+	}
+	_highlightedToken = token;
 }
 
 - (void)tokenTouchUpInside:(TIToken *)token {
 	if (_editable) [self selectToken:token];
+	_highlightedToken = nil;
 }
 
 - (CGFloat)layoutTokensInternal {

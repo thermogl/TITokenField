@@ -88,6 +88,7 @@ typedef enum {
 @property (nonatomic, weak) id <TITokenFieldDelegate> delegate;
 @property (weak, nonatomic, readonly) NSArray * tokens;
 @property (weak, nonatomic, readonly) TIToken * selectedToken;
+@property (weak, nonatomic, readonly) TIToken * highlightedToken;
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
 @property (weak, nonatomic, readonly) NSArray * tokenObjects;
 @property (nonatomic, assign) BOOL editable;
