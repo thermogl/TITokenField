@@ -1245,7 +1245,16 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		// Flat design
 		CGContextSaveGState(context);
 		CGContextAddPath(context, innerPath);
-		CGContextSetFillColor(context, CGColorGetComponents(self.tintColor.CGColor));
+		
+		if (drawHighlighted && [self isColorDarker:self.tintColor]) {
+			CGContextSetFillColor(context, CGColorGetComponents([self lighterColorForColor:self.tintColor].CGColor));
+		} else if (drawHighlighted && ![self isColorDarker:self.tintColor]) {
+			CGContextSetFillColor(context, CGColorGetComponents([self darkerColorForColor:self.tintColor].CGColor));
+		} else {
+			CGContextSetFillColor(context, CGColorGetComponents(self.tintColor.CGColor));
+		}
+		
+		
 		CGContextFillPath(context);
 		CGContextRestoreGState(context);
 	} else {
@@ -1389,6 +1398,37 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 	
 	return NO;
+}
+
+- (UIColor *)lighterColorForColor:(UIColor *)c
+{
+    CGFloat r, g, b, a;
+    if ([c getRed:&r green:&g blue:&b alpha:&a])
+        return [UIColor colorWithRed:MIN(r + 0.1, 1.0)
+                               green:MIN(g + 0.1, 1.0)
+                                blue:MIN(b + 0.1, 1.0)
+                               alpha:a];
+    return nil;
+}
+
+- (UIColor *)darkerColorForColor:(UIColor *)c
+{
+    CGFloat r, g, b, a;
+    if ([c getRed:&r green:&g blue:&b alpha:&a])
+        return [UIColor colorWithRed:MAX(r - 0.1, 0.0)
+                               green:MAX(g - 0.1, 0.0)
+                                blue:MAX(b - 0.1, 0.0)
+                               alpha:a];
+    return nil;
+}
+
+- (BOOL)isColorDarker:(UIColor *)color {
+	// Calculates a weighted distance brightness
+	// brightness  =  sqrt( .241 R^2 + .691 G^2 + .068 B^2 )
+	CGFloat * components = CGColorGetComponents(color.CGColor);
+	return sqrt(.241 * pow(components[0],2) +
+				.691 * pow(components[1],2) +
+				.068 * pow(components[3],2))>127.5?YES:NO;
 }
 
 #pragma mark Other
