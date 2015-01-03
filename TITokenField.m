@@ -34,6 +34,7 @@
 @dynamic delegate;
 @synthesize showAlreadyTokenized = _showAlreadyTokenized;
 @synthesize searchSubtitles = _searchSubtitles;
+@synthesize subtitleIsPhoneNumber = _subtitleIsPhoneNumber;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
 @synthesize shouldSortResults = _shouldSortResults;
 @synthesize shouldSearchInBackground = _shouldSearchInBackground;
@@ -71,6 +72,7 @@
 	
 	_showAlreadyTokenized = NO;
     _searchSubtitles = YES;
+    _subtitleIsPhoneNumber = NO;
     _forcePickSearchResult = NO;
     _shouldSortResults = YES;
     _shouldSearchInBackground = NO;
@@ -359,7 +361,11 @@
 
     NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
     NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-    if (!querySubtitle || !_searchSubtitles) querySubtitle = @"";
+    if (!querySubtitle || !_searchSubtitles) {
+        querySubtitle = @"";
+    } else if (_subtitleIsPhoneNumber) {
+        querySubtitle = [querySubtitle stringByReplacingOccurrencesOfString:@" " withString:@""];
+    }
     
     if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
