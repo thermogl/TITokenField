@@ -130,15 +130,19 @@
 }
 
 #pragma mark Property Overrides
+- (void) setChildFrames:(CGRect)frame {
+    CGFloat width = frame.size.width;
+    [_separator setFrame:((CGRect){_separator.frame.origin, {width, _separator.bounds.size.height}})];
+    [_resultsTable setFrame:((CGRect){_resultsTable.frame.origin, {width, _resultsTable.bounds.size.height}})];
+    [_contentView setFrame:((CGRect){_contentView.frame.origin, {width, (frame.size.height - CGRectGetMaxY(_tokenField.frame))}})];
+    [_tokenField setFrame:((CGRect){_tokenField.frame.origin, {width, _tokenField.bounds.size.height}})];
+}
+
 - (void)setFrame:(CGRect)frame {
 	
 	[super setFrame:frame];
 	
-	CGFloat width = frame.size.width;
-	[_separator setFrame:((CGRect){_separator.frame.origin, {width, _separator.bounds.size.height}})];
-	[_resultsTable setFrame:((CGRect){_resultsTable.frame.origin, {width, _resultsTable.bounds.size.height}})];
-	[_contentView setFrame:((CGRect){_contentView.frame.origin, {width, (frame.size.height - CGRectGetMaxY(_tokenField.frame))}})];
-	[_tokenField setFrame:((CGRect){_tokenField.frame.origin, {width, _tokenField.bounds.size.height}})];
+    [self setChildFrames:frame];
 	
 	if (_popoverController.popoverVisible){
 		[_popoverController dismissPopoverAnimated:NO];
@@ -169,6 +173,8 @@
 	
 	[super layoutSubviews];
 	
+    [self setChildFrames:self.frame];
+    
 	CGFloat relativeFieldHeight = CGRectGetMaxY(_tokenField.frame) - self.contentOffset.y;
 	CGFloat newHeight = self.bounds.size.height - relativeFieldHeight;
 	if (newHeight > -1) [_resultsTable setFrame:((CGRect){_resultsTable.frame.origin, {_resultsTable.bounds.size.width, newHeight}})];
