@@ -839,7 +839,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	if (self.bounds.size.height != newHeight){
 		
 		// Animating this seems to invoke the triple-tap-delete-key-loop-problem-thing™
-		[UIView animateWithDuration:(animated ? 0.3 : 0) animations:^{
+		[UIView animateWithDuration:(animated && _editable ? 0.3 : 0) animations:^{
 			[self setFrame:((CGRect){self.frame.origin, {self.bounds.size.width, newHeight}})];
 			[self sendActionsForControlEvents:(UIControlEvents)TITokenFieldControlEventFrameWillChange];
 			
