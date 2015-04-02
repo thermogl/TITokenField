@@ -704,28 +704,32 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 }
 
-- (void)removeToken:(TIToken *)token {
-	
-	if (token == _selectedToken) [self deselectSelectedToken];
-	
-	BOOL shouldRemove = YES;
-	if ([delegate respondsToSelector:@selector(tokenField:willRemoveToken:)]){
-		shouldRemove = [delegate tokenField:self willRemoveToken:token];
-	}
-	
-	if (shouldRemove){
-		
-		[token removeFromSuperview];
-		[_tokens removeObject:token];
-        [self layoutTokensAnimated:YES];
+- (void)deselectTokenIfSelected:(TIToken *)token {
+    if (token == _selectedToken) [self deselectSelectedToken];
+}
 
-		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
-			[delegate tokenField:self didRemoveToken:token];
-		}
-		
-		[self showOrHidePlaceHolderLabel];
-		[self setResultsModeEnabled:_forcePickSearchResult];
-	}
+- (void)removeToken:(TIToken *)token {
+
+    BOOL shouldRemove = YES;
+    if ([delegate respondsToSelector:@selector(tokenField:willRemoveToken:)]){
+        shouldRemove = [delegate tokenField:self willRemoveToken:token];
+    }
+
+    if (!shouldRemove) {
+        [self deselectTokenIfSelected:token];
+        return;
+    }
+
+    [token removeFromSuperview];
+    [_tokens removeObject:token];
+    [self deselectTokenIfSelected:token];
+
+    if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
+        [delegate tokenField:self didRemoveToken:token];
+    }
+
+    [self showOrHidePlaceHolderLabel];
+    [self setResultsModeEnabled:_forcePickSearchResult];
 }
 
 - (void)removeAllTokens {
