@@ -11,6 +11,7 @@
 
 @interface TITokenField ()
 @property (nonatomic, assign) BOOL forcePickSearchResult;
+@property (nonatomic, assign) BOOL alwaysShowSearchResult;
 @end
 
 //==========================================================
@@ -36,6 +37,7 @@
 @synthesize searchSubtitles = _searchSubtitles;
 @synthesize subtitleIsPhoneNumber = _subtitleIsPhoneNumber;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
+@synthesize alwaysShowSearchResult = _alwaysShowSearchResult;
 @synthesize shouldSortResults = _shouldSortResults;
 @synthesize shouldSearchInBackground = _shouldSearchInBackground;
 @synthesize permittedArrowDirections = _permittedArrowDirections;
@@ -74,6 +76,7 @@
     _searchSubtitles = YES;
     _subtitleIsPhoneNumber = NO;
     _forcePickSearchResult = NO;
+    _alwaysShowSearchResult = NO;
     _shouldSortResults = YES;
     _shouldSearchInBackground = NO;
     _permittedArrowDirections = UIPopoverArrowDirectionUp;
@@ -168,6 +171,13 @@
     _forcePickSearchResult = forcePickSearchResult;
 }
 
+- (void)setAlwaysShowSearchResult:(BOOL)alwaysShowSearchResult
+{
+    _tokenField.alwaysShowSearchResult = alwaysShowSearchResult;
+    _alwaysShowSearchResult = alwaysShowSearchResult;
+    if (_alwaysShowSearchResult) [self resultsForSearchString:_tokenField.text];
+}
+
 #pragma mark Event Handling
 - (void)layoutSubviews {
 	
@@ -243,13 +253,13 @@
     [_tokenField addToken:token];
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
-	[self setSearchResultsVisible:NO];
+	if (!_alwaysShowSearchResult) [self setSearchResultsVisible:NO];
 }
 
 #pragma mark TextField Methods
 
 - (void)tokenFieldDidBeginEditing:(TITokenField *)field {
-	[_resultsArray removeAllObjects];
+    if (!_alwaysShowSearchResult) [_resultsArray removeAllObjects];
 	[_resultsTable reloadData];
 }
 
@@ -260,7 +270,7 @@
 - (void)tokenFieldTextDidChange:(TITokenField *)field {
     [self resultsForSearchString:_tokenField.text];
     
-    if (_forcePickSearchResult) [self setSearchResultsVisible:YES];
+    if (_forcePickSearchResult || _alwaysShowSearchResult) [self setSearchResultsVisible:YES];
 	else [self setSearchResultsVisible:(_resultsArray.count > 0)];
 }
 
@@ -343,7 +353,7 @@
 
 	searchString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
-	if (searchString.length || _forcePickSearchResult){
+	if (searchString.length || _forcePickSearchResult || _alwaysShowSearchResult){
 
         if ([_tokenField.delegate respondsToSelector:@selector(tokenField:shouldUseCustomSearchForSearchString:)] && [_tokenField.delegate tokenField:_tokenField shouldUseCustomSearchForSearchString:searchString]) {
             if ([_tokenField.delegate respondsToSelector:@selector(tokenField:performCustomSearchForSearchString:withCompletionHandler:)]) {
@@ -375,7 +385,8 @@
     
     if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-        (_forcePickSearchResult && searchString.length == 0)){
+        (_forcePickSearchResult && searchString.length == 0) ||
+        (_alwaysShowSearchResult && searchString.length == 0)){
 
       __block BOOL shouldAdd = ![resultsToAdd containsObject:sourceObject];
       if (shouldAdd && !_showAlreadyTokenized){
@@ -472,6 +483,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize selectedToken = _selectedToken;
 @synthesize tokenizingCharacters = _tokenizingCharacters;
 @synthesize forcePickSearchResult = _forcePickSearchResult;
+@synthesize alwaysShowSearchResult = _alwaysShowSearchResult;
 
 #pragma mark Init
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -724,7 +736,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		}
 		
 		[self showOrHidePlaceHolderLabel];
-		[self setResultsModeEnabled:_forcePickSearchResult];
+		[self setResultsModeEnabled:_forcePickSearchResult || _alwaysShowSearchResult];
 	}
 }
 
