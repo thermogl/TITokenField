@@ -477,6 +477,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 @synthesize delegate = delegate;
 @synthesize editable = _editable;
+@synthesize showShadow = _showShadow;
 @synthesize resultsModeEnabled = _resultsModeEnabled;
 @synthesize removesTokensOnEndEditing = _removesTokensOnEndEditing;
 @synthesize numberOfLines = _numberOfLines;
@@ -516,18 +517,16 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self addTarget:self action:@selector(didBeginEditing) forControlEvents:UIControlEventEditingDidBegin];
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
-	
-	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
-	[self.layer setShadowOpacity:0.6];
-	[self.layer setShadowRadius:12];
-	
+
 	[self setPromptText:@"To:"];
     	[self setText:kTextEmpty];
 	
 	_internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
 	[_internalDelegate setTokenField:self];
 	[super setDelegate:_internalDelegate];
-	
+
+    [self setShowShadow:YES];
+    
 	_tokens = [NSMutableArray array];
 	_editable = YES;
 	_removesTokensOnEndEditing = YES;
@@ -538,8 +537,19 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 #pragma mark Property Overrides
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
-	[self.layer setShadowPath:[[UIBezierPath bezierPathWithRect:self.bounds] CGPath]];
+    [self.layer setShadowPath:[[UIBezierPath bezierPathWithRect:self.bounds] CGPath]];
 	[self layoutTokensAnimated:NO];
+}
+
+- (void)setShowShadow:(BOOL)showShadow {
+    _showShadow = showShadow;
+    if (showShadow) {
+        [self.layer setShadowColor:[[UIColor blackColor] CGColor]];
+        [self.layer setShadowOpacity:0.6];
+        [self.layer setShadowRadius:12];
+    } else {
+        [self.layer setShadowColor:[[UIColor clearColor] CGColor]];
+    }
 }
 
 - (void)setText:(NSString *)text {

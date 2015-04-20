@@ -1,6 +1,6 @@
 {
   "name": "TITokenField",
-  "version": "0.9.5.1",
+  "version": "0.9.5.2",
   "summary": "An iOS version of the NSTokenField (See To: field in Mail and Messages).",
   "homepage": "https://github.com/Batterii/TITokenField",
   "license": {
