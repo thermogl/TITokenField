@@ -903,7 +903,6 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)setPromptColor:(UIColor *)promptColor
 {
-    NSLog(@"Setting prompt color");
     _promptColor = promptColor;
     [self setPromptText:_promptText];
 }
