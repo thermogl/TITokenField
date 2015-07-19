@@ -593,7 +593,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)didBeginEditing {
     if (_removesTokensOnEndEditing) {
-        	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
+        	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addTokenToView:token];}];
     }
 }
 
@@ -695,25 +695,28 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	if (shouldAdd){
 		
 		//[self becomeFirstResponder];
-		
-		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
-		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
-		[self addSubview:token];
-		
 		if (![_tokens containsObject:token]) {
 			[_tokens addObject:token];
-            [self layoutTokensAnimated:YES];
             
 			if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
 				[delegate tokenField:self didAddToken:token];
 			}
-            
-			[self showOrHidePlaceHolderLabel];
 		}
-		
-		[self setResultsModeEnabled:NO];
-		[self deselectSelectedToken];
+
+        [self addTokenToView:token];
+
 	}
+}
+
+- (void) addTokenToView:(TIToken *)token
+{
+    [token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
+    [token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:token];
+    [self layoutTokensAnimated:YES];
+    [self showOrHidePlaceHolderLabel];
+    [self setResultsModeEnabled:NO];
+    [self deselectSelectedToken];
 }
 
 - (void)removeToken:(TIToken *)token {
