@@ -98,6 +98,9 @@ typedef enum {
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic) int tokenLimit;
 @property (nonatomic, strong) NSCharacterSet * tokenizingCharacters;
+@property (strong, nonatomic) UIColor *promptColor;
+// Pass nil to hide label
+@property (strong, nonatomic) NSString *promptText;
 
 - (void)addToken:(TIToken *)title;
 - (TIToken *)addTokenWithTitle:(NSString *)title;
@@ -114,9 +117,6 @@ typedef enum {
 
 - (void)layoutTokensAnimated:(BOOL)animated;
 - (void)setResultsModeEnabled:(BOOL)enabled animated:(BOOL)animated;
-
-// Pass nil to hide label
-- (void)setPromptText:(NSString *)aText;
 
 @end
 

@@ -522,7 +522,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self.layer setShadowRadius:12];
 	
 	[self setPromptText:@"To:"];
-    	[self setText:kTextEmpty];
+    [self setText:kTextEmpty];
+    self.promptColor = [UIColor colorWithWhite:0.5 alpha:1];
 	
 	_internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
 	[_internalDelegate setTokenField:self];
@@ -879,17 +880,18 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 #pragma mark Left / Right view stuff
 - (void)setPromptText:(NSString *)text {
 	
+    _promptText = text;
 	if (text){
 		
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
 			[self setLeftView:label];
 
 			[self setLeftViewMode:UITextFieldViewModeAlways];
 		}
-		
+
+        [label setTextColor:_promptColor];
 		[label setText:text];
 		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
 		[label sizeToFit];
@@ -900,6 +902,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self layoutTokensAnimated:YES];
+}
+
+- (void)setPromptColor:(UIColor *)promptColor
+{
+    _promptColor = promptColor;
+    [self setPromptText:_promptText];
 }
 
 - (void)setPlaceholder:(NSString *)placeholder {
