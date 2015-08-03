@@ -40,11 +40,13 @@
 @synthesize alwaysShowSearchResult = _alwaysShowSearchResult;
 @synthesize shouldSortResults = _shouldSortResults;
 @synthesize shouldSearchInBackground = _shouldSearchInBackground;
+@synthesize shouldAlwaysShowSeparator = _shouldAlwaysShowSeparator;
 @synthesize permittedArrowDirections = _permittedArrowDirections;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
 @synthesize separator = _separator;
+@synthesize tableHeader = _tableHeader;
 @synthesize sourceArray = _sourceArray;
 
 #pragma mark Init
@@ -79,6 +81,7 @@
     _alwaysShowSearchResult = NO;
     _shouldSortResults = YES;
     _shouldSearchInBackground = NO;
+    _shouldAlwaysShowSeparator = YES;
     _permittedArrowDirections = UIPopoverArrowDirectionUp;
 	_resultsArray = [NSMutableArray array];
 	
@@ -95,8 +98,12 @@
 	
 	_separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
 	[_separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
-	[self addSubview:_separator];
-	
+
+    _tableHeader = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 1)];
+    [_tableHeader setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
+
+    [self addSubview:_separator];
+    
 	// This view is created for convenience, because it resizes and moves with the rest of the subviews.
 	_contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width,
 														   self.bounds.size.height - tokenFieldBottom - 1)];
@@ -111,7 +118,7 @@
 		[tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
 		
 		_resultsTable = tableViewController.tableView;
-		
+        
 		_popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
 	}
 	else
@@ -127,7 +134,12 @@
 		_popoverController = nil;
 	}
 	
-	[self bringSubviewToFront:_separator];
+    if (_shouldAlwaysShowSeparator) {
+        [self bringSubviewToFront:_separator];
+    } else {
+        _separator.hidden = YES;
+        _resultsTable.tableHeaderView = _tableHeader;
+    }
 	[self bringSubviewToFront:_tokenField];
 	[self updateContentSize];
 }
@@ -176,6 +188,19 @@
     _tokenField.alwaysShowSearchResult = alwaysShowSearchResult;
     _alwaysShowSearchResult = alwaysShowSearchResult;
     if (_alwaysShowSearchResult) [self resultsForSearchString:_tokenField.text];
+}
+
+- (void) setShouldAlwaysShowSeparator:(BOOL)shouldAlwaysShowSeparator
+{
+    _shouldAlwaysShowSeparator = shouldAlwaysShowSeparator;
+    if (_shouldAlwaysShowSeparator) {
+        _resultsTable.tableHeaderView = nil;
+        _separator.hidden = NO;
+        [self bringSubviewToFront:_separator];
+    } else {
+        _separator.hidden = YES;
+        _resultsTable.tableHeaderView = _tableHeader;
+    }
 }
 
 #pragma mark Event Handling
