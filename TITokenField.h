@@ -66,9 +66,11 @@
 @property (nonatomic, assign) BOOL alwaysShowSearchResult;
 @property (nonatomic, assign) BOOL shouldSortResults;
 @property (nonatomic, assign) BOOL shouldSearchInBackground;
+@property (nonatomic, assign) BOOL shouldAlwaysShowSeparator;
 @property (nonatomic, assign) UIPopoverArrowDirection permittedArrowDirections;
 @property (nonatomic, readonly) TITokenField * tokenField;
 @property (nonatomic, readonly) UIView * separator;
+@property (nonatomic, readonly) UIView * tableHeader;
 @property (nonatomic, readonly) UITableView * resultsTable;
 @property (nonatomic, readonly) UIView * contentView;
 @property (nonatomic, copy) NSArray * sourceArray;
