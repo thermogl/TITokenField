@@ -40,11 +40,13 @@
 @synthesize alwaysShowSearchResult = _alwaysShowSearchResult;
 @synthesize shouldSortResults = _shouldSortResults;
 @synthesize shouldSearchInBackground = _shouldSearchInBackground;
+@synthesize shouldAlwaysShowSeparator = _shouldAlwaysShowSeparator;
 @synthesize permittedArrowDirections = _permittedArrowDirections;
 @synthesize tokenField = _tokenField;
 @synthesize resultsTable = _resultsTable;
 @synthesize contentView = _contentView;
 @synthesize separator = _separator;
+@synthesize tableHeader = _tableHeader;
 @synthesize sourceArray = _sourceArray;
 
 #pragma mark Init
@@ -79,6 +81,7 @@
     _alwaysShowSearchResult = NO;
     _shouldSortResults = YES;
     _shouldSearchInBackground = NO;
+    _shouldAlwaysShowSeparator = YES;
     _permittedArrowDirections = UIPopoverArrowDirectionUp;
 	_resultsArray = [NSMutableArray array];
 	
@@ -95,8 +98,12 @@
 	
 	_separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
 	[_separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
-	[self addSubview:_separator];
-	
+
+    _tableHeader = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 1)];
+    [_tableHeader setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
+
+    [self addSubview:_separator];
+    
 	// This view is created for convenience, because it resizes and moves with the rest of the subviews.
 	_contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width,
 														   self.bounds.size.height - tokenFieldBottom - 1)];
@@ -111,7 +118,7 @@
 		[tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
 		
 		_resultsTable = tableViewController.tableView;
-		
+        
 		_popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
 	}
 	else
@@ -127,7 +134,12 @@
 		_popoverController = nil;
 	}
 	
-	[self bringSubviewToFront:_separator];
+    if (_shouldAlwaysShowSeparator) {
+        [self bringSubviewToFront:_separator];
+    } else {
+        _separator.hidden = YES;
+        _resultsTable.tableHeaderView = _tableHeader;
+    }
 	[self bringSubviewToFront:_tokenField];
 	[self updateContentSize];
 }
@@ -176,6 +188,19 @@
     _tokenField.alwaysShowSearchResult = alwaysShowSearchResult;
     _alwaysShowSearchResult = alwaysShowSearchResult;
     if (_alwaysShowSearchResult) [self resultsForSearchString:_tokenField.text];
+}
+
+- (void) setShouldAlwaysShowSeparator:(BOOL)shouldAlwaysShowSeparator
+{
+    _shouldAlwaysShowSeparator = shouldAlwaysShowSeparator;
+    if (_shouldAlwaysShowSeparator) {
+        _resultsTable.tableHeaderView = nil;
+        _separator.hidden = NO;
+        [self bringSubviewToFront:_separator];
+    } else {
+        _separator.hidden = YES;
+        _resultsTable.tableHeaderView = _tableHeader;
+    }
 }
 
 #pragma mark Event Handling
@@ -519,7 +544,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
 
 	[self setPromptText:@"To:"];
-    	[self setText:kTextEmpty];
+    [self setText:kTextEmpty];
+    self.promptColor = [UIColor colorWithWhite:0.5 alpha:1];
 	
 	_internalDelegate = [[TITokenFieldInternalDelegate alloc] init];
 	[_internalDelegate setTokenField:self];
@@ -603,7 +629,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)didBeginEditing {
     if (_removesTokensOnEndEditing) {
-        	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addToken:token];}];
+        	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){[self addTokenToView:token];}];
     }
 }
 
@@ -705,25 +731,28 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	if (shouldAdd){
 		
 		//[self becomeFirstResponder];
-		
-		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
-		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
-		[self addSubview:token];
-		
 		if (![_tokens containsObject:token]) {
 			[_tokens addObject:token];
-            [self layoutTokensAnimated:YES];
             
 			if ([delegate respondsToSelector:@selector(tokenField:didAddToken:)]){
 				[delegate tokenField:self didAddToken:token];
 			}
-            
-			[self showOrHidePlaceHolderLabel];
 		}
-		
-		[self setResultsModeEnabled:NO];
-		[self deselectSelectedToken];
+
+        [self addTokenToView:token];
+
 	}
+}
+
+- (void) addTokenToView:(TIToken *)token
+{
+    [token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
+    [token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:token];
+    [self layoutTokensAnimated:YES];
+    [self showOrHidePlaceHolderLabel];
+    [self setResultsModeEnabled:NO];
+    [self deselectSelectedToken];
 }
 
 - (void)removeToken:(TIToken *)token {
@@ -886,17 +915,18 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 #pragma mark Left / Right view stuff
 - (void)setPromptText:(NSString *)text {
 	
+    _promptText = text;
 	if (text){
 		
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
-			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
 			[self setLeftView:label];
 
 			[self setLeftViewMode:UITextFieldViewModeAlways];
 		}
-		
+
+        [label setTextColor:_promptColor];
 		[label setText:text];
 		[label setFont:[UIFont systemFontOfSize:(self.font.pointSize + 1)]];
 		[label sizeToFit];
@@ -907,6 +937,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	[self layoutTokensAnimated:YES];
+}
+
+- (void)setPromptColor:(UIColor *)promptColor
+{
+    _promptColor = promptColor;
+    [self setPromptText:_promptText];
 }
 
 - (void)setPlaceholder:(NSString *)placeholder {
