@@ -751,7 +751,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
     [self addSubview:token];
     [self layoutTokensAnimated:YES];
     [self showOrHidePlaceHolderLabel];
-    [self setResultsModeEnabled:NO];
+    [self setResultsModeEnabled:_alwaysShowSearchResult];
     [self deselectSelectedToken];
 }
 
