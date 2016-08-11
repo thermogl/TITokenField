@@ -94,6 +94,7 @@ typedef enum {
 @property (weak, nonatomic, readonly) TIToken * selectedToken;
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
 @property (weak, nonatomic, readonly) NSArray * tokenObjects;
+@property (nonatomic, assign) BOOL showShadow;
 @property (nonatomic, assign) BOOL editable;
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
