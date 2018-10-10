@@ -402,21 +402,21 @@
 
     NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
     NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-    if (!querySubtitle || !_searchSubtitles) {
+    if (!querySubtitle || !self->_searchSubtitles) {
         querySubtitle = @"";
-    } else if (_subtitleIsPhoneNumber) {
+    } else if (self->_subtitleIsPhoneNumber) {
         querySubtitle = [querySubtitle stringByReplacingOccurrencesOfString:@" " withString:@""];
     }
     
     if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-        (_forcePickSearchResult && searchString.length == 0) ||
-        (_alwaysShowSearchResult && searchString.length == 0)){
+        (self->_forcePickSearchResult && searchString.length == 0) ||
+        (self->_alwaysShowSearchResult && searchString.length == 0)){
 
       __block BOOL shouldAdd = ![resultsToAdd containsObject:sourceObject];
-      if (shouldAdd && !_showAlreadyTokenized){
+      if (shouldAdd && !self->_showAlreadyTokenized){
 
-        [_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+        [self->_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
           if ([token.representedObject isEqual:sourceObject]){
             shouldAdd = NO;
             *secondStop = YES;
@@ -847,23 +847,23 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		
 		[token setFont:self.font];
-		[token setMaxWidth:(self.bounds.size.width - rightMargin - (_numberOfLines > 1 ? hPadding : leftMargin))];
+		[token setMaxWidth:(self.bounds.size.width - rightMargin - (self->_numberOfLines > 1 ? hPadding : leftMargin))];
 		
 		if (token.superview){
 			
-			if (_tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
-				_numberOfLines++;
-				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
-				_tokenCaret.y += lineHeight;
+			if (self->_tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
+				self->_numberOfLines++;
+				self->_tokenCaret.x = (self->_numberOfLines > 1 ? hPadding : leftMargin);
+				self->_tokenCaret.y += lineHeight;
 			}
 			
-			[token setFrame:(CGRect){_tokenCaret, token.bounds.size}];
-			_tokenCaret.x += token.bounds.size.width + 4;
+			[token setFrame:(CGRect){self->_tokenCaret, token.bounds.size}];
+			self->_tokenCaret.x += token.bounds.size.width + 4;
 			
-			if (self.bounds.size.width - _tokenCaret.x - rightMargin < 50){
-				_numberOfLines++;
-				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
-				_tokenCaret.y += lineHeight;
+			if (self.bounds.size.width - self->_tokenCaret.x - rightMargin < 50){
+				self->_numberOfLines++;
+				self->_tokenCaret.x = (self->_numberOfLines > 1 ? hPadding : leftMargin);
+				self->_tokenCaret.y += lineHeight;
 			}
 		}
 	}];
