@@ -462,7 +462,7 @@
 
 #pragma mark Other
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
+    return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %lu>", self, (unsigned long)self.tokenTitles.count];
 }
 
 - (void)dealloc {
@@ -654,7 +654,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
 			if (_tokens.count > 1 && untokSize.width > availableWidth){
-				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+                untokenized = [NSString stringWithFormat:@"%lu recipients", (unsigned long)titles.count];
 			}
 			
 		}
