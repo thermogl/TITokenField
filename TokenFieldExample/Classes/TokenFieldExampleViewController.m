@@ -22,8 +22,7 @@
 
 - (void)viewDidLoad {
 	
-    if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
-        self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.edgesForExtendedLayout = UIRectEdgeNone;
 
 	[self.view setBackgroundColor:[UIColor whiteColor]];
 	[self.navigationItem setTitle:@"Example"];
@@ -35,7 +34,7 @@
 	[_tokenFieldView.tokenField setDelegate:self];
 	[_tokenFieldView setShouldSearchInBackground:NO];
 	[_tokenFieldView setShouldSortResults:NO];
-	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
+	[_tokenFieldView.tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:(UIControlEvents)TITokenFieldControlEventFrameDidChange];
 	[_tokenFieldView.tokenField setTokenizingCharacters:[NSCharacterSet characterSetWithCharactersInString:@",;."]]; // Default is a comma
     [_tokenFieldView.tokenField setPromptText:@"To:"];
 	[_tokenFieldView.tokenField setPlaceholder:@"Type a name"];
@@ -62,16 +61,14 @@
 	[_tokenFieldView becomeFirstResponder];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-	return (toInterfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-	[UIView animateWithDuration:duration animations:^{[self resizeViews];}]; // Make it pweeetty.
-}
-
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-	[self resizeViews];
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        [self resizeViews];
+    } completion:nil];
 }
 
 - (void)showContactsPicker:(id)sender {
@@ -162,26 +159,25 @@
         //Send a Github API request to retrieve the Contributors of this project.
         //Using a syncrhonous request in a Background Thread to not over-complexify the demo project
         NSURLRequest * urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://api.github.com/repos/thermogl/TITokenField/contributors"]];
-        NSURLResponse * response = nil;
-        NSError * error = nil;
-        NSData * data = [NSURLConnection sendSynchronousRequest:urlRequest returningResponse:&response error:&error];
 
-        NSMutableArray *results = [[NSMutableArray alloc] init];
-
-        if (error == nil) {
-            NSError *errorJSON;
-            NSArray *contributors = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&errorJSON];
-
-            for (NSDictionary *user in contributors) {
-                [results addObject:[user objectForKey:@"login"]];
+        [[NSURLSession alloc] dataTaskWithRequest:urlRequest completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            NSMutableArray *results = [[NSMutableArray alloc] init];
+            
+            if (error == nil) {
+                NSError *errorJSON;
+                NSArray *contributors = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&errorJSON];
+                
+                for (NSDictionary *user in contributors) {
+                    [results addObject:[user objectForKey:@"login"]];
+                }
             }
-        }
-
-
-        dispatch_async(dispatch_get_main_queue(), ^(void) {
-            //Finally call the completionHandler with the results array!
-            completionHandler(results);
-        });
+            
+            
+            dispatch_async(dispatch_get_main_queue(), ^(void) {
+                //Finally call the completionHandler with the results array!
+                completionHandler(results);
+            });
+        }];
     });
 }
 

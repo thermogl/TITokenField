@@ -402,21 +402,21 @@
 
     NSString * query = [self searchResultStringForRepresentedObject:sourceObject];
     NSString * querySubtitle = [self searchResultSubtitleForRepresentedObject:sourceObject];
-    if (!querySubtitle || !_searchSubtitles) {
+    if (!querySubtitle || !self->_searchSubtitles) {
         querySubtitle = @"";
-    } else if (_subtitleIsPhoneNumber) {
+    } else if (self->_subtitleIsPhoneNumber) {
         querySubtitle = [querySubtitle stringByReplacingOccurrencesOfString:@" " withString:@""];
     }
     
     if ([query rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
 				[querySubtitle rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound ||
-        (_forcePickSearchResult && searchString.length == 0) ||
-        (_alwaysShowSearchResult && searchString.length == 0)){
+        (self->_forcePickSearchResult && searchString.length == 0) ||
+        (self->_alwaysShowSearchResult && searchString.length == 0)){
 
       __block BOOL shouldAdd = ![resultsToAdd containsObject:sourceObject];
-      if (shouldAdd && !_showAlreadyTokenized){
+      if (shouldAdd && !self->_showAlreadyTokenized){
 
-        [_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
+        [self->_tokenField.tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *secondStop){
           if ([token.representedObject isEqual:sourceObject]){
             shouldAdd = NO;
             *secondStop = YES;
@@ -462,7 +462,7 @@
 
 #pragma mark Other
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %d>", self, self.tokenTitles.count];
+    return [NSString stringWithFormat:@"<TITokenFieldView %p; Token count = %lu>", self, (unsigned long)self.tokenTitles.count];
 }
 
 - (void)dealloc {
@@ -650,11 +650,11 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 			NSArray * titles = self.tokenTitles;
 			untokenized = [titles componentsJoinedByString:@", "];
 			
-			CGSize untokSize = [untokenized sizeWithFont:[UIFont systemFontOfSize:14]];
+            CGSize untokSize = [untokenized sizeWithAttributes:@{NSFontAttributeName: [UIFont systemFontOfSize:14]}];
 			CGFloat availableWidth = self.bounds.size.width - self.leftView.bounds.size.width - self.rightView.bounds.size.width;
 			
 			if (_tokens.count > 1 && untokSize.width > availableWidth){
-				untokenized = [NSString stringWithFormat:@"%d recipients", titles.count];
+                untokenized = [NSString stringWithFormat:@"%lu recipients", (unsigned long)titles.count];
 			}
 			
 		}
@@ -847,23 +847,23 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[_tokens enumerateObjectsUsingBlock:^(TIToken * token, NSUInteger idx, BOOL *stop){
 		
 		[token setFont:self.font];
-		[token setMaxWidth:(self.bounds.size.width - rightMargin - (_numberOfLines > 1 ? hPadding : leftMargin))];
+		[token setMaxWidth:(self.bounds.size.width - rightMargin - (self->_numberOfLines > 1 ? hPadding : leftMargin))];
 		
 		if (token.superview){
 			
-			if (_tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
-				_numberOfLines++;
-				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
-				_tokenCaret.y += lineHeight;
+			if (self->_tokenCaret.x + token.bounds.size.width + rightMargin > self.bounds.size.width){
+				self->_numberOfLines++;
+				self->_tokenCaret.x = (self->_numberOfLines > 1 ? hPadding : leftMargin);
+				self->_tokenCaret.y += lineHeight;
 			}
 			
-			[token setFrame:(CGRect){_tokenCaret, token.bounds.size}];
-			_tokenCaret.x += token.bounds.size.width + 4;
+			[token setFrame:(CGRect){self->_tokenCaret, token.bounds.size}];
+			self->_tokenCaret.x += token.bounds.size.width + 4;
 			
-			if (self.bounds.size.width - _tokenCaret.x - rightMargin < 50){
-				_numberOfLines++;
-				_tokenCaret.x = (_numberOfLines > 1 ? hPadding : leftMargin);
-				_tokenCaret.y += lineHeight;
+			if (self.bounds.size.width - self->_tokenCaret.x - rightMargin < 50){
+				self->_numberOfLines++;
+				self->_tokenCaret.x = (self->_numberOfLines > 1 ? hPadding : leftMargin);
+				self->_tokenCaret.y += lineHeight;
 			}
 		}
 	}];
@@ -1125,7 +1125,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 CGFloat const hTextPadding = 14;
 CGFloat const vTextPadding = 8;
 CGFloat const kDisclosureThickness = 2.5;
-UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
+NSLineBreakMode const kLineBreakMode = NSLineBreakByTruncatingTail;
 
 @interface TIToken (Private)
 CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath);
@@ -1263,10 +1263,19 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		accessoryWidth += floorf(hTextPadding / 2);
 	}
 	
-	CGSize titleSize = [_title sizeWithFont:_font forWidth:(_maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	CGFloat height = floorf(titleSize.height + vTextPadding);
+    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    paragraphStyle.lineBreakMode = kLineBreakMode;
+
+    CGRect titleFrame = [_title boundingRectWithSize:(CGSize){(_maxWidth - hTextPadding - accessoryWidth), CGFLOAT_MAX}
+                                             options:NSStringDrawingUsesLineFragmentOrigin
+                                          attributes:@{
+                                                       NSFontAttributeName: _font,
+                                                       NSParagraphStyleAttributeName: paragraphStyle
+                                                       }
+                                             context:nil];
+	CGFloat height = floorf(titleFrame.size.height + vTextPadding);
 	
-    return (CGSize){MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height};
+    return (CGSize){MAX(floorf(titleFrame.size.width + hTextPadding + accessoryWidth), height - 3), height};
 }
 
 #pragma mark Drawing
@@ -1372,13 +1381,23 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGColorSpaceRelease(colorspace);
 	
-	CGSize titleSize = [_title sizeWithFont:_font forWidth:(_maxWidth - hTextPadding - accessoryWidth) lineBreakMode:kLineBreakMode];
-	CGFloat vPadding = floor((self.bounds.size.height - titleSize.height) / 2);
+    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    paragraphStyle.lineBreakMode = kLineBreakMode;
+    NSDictionary *attributes = @{
+                                 NSFontAttributeName: _font,
+                                 NSParagraphStyleAttributeName: paragraphStyle
+                                 };
+
+	CGRect titleFrame = [_title boundingRectWithSize:(CGSize){(_maxWidth - hTextPadding - accessoryWidth), CGFLOAT_MAX}
+                                             options:NSStringDrawingUsesLineFragmentOrigin
+                                          attributes:attributes
+                                             context:nil];
+	CGFloat vPadding = floor((self.bounds.size.height - titleFrame.size.height) / 2);
 	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding - accessoryWidth);
 	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
 	
 	CGContextSetFillColorWithColor(context, (drawHighlighted ? _highlightedTextColor : _textColor).CGColor);
-	[_title drawInRect:textBounds withFont:_font lineBreakMode:kLineBreakMode];
+	[_title drawInRect:textBounds withAttributes:attributes];
 }
 
 CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
