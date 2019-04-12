@@ -92,6 +92,7 @@ typedef enum {
 @property (nonatomic, weak) id <TITokenFieldDelegate> delegate;
 @property (weak, nonatomic, readonly) NSArray * tokens;
 @property (weak, nonatomic, readonly) TIToken * selectedToken;
+@property (weak, nonatomic, readonly) TIToken * highlightedToken;
 @property (weak, nonatomic, readonly) NSArray * tokenTitles;
 @property (weak, nonatomic, readonly) NSArray * tokenObjects;
 @property (nonatomic, assign) BOOL showShadow;
@@ -140,6 +141,7 @@ typedef enum {
 @property (nonatomic, strong) UIColor * tintColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, assign) TITokenAccessoryType accessoryType;
 @property (nonatomic, assign) CGFloat maxWidth;
+@property (nonatomic, assign) BOOL flatDesign;
 
 - (instancetype)initWithTitle:(NSString *)aTitle;
 - (instancetype)initWithTitle:(NSString *)aTitle representedObject:(id)object;

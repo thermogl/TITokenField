@@ -827,10 +827,16 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[_selectedToken setSelected:NO];
 		_selectedToken = nil;
 	}
+	
+	if (_highlightedToken != token) {
+		_highlightedToken = nil;
+	}
+	_highlightedToken = token;
 }
 
 - (void)tokenTouchUpInside:(TIToken *)token {
 	if (_editable) [self selectToken:token];
+	_highlightedToken = nil;
 }
 
 - (CGFloat)layoutTokensInternal {
@@ -1167,6 +1173,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 		_accessoryType = TITokenAccessoryTypeNone;
 		_maxWidth = 200;
 		
+		_flatDesign = NO;
+		
 		[self setBackgroundColor:[UIColor clearColor]];
 		[self sizeToFit];
 	}
@@ -1316,28 +1324,56 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	CGContextRestoreGState(context);
 	
 	CGPathRef innerPath = CGPathCreateTokenPath(self.bounds.size, YES);
-    
-    // Draw a white background so we can use alpha to lighten the inner gradient
-    CGContextSaveGState(context);
-	CGContextAddPath(context, innerPath);
-    CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
-    CGContextFillPath(context);
-    CGContextRestoreGState(context);
+	CGFloat highlightedComp[8];
 	
-	// Draw the inner gradient.
-	CGContextSaveGState(context);
-	CGContextAddPath(context, innerPath);
-	CGPathRelease(innerPath);
-	CGContextClip(context);
-	
-	CGFloat locations[2] = {0, (drawHighlighted ? 0.9 : 0.6)};
-    CGFloat highlightedComp[8] = {red, green, blue, 0.7, red, green, blue, 1};
-    CGFloat nonHighlightedComp[8] = {red, green, blue, 0.15, red, green, blue, 0.3};
-	
-	CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, (drawHighlighted ? highlightedComp : nonHighlightedComp), locations, 2);
-	CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
-	CGGradientRelease(gradient);
-	CGContextRestoreGState(context);
+	if (self.flatDesign) {
+		// Flat design
+		CGContextSaveGState(context);
+		CGContextAddPath(context, innerPath);
+		
+		if (drawHighlighted && [self isColorDarker:self.tintColor]) {
+			CGContextSetFillColor(context, CGColorGetComponents([self lighterColorForColor:self.tintColor].CGColor));
+		} else if (drawHighlighted && ![self isColorDarker:self.tintColor]) {
+			CGContextSetFillColor(context, CGColorGetComponents([self darkerColorForColor:self.tintColor].CGColor));
+		} else {
+			CGContextSetFillColor(context, CGColorGetComponents(self.tintColor.CGColor));
+		}
+		
+		
+		CGContextFillPath(context);
+		CGContextRestoreGState(context);
+	} else {
+		
+		// Draw a white background so we can use alpha to lighten the inner gradient
+		CGContextSaveGState(context);
+		CGContextAddPath(context, innerPath);
+		CGContextSetFillColor(context, (CGFloat[4]){1, 1, 1, 1});
+		CGContextFillPath(context);
+		CGContextRestoreGState(context);
+		
+		// Draw the inner gradient.
+		CGContextSaveGState(context);
+		CGContextAddPath(context, innerPath);
+		CGPathRelease(innerPath);
+		CGContextClip(context);
+		
+		CGFloat locations[2] = {0, (drawHighlighted ? 0.9 : 0.6)};
+		highlightedComp[0] = red;
+		highlightedComp[1] = green;
+		highlightedComp[2] = blue;
+		highlightedComp[3] = 0.15;
+		highlightedComp[4] = red;
+		highlightedComp[5] = green;
+		highlightedComp[6] = blue;
+		highlightedComp[7] = 0.3;
+		CGFloat nonHighlightedComp[8] = {red, green, blue, 0.15, red, green, blue, 0.3};
+		
+		CGGradientRef gradient = CGGradientCreateWithColorComponents(colorspace, (drawHighlighted ? highlightedComp : nonHighlightedComp), locations, 2);
+		CGContextDrawLinearGradient(context, gradient, CGPointZero, endPoint, 0);
+		CGGradientRelease(gradient);
+		CGContextRestoreGState(context);
+		
+	}
 	
 	CGFloat accessoryWidth = 0;
 	
@@ -1363,9 +1399,11 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 			CGContextAddPath(context, disclosurePath);
 			CGContextClip(context);
 			
-			CGGradientRef disclosureGradient = CGGradientCreateWithColorComponents(colorspace, highlightedComp, NULL, 2);
-			CGContextDrawLinearGradient(context, disclosureGradient, CGPointZero, endPoint, 0);
-			CGGradientRelease(disclosureGradient);
+			if (!self.flatDesign) {
+				CGGradientRef disclosureGradient = CGGradientCreateWithColorComponents(colorspace, highlightedComp, NULL, 2);
+				CGContextDrawLinearGradient(context, disclosureGradient, CGPointZero, endPoint, 0);
+				CGGradientRelease(disclosureGradient);
+			}
 			
 			arrowPoint.y += 0.5;
 			CGPathRef innerShadowPath = CGPathCreateDisclosureIndicatorPath(arrowPoint, _font.pointSize, kDisclosureThickness, NULL);
@@ -1455,6 +1493,37 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	}
 	
 	return NO;
+}
+
+- (UIColor *)lighterColorForColor:(UIColor *)c
+{
+    CGFloat r, g, b, a;
+    if ([c getRed:&r green:&g blue:&b alpha:&a])
+        return [UIColor colorWithRed:MIN(r + 0.1, 1.0)
+                               green:MIN(g + 0.1, 1.0)
+                                blue:MIN(b + 0.1, 1.0)
+                               alpha:a];
+    return nil;
+}
+
+- (UIColor *)darkerColorForColor:(UIColor *)c
+{
+    CGFloat r, g, b, a;
+    if ([c getRed:&r green:&g blue:&b alpha:&a])
+        return [UIColor colorWithRed:MAX(r - 0.1, 0.0)
+                               green:MAX(g - 0.1, 0.0)
+                                blue:MAX(b - 0.1, 0.0)
+                               alpha:a];
+    return nil;
+}
+
+- (BOOL)isColorDarker:(UIColor *)color {
+	// Calculates a weighted distance brightness
+	// brightness  =  sqrt( .241 R^2 + .691 G^2 + .068 B^2 )
+	CGFloat * components = CGColorGetComponents(color.CGColor);
+	return sqrt(.241 * pow(components[0],2) +
+				.691 * pow(components[1],2) +
+				.068 * pow(components[3],2))>127.5?YES:NO;
 }
 
 #pragma mark Other
